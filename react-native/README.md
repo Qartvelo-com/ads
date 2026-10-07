@@ -15,4 +15,4 @@ npx react-native start            # Metro
 npx react-native run-android      # build, install and launch on the emulator
 ```
 
-See [docs/react-native-integration.md](../docs/react-native-integration.md).
+See the [React Native guide](https://developers.qartvelo.com/react-native/installation/).

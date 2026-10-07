@@ -1,0 +1,46 @@
+{
+  "name": "@qartvelo/ads-mcp",
+  "version": "0.3.0",
+  "description": "MCP server for Qartvelo Ads: search the developer docs, generate SDK integration code and send test-mode ad requests from AI agents.",
+  "type": "module",
+  "bin": {
+    "qartvelo-ads-mcp": "./src/index.js"
+  },
+  "main": "./src/server.js",
+  "files": [
+    "src",
+    "docs.json",
+    "README.md"
+  ],
+  "scripts": {
+    "bundle-docs": "node scripts/bundle-docs.js",
+    "prepack": "node scripts/bundle-docs.js",
+    "start": "node src/index.js",
+    "test": "node scripts/bundle-docs.js && node --test test/server.test.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "qartvelo",
+    "ads",
+    "android",
+    "react-native",
+    "admob",
+    "ai-agents"
+  ],
+  "author": "Qartvelo Ads",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Qartvelo-com/ads.git",
+    "directory": "developers/mcp"
+  },
+  "homepage": "https://developers.qartvelo.com/ai/mcp-server/",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "zod": "^4.6.5"
+  }
+}

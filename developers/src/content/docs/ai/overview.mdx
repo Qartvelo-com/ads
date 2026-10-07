@@ -1,0 +1,31 @@
+---
+title: Build with AI
+description: Use Claude, ChatGPT, Cursor, Copilot and other AI agents to integrate Qartvelo Ads correctly on the first try.
+---
+
+import { CardGrid, LinkCard, Aside } from '@astrojs/starlight/components';
+
+These docs are designed to be read by AI assistants as well as people. Pick the integration that fits your tools:
+
+<CardGrid>
+	<LinkCard title="llms.txt and Markdown" description="The whole site as plain text for any LLM, plus every page as .md." href="/ai/llms-txt/" />
+	<LinkCard title="MCP server" description="Let Claude Code, Cursor, VS Code or Claude Desktop search the docs, generate code and send test ad requests." href="/ai/mcp-server/" />
+	<LinkCard title="Agent skill and rules" description="A SKILL.md for Claude, plus ready-made Cursor rules, AGENTS.md and Copilot instructions." href="/ai/agent-skill/" />
+	<LinkCard title="Prompts" description="Copy-paste prompts for integrating, migrating from AdMob, debugging and reviewing." href="/ai/prompts/" />
+</CardGrid>
+
+## On every page
+
+Each page has three actions under its title:
+
+- **Copy page** copies the page as Markdown, ready to paste into any chat.
+- **View as Markdown** opens the raw `.md` (append `.md` to any docs URL, for example [`/android/banner.md`](/android/banner.md)).
+- **Ask AI about this page** opens ChatGPT, Claude or Perplexity with the page already referenced.
+
+## Why this matters
+
+Ad SDKs have details an LLM cannot guess: the exact Gradle coordinates, the XML attribute name, which callback ends a show, when it is safe to grant a reward. Models trained on older or similar SDKs will confidently write `ourads_placementId`, `AdSource.OURADS` or grant rewards in `onDismissed`. Giving the agent these docs, the skill or the MCP server avoids those mistakes.
+
+<Aside type="tip">
+Whatever tool you use, ask the agent to run your app's debug build in **test mode** and to check the [release checklist](/android/release-checklist/) at the end.
+</Aside>

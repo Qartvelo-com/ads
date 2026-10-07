@@ -1,0 +1,138 @@
+---
+title: Installation
+description: Add the Qartvelo Ads Android SDK and the optional AdMob adapter to your Gradle build.
+---
+
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+| Artifact | Contents | Required |
+|---|---|---|
+| `com.qartvelo.ads:core:0.3.0` | API client, config cache, rendering, event delivery, banner view | Yes |
+| `com.qartvelo.ads:admob:0.3.0` | Fallback adapter for Google Mobile Ads (`play-services-ads` 25.4.0) | Optional |
+
+## Requirements
+
+- `minSdk` 23 or higher, `compileSdk` 35 or higher
+- Java 17 toolchain, AndroidX
+- Core brings OkHttp 4.12, Media3 ExoPlayer 1.8 and AndroidX core. It does not depend on Google Mobile Ads; only the adapter does, as a normal (never shaded) dependency, so a newer `play-services-ads` in your app wins.
+
+## Add the repository and dependencies
+
+The SDK is published on JitPack (built from the [Qartvelo-com/ads](https://github.com/Qartvelo-com/ads) tags). No account or token is needed.
+
+<Tabs>
+<TabItem label="Kotlin DSL">
+
+```kotlin title="settings.gradle.kts"
+dependencyResolutionManagement {
+    repositories {
+        google()
+        mavenCentral()
+        maven("https://jitpack.io") {
+            content { includeGroup("com.qartvelo.ads") }
+        }
+    }
+}
+```
+
+```kotlin title="app/build.gradle.kts"
+dependencies {
+    implementation("com.qartvelo.ads:core:0.3.0")
+    // Optional: fall back to your own AdMob ad units. Leave out to run Qartvelo Ads only.
+    implementation("com.qartvelo.ads:admob:0.3.0")
+}
+```
+
+</TabItem>
+<TabItem label="Groovy">
+
+```groovy title="settings.gradle"
+dependencyResolutionManagement {
+    repositories {
+        google()
+        mavenCentral()
+        maven {
+            url "https://jitpack.io"
+            content { includeGroup("com.qartvelo.ads") }
+        }
+    }
+}
+```
+
+```groovy title="app/build.gradle"
+dependencies {
+    implementation "com.qartvelo.ads:core:0.3.0"
+    implementation "com.qartvelo.ads:admob:0.3.0" // optional
+}
+```
+
+</TabItem>
+<TabItem label="Version catalog">
+
+```toml title="gradle/libs.versions.toml"
+[versions]
+qartvelo-ads = "0.3.0"
+
+[libraries]
+qartvelo-ads-core = { module = "com.qartvelo.ads:core", version.ref = "qartvelo-ads" }
+qartvelo-ads-admob = { module = "com.qartvelo.ads:admob", version.ref = "qartvelo-ads" }
+```
+
+```kotlin title="app/build.gradle.kts"
+dependencies {
+    implementation(libs.qartvelo.ads.core)
+    implementation(libs.qartvelo.ads.admob)
+}
+```
+
+</TabItem>
+</Tabs>
+
+<Aside title="GitHub Packages">
+The same artifacts are on GitHub Packages at `https://maven.pkg.github.com/Qartvelo-com/ads`. GitHub Packages always requires credentials (a GitHub user and a token with `read:packages`), even for public packages, so JitPack is simpler.
+</Aside>
+
+The adapter is discovered at runtime by class name, so adding or removing `com.qartvelo.ads:admob` needs no code change. Without it, the SDK works normally and reports `onNoAdAvailable` when Qartvelo Ads has no ad.
+
+## Manifest
+
+`core` merges the `INTERNET` permission and its full-screen ad Activity automatically. Nothing else is needed for Qartvelo Ads.
+
+If you include the AdMob adapter, Google requires **your own** AdMob App ID, or the Google Mobile Ads SDK crashes the app at start-up:
+
+```xml title="app/src/main/AndroidManifest.xml"
+<application>
+    <meta-data
+        android:name="com.google.android.gms.ads.APPLICATION_ID"
+        android:value="ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY" />
+</application>
+```
+
+For development you can use Google's sample App ID `ca-app-pub-3940256099942544~3347511713`.
+
+## R8 / ProGuard
+
+Both libraries ship consumer rules. Minified release builds need no extra configuration.
+
+## Local backend (optional)
+
+If you run your own Qartvelo Ads backend on your machine for development, the emulator reaches it at `http://10.0.2.2:8000/`. Allow cleartext HTTP for that host in **debug builds only**:
+
+```xml title="app/src/debug/res/xml/network_security_config.xml"
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">10.0.2.2</domain>
+        <domain includeSubdomains="false">localhost</domain>
+    </domain-config>
+</network-security-config>
+```
+
+```xml title="app/src/debug/AndroidManifest.xml"
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application android:networkSecurityConfig="@xml/network_security_config" />
+</manifest>
+```
+
+Production always uses HTTPS (`https://ads.qartvelo.com/`, the default).
+
+Next: [Initialization](/android/initialization/).

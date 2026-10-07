@@ -1,0 +1,365 @@
+openapi: 3.1.0
+info:
+  title: Qartvelo Ads SDK API
+  version: 0.3.0
+  summary: The HTTP API used by the Qartvelo Ads Android and React Native SDKs.
+  description: |
+    Stateless JSON API for initializing an SDK session, requesting ads and reporting ad events.
+    Authentication is the public app key plus a short-lived session token; there are no cookies
+    and no secret API keys. Tokens are opaque: pass them back verbatim, never parse or log them.
+
+    Every endpoint accepts `test_mode` traffic that is validated like live traffic but never billed.
+    Documentation: https://developers.qartvelo.com/api/overview/
+  contact:
+    name: Qartvelo Ads
+    url: https://developers.qartvelo.com
+  license:
+    name: MIT
+    identifier: MIT
+servers:
+  - url: https://ads.qartvelo.com/api/v1
+    description: Production
+# No secret credentials: the public app key and the session token travel in the request body.
+security: []
+tags:
+  - name: SDK
+    description: Session start and remote configuration
+  - name: Ads
+    description: Ad selection
+  - name: Events
+    description: Impression, click, reward and fallback reporting
+paths:
+  /sdk/initialize:
+    post:
+      tags: [SDK]
+      operationId: initializeSdk
+      summary: Start a session
+      description: Validates the app key together with the package name and returns a session token (one hour) and the remote configuration.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/InitializeRequest' }
+            example:
+              app_key: app_xxxxxxxxxxxxxxxxxxxxxxxx
+              package_name: com.example.app
+              sdk_version: 0.3.0
+              app_version: 1.0.0
+              platform: android
+              os_version: '14'
+              test_mode: false
+      responses:
+        '200':
+          description: Session started
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InitializeResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /ads/request:
+    post:
+      tags: [Ads]
+      operationId: requestAd
+      summary: Request an ad
+      description: Selects a campaign for a placement and returns a fill with a signed impression token, or an explicit no-fill with the fallback to use.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdRequest' }
+            example:
+              app_key: app_xxxxxxxxxxxxxxxxxxxxxxxx
+              placement: game_end
+              format: interstitial
+              session_token: '<opaque>'
+              language: ka
+              android_version: '14'
+              screen_width: 1080
+              screen_height: 2400
+      responses:
+        '200':
+          description: Fill or no fill
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/FillResponse'
+                  - $ref: '#/components/schemas/NoFillResponse'
+                discriminator:
+                  propertyName: status
+                  mapping:
+                    fill: '#/components/schemas/FillResponse'
+                    no_fill: '#/components/schemas/NoFillResponse'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /events/impression:
+    post:
+      tags: [Events]
+      operationId: reportImpression
+      summary: Report an impression
+      description: Send once, when the creative is on screen and before the ad expires. This is the billing event.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdEvent' }
+      responses:
+        '200': { $ref: '#/components/responses/Accepted' }
+        '409': { $ref: '#/components/responses/Duplicate' }
+        '422': { $ref: '#/components/responses/EventRejected' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /events/click:
+    post:
+      tags: [Events]
+      operationId: reportClick
+      summary: Report a click
+      description: At most once per impression, after an accepted impression and at least one second later.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdEvent' }
+      responses:
+        '200': { $ref: '#/components/responses/Accepted' }
+        '409': { $ref: '#/components/responses/Duplicate' }
+        '422': { $ref: '#/components/responses/EventRejected' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /events/reward:
+    post:
+      tags: [Events]
+      operationId: reportReward
+      summary: Report a rewarded outcome
+      description: Rewarded placements only, once per impression. The first report wins.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RewardEvent' }
+      responses:
+        '200':
+          description: Recorded
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, rewarded]
+                properties:
+                  status: { const: accepted }
+                  rewarded: { type: boolean, description: Mirrors `completion` }
+        '409': { $ref: '#/components/responses/Duplicate' }
+        '422': { $ref: '#/components/responses/EventRejected' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /events/fallback:
+    post:
+      tags: [Events]
+      operationId: reportFallback
+      summary: Report a fallback (telemetry)
+      description: Fire-and-forget. Counts fallbacks for publisher reports; test sessions are ignored.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FallbackEvent' }
+      responses:
+        '200': { $ref: '#/components/responses/Accepted' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+components:
+  schemas:
+    AdFormat:
+      type: string
+      enum: [banner, interstitial, rewarded]
+    InitializeRequest:
+      type: object
+      required: [app_key, package_name]
+      properties:
+        app_key: { type: string, maxLength: 64, description: '`app_` + 24 alphanumerics from the publisher dashboard' }
+        package_name: { type: string, maxLength: 255, description: 'Android application id, compared exactly' }
+        sdk_version: { type: [string, 'null'], maxLength: 32 }
+        app_version: { type: [string, 'null'], maxLength: 64 }
+        platform: { type: [string, 'null'], enum: [android, null] }
+        os_version: { type: [string, 'null'], maxLength: 32 }
+        test_mode: { type: [boolean, 'null'], description: Skips the approval check; the session only gets test ads }
+    InitializeResponse:
+      type: object
+      required: [session_token, session_expires_at, config, placements]
+      properties:
+        session_token: { type: string, description: Opaque signed token }
+        session_expires_at: { type: string, format: date-time }
+        config:
+          type: object
+          required: [serving_enabled, request_timeout_ms, fallback_enabled, test_mode, config_ttl_seconds]
+          properties:
+            serving_enabled: { type: boolean, description: False when a kill switch applies to the whole app }
+            request_timeout_ms: { type: integer }
+            fallback_enabled: { type: boolean }
+            test_mode: { type: boolean, description: Echo of the request; never cache it }
+            config_ttl_seconds: { type: integer }
+        placements:
+          type: array
+          items: { $ref: '#/components/schemas/PlacementConfig' }
+    PlacementConfig:
+      type: object
+      required: [code, format, ourads_enabled, fallback_provider, request_timeout_ms, banner_refresh_seconds]
+      properties:
+        code: { type: string, pattern: '^[a-z0-9_]{2,64}$' }
+        format: { $ref: '#/components/schemas/AdFormat' }
+        ourads_enabled: { type: boolean, description: Whether Qartvelo Ads may serve this placement (historical field name) }
+        fallback_provider: { type: string, enum: [admob, none] }
+        admob_ad_unit_id: { type: [string, 'null'] }
+        request_timeout_ms: { type: integer, minimum: 100, maximum: 5000 }
+        frequency_cap_count: { type: [integer, 'null'] }
+        frequency_cap_period: { type: [string, 'null'], enum: [session, hour, day, null] }
+        banner_refresh_seconds: { type: integer, minimum: 30 }
+    AdRequest:
+      type: object
+      required: [app_key, placement, format, session_token]
+      properties:
+        app_key: { type: string, maxLength: 64 }
+        placement: { type: string, maxLength: 64 }
+        format: { $ref: '#/components/schemas/AdFormat' }
+        session_token: { type: string, maxLength: 2048 }
+        language: { type: [string, 'null'], maxLength: 35, description: 'Content language, e.g. ka or en-US' }
+        android_version: { type: [string, 'null'], maxLength: 32 }
+        app_version: { type: [string, 'null'], maxLength: 64 }
+        sdk_version: { type: [string, 'null'], maxLength: 32 }
+        screen_width: { type: [integer, 'null'], minimum: 0, maximum: 20000 }
+        screen_height: { type: [integer, 'null'], minimum: 0, maximum: 20000 }
+        test_mode: { type: [boolean, 'null'] }
+        test_force_no_fill: { type: [boolean, 'null'] }
+    FillResponse:
+      type: object
+      required: [status, request_id, ad]
+      properties:
+        status: { const: fill }
+        request_id: { type: string, examples: [req_01k9xyz] }
+        ad:
+          type: object
+          required: [id, campaign_id, creative_id, format, creative_type, creative_url, click_url, width, height, impression_token, expires_at, test]
+          properties:
+            id: { type: string, examples: [ad_3f2a9c01d4e5b6a7] }
+            campaign_id: { type: string, examples: [cmp_12, cmp_test] }
+            creative_id: { type: string, examples: [cr_34, cr_test_interstitial] }
+            format: { $ref: '#/components/schemas/AdFormat' }
+            creative_type: { type: string, enum: [image, video] }
+            creative_url: { type: string, format: uri }
+            click_url: { type: string, format: uri }
+            width: { type: [integer, 'null'] }
+            height: { type: [integer, 'null'] }
+            duration_seconds: { type: [number, 'null'] }
+            impression_token: { type: string, description: 'Opaque, single use' }
+            expires_at: { type: string, format: date-time, description: Never show the ad after this }
+            test: { type: boolean }
+    NoFillResponse:
+      type: object
+      required: [status, request_id, fallback, reason]
+      properties:
+        status: { const: no_fill }
+        request_id: { type: string }
+        fallback: { type: string, enum: [admob, none] }
+        reason:
+          type: string
+          enum: [no_eligible_campaign, serving_disabled, placement_disabled, frequency_capped, test_no_fill]
+    AdEvent:
+      type: object
+      required: [request_id, impression_token]
+      properties:
+        request_id: { type: string, maxLength: 64 }
+        impression_token: { type: string, maxLength: 2048 }
+    RewardEvent:
+      allOf:
+        - $ref: '#/components/schemas/AdEvent'
+        - type: object
+          required: [completion]
+          properties:
+            completion: { type: boolean }
+    FallbackEvent:
+      type: object
+      required: [session_token, placement, reason]
+      properties:
+        session_token: { type: string, maxLength: 2048 }
+        placement: { type: string, maxLength: 64 }
+        reason: { type: string, enum: [no_fill, timeout, error, creative_failed] }
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              enum: [invalid_app_key, invalid_session, session_expired, package_mismatch, app_not_approved, placement_not_found, format_mismatch, validation_failed, rate_limited, server_error]
+            message: { type: string }
+            fields:
+              type: object
+              additionalProperties: { type: array, items: { type: string } }
+    Rejected:
+      type: object
+      required: [status, reason]
+      properties:
+        status: { const: rejected }
+        reason:
+          type: string
+          enum: [duplicate, invalid_token, expired_token, request_mismatch, no_impression, suspicious]
+  responses:
+    Accepted:
+      description: Accepted
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [status]
+            properties:
+              status: { const: accepted }
+    Duplicate:
+      description: The token was already used for this event type. Final.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Rejected' }
+          example: { status: rejected, reason: duplicate }
+    EventRejected:
+      description: The event was rejected (final, never billed) or failed validation.
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/Rejected'
+              - $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: invalid_app_key, invalid_session or session_expired
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Forbidden:
+      description: package_mismatch or app_not_approved
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    NotFound:
+      description: placement_not_found
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    ValidationFailed:
+      description: validation_failed or format_mismatch
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    RateLimited:
+      description: rate_limited
+      headers:
+        Retry-After:
+          schema: { type: integer }
+          description: Seconds to wait
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }

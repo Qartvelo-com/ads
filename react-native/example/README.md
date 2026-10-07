@@ -22,7 +22,7 @@ consumes the local package through `file:../packages/react-native-qartvelo-ads` 
 
 Initialization options apply once per process: force-stop the app to change the switches.
 
-Android configuration used here (see `docs/react-native-integration.md`):
+Android configuration used here (see the [React Native guide](https://developers.qartvelo.com/react-native/installation/)):
 
 - `android/build.gradle`: `mavenLocal()` restricted to the `com.ourads` group;
 - `android/gradle.properties`: `QartveloAds_admobEnabled=true`;
