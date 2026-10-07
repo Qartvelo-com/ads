@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">QartveloAds Sample</string>
+    <string name="banner_screen">Banner</string>
+    <string name="base_url">Backend base URL</string>
+    <string name="test_mode">Test mode (never billable)</string>
+    <string name="force_no_fill">Force QartveloAds no-fill (test mode)</string>
+    <string name="apply_restart">Save and restart</string>
+    <string name="load_interstitial">Load interstitial</string>
+    <string name="show_interstitial">Show interstitial</string>
+    <string name="load_rewarded">Load rewarded</string>
+    <string name="show_rewarded">Show rewarded</string>
+    <string name="open_banner">Open banner screen</string>
+    <string name="clear_log">Clear log</string>
+    <string name="event_log">Event log</string>
+    <string name="banner_hint">The banner below is placement home_banner. Rotate the device: the same banner is reused, no new request is made.</string>
+</resources>

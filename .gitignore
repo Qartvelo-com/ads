@@ -1,0 +1,24 @@
+.DS_Store
+*.log
+.idea/
+.vscode/
+*.iml
+node_modules/
+
+# Android
+.gradle/
+.kotlin/
+build/
+local.properties
+*.apk
+*.aab
+*.keystore
+!debug.keystore
+.cxx/
+
+# React Native package build output (created by `bob build` / prepare)
+react-native/packages/react-native-qartvelo-ads/lib/
+
+# React Native example
+react-native/example/ios/Pods/
+react-native/example/vendor/

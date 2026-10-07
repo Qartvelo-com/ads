@@ -1,0 +1,60 @@
+# Release: push a tag equal to the version (e.g. `git tag 0.2.0 && git push origin 0.2.0`).
+# - Android: com.qartvelo:qartvelo-ads-core / qartvelo-ads-admob to GitHub Packages.
+#   JitPack builds the same tag on first request (see jitpack.yml).
+# - npm: @qartvelo/react-native-ads, only when the NPM_TOKEN secret is set.
+# The tag must match `version` in android/build.gradle.kts and the npm package.json.
+
+name: Publish
+
+on:
+  push:
+    tags: ['[0-9]+.[0-9]+.[0-9]+*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: android
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Unit tests
+        run: ./gradlew :qartvelo-ads-core:testDebugUnitTest :qartvelo-ads-admob:testDebugUnitTest
+      - name: Publish to GitHub Packages
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./gradlew :qartvelo-ads-core:publishAllPublicationsToGitHubPackagesRepository :qartvelo-ads-admob:publishAllPublicationsToGitHubPackagesRepository
+
+  npm:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+    defaults:
+      run:
+        working-directory: react-native/packages/react-native-qartvelo-ads
+    steps:
+      - uses: actions/checkout@v4
+        if: env.NPM_TOKEN != ''
+      - uses: actions/setup-node@v4
+        if: env.NPM_TOKEN != ''
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+      - name: Publish @qartvelo/react-native-ads
+        if: env.NPM_TOKEN != ''
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm ci --no-audit --no-fund && npm publish --access public

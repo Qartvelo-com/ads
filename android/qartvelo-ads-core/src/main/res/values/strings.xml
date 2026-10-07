@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="qartvelo_ad_label">Ad</string>
+    <string name="qartvelo_close">Close ad</string>
+    <string name="qartvelo_learn_more">Learn more</string>
+    <string name="qartvelo_reward_in">Reward in %1$ds</string>
+    <string name="qartvelo_reward_earned">Reward earned</string>
+    <string name="qartvelo_seconds_left">%1$ds</string>
+    <string name="qartvelo_skip_title">Close video?</string>
+    <string name="qartvelo_skip_message">If you close now you will not receive the reward.</string>
+    <string name="qartvelo_skip_confirm">Close video</string>
+    <string name="qartvelo_skip_resume">Resume</string>
+</resources>

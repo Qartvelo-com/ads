@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="QartveloAdsBannerView">
+        <attr name="qartvelo_placementId" format="string" />
+    </declare-styleable>
+</resources>
