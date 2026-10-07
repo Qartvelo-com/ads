@@ -143,7 +143,9 @@ internal class QartveloAdsBannerHostView(context: ThemedReactContext) : FrameLay
     private fun dispatch(name: String, data: WritableMap) {
         if (id == NO_ID) return
         val reactContext = context as? ReactContext ?: return
-        val dispatcher = UIManagerHelper.getEventDispatcher(reactContext) ?: return
+        // getEventDispatcher(ReactContext) only exists in newer React Native; the per-tag lookup
+        // works on every supported version (0.79+).
+        val dispatcher = UIManagerHelper.getEventDispatcherForReactTag(reactContext, id) ?: return
         dispatcher.dispatchEvent(BannerEvent(UIManagerHelper.getSurfaceId(this), id, name, data))
     }
 

@@ -5,7 +5,7 @@ import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { createServer } from '../src/server.js';
 import { getDoc, normalizePath, searchDocs } from '../src/docs.js';
 import { explainCode } from '../src/reference.js';
-import { generateIntegration } from '../src/snippets.js';
+import { generateIntegration, SDK_VERSION } from '../src/snippets.js';
 import { redact } from '../src/api.js';
 
 async function connect() {
@@ -49,7 +49,7 @@ test('generates Android code with the right attribute and units', () => {
 	assert.deepEqual(result.problems, []);
 	assert.match(all, /app:qartvelo_placementId="home_banner"/);
 	assert.match(all, /"game_end" to "ca-app-pub-1234567890123456\/1234567890"/);
-	assert.match(all, /com\.qartvelo\.ads:admob:0\.3\.0/);
+	assert.ok(all.includes(`com.qartvelo.ads:admob:${SDK_VERSION}`));
 	assert.match(all, /fun showRewardedRewardCoins/);
 });
 

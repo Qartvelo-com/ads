@@ -5,6 +5,14 @@ description: Release history of the Qartvelo Ads SDKs.
 
 Releases are tagged in [Qartvelo-com/ads](https://github.com/Qartvelo-com/ads). The Android SDK, the AdMob adapter and the React Native plugin share one version number.
 
+## 0.3.1
+
+- React Native plugin: fixed the Android build on React Native versions before 0.87, where
+  `QartveloAdsBannerHostView` failed to compile because it used an event-dispatcher overload that
+  only newer React Native versions have. Apps that patched `node_modules` for this can drop the
+  patch.
+- Android SDK, AdMob adapter and MCP server: version bump only, no functional changes.
+
 ## 0.3.0
 
 - Short Maven coordinates: `com.qartvelo.ads:core` and `com.qartvelo.ads:admob`, identical on JitPack, GitHub Packages and `mavenLocal()`.
