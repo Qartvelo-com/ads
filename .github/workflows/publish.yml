@@ -3,6 +3,7 @@
 #   JitPack builds the same tag on first request (see jitpack.yml).
 # - npm: @qartvelo/react-native-ads and the docs MCP server @qartvelo/ads-mcp, only when the
 #   NPM_TOKEN secret is set.
+# Run manually with "mcp_only" to publish just the MCP server between SDK releases.
 # The tag must match `version` in android/build.gradle.kts and both npm package.json files.
 
 name: Publish
@@ -11,6 +12,11 @@ on:
   push:
     tags: ['[0-9]+.[0-9]+.[0-9]+*']
   workflow_dispatch:
+    inputs:
+      mcp_only:
+        description: Publish only @qartvelo/ads-mcp (version from developers/mcp/package.json)
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -18,6 +24,7 @@ permissions:
 
 jobs:
   android:
+    if: ${{ !inputs.mcp_only }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     defaults:
@@ -39,6 +46,7 @@ jobs:
         run: ./gradlew :qartvelo-ads-core:publishAllPublicationsToGitHubPackagesRepository :qartvelo-ads-admob:publishAllPublicationsToGitHubPackagesRepository
 
   npm:
+    if: ${{ !inputs.mcp_only }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:

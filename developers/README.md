@@ -39,11 +39,13 @@ changes, update the version strings (search for `0.3.0`), `resources/changelog.m
 ## Deploy
 
 `.github/workflows/docs.yml` builds the site and tests the MCP server on every push and pull request.
-On `main` it deploys to GitHub Pages when the repository variable `DOCS_PAGES_ENABLED` is `true`:
+On `main` it deploys to GitHub Pages when the repository variable `DOCS_PAGES_ENABLED` is `true`
+(a manual run of the workflow on `main` always deploys):
 
 1. Settings -> Pages -> Source: **GitHub Actions**.
 2. Settings -> Secrets and variables -> Actions -> Variables: `DOCS_PAGES_ENABLED` = `true`.
 3. DNS (Cloudflare): `CNAME developers -> qartvelo-com.github.io` (`public/CNAME` sets the custom domain).
 
 The MCP server is published to npm as `@qartvelo/ads-mcp` by the Publish workflow together with the
-SDK tags, when the `NPM_TOKEN` secret is set.
+SDK tags, when the `NPM_TOKEN` secret is set. To publish it between SDK releases, bump
+`developers/mcp/package.json` and run the Publish workflow manually with **mcp_only**.

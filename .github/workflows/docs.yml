@@ -1,6 +1,6 @@
 # Developer docs (developers/): build the Starlight site, lint the OpenAPI spec and test the MCP
 # server on every change. On main, deploy to GitHub Pages (https://developers.qartvelo.com) once the
-# repository variable DOCS_PAGES_ENABLED is "true" (see developers/README.md).
+# repository variable DOCS_PAGES_ENABLED is "true", or when run manually (see developers/README.md).
 
 name: Docs
 
@@ -49,13 +49,13 @@ jobs:
         working-directory: developers/mcp
         run: npm ci --no-audit --no-fund && npm test
       - uses: actions/upload-pages-artifact@v3
-        if: github.ref == 'refs/heads/main' && vars.DOCS_PAGES_ENABLED == 'true'
+        if: github.ref == 'refs/heads/main' && (vars.DOCS_PAGES_ENABLED == 'true' || github.event_name == 'workflow_dispatch')
         with:
           path: developers/dist
 
   deploy:
     needs: build
-    if: github.ref == 'refs/heads/main' && vars.DOCS_PAGES_ENABLED == 'true'
+    if: github.ref == 'refs/heads/main' && (vars.DOCS_PAGES_ENABLED == 'true' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     permissions:
       pages: write
