@@ -17,7 +17,7 @@ Qartvelo Ads is the primary ad source. When it has no eligible campaign, fails, 
 
 1. In AdMob, create an app for your package and ad units that match your placements: banner units for banner placements, interstitial units for interstitial placements, rewarded units for rewarded placements.
 2. Add the AdMob **App ID** (contains `~`) to `AndroidManifest.xml` as `com.google.android.gms.ads.APPLICATION_ID` meta-data.
-3. Add the adapter: `implementation("com.qartvelo.ads:admob:0.3.0")`, or `QartveloAds_admobEnabled=true` in React Native.
+3. Add the adapter: `implementation("com.qartvelo.ads:admob:0.3.1")`, or `QartveloAds_admobEnabled=true` in React Native.
 4. Map each placement to its ad unit **ID** (contains `/`), either on the placement in the dashboard (fallback provider **AdMob**) or in code:
 
    ```kotlin

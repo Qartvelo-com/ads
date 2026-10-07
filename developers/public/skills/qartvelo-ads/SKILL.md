@@ -9,7 +9,7 @@ Qartvelo Ads is a direct-sold ad network for Android apps in Georgia. The SDK se
 
 ## Facts that must be exact
 
-- Version **0.3.0**. Android artifacts on JitPack: `com.qartvelo.ads:core:0.3.0` (required), `com.qartvelo.ads:admob:0.3.0` (optional AdMob fallback). Repository `maven("https://jitpack.io")`.
+- Version **0.3.1**. Android artifacts on JitPack: `com.qartvelo.ads:core:0.3.1` (required), `com.qartvelo.ads:admob:0.3.1` (optional AdMob fallback). Repository `maven("https://jitpack.io")`.
 - Kotlin package `com.qartvelo.sdk`, entry point `object QartveloAds`. Options class `QartveloAdsOptions`. Listener `QartveloAdsListener` (all methods have default bodies, main thread).
 - `AdSource` is `QARTVELO` or `ADMOB` (React Native: `'qartvelo'` or `'admob'`). There is no `OURADS` value.
 - Banner view `com.qartvelo.sdk.QartveloAdsBannerView`, XML attribute **`app:qartvelo_placementId`**.
@@ -23,7 +23,7 @@ Qartvelo Ads is a direct-sold ad network for Android apps in Georgia. The SDK se
 
 1. Ask for (or find) the app key and the placement codes and formats. If missing, tell the user to create them at https://ads.qartvelo.com (Apps -> app -> placements).
 2. Add the dependencies:
-   - Android: JitPack in `settings.gradle.kts` `dependencyResolutionManagement.repositories`, then `implementation("com.qartvelo.ads:core:0.3.0")` and, for fallback, `implementation("com.qartvelo.ads:admob:0.3.0")`.
+   - Android: JitPack in `settings.gradle.kts` `dependencyResolutionManagement.repositories`, then `implementation("com.qartvelo.ads:core:0.3.1")` and, for fallback, `implementation("com.qartvelo.ads:admob:0.3.1")`.
    - React Native: install the package, add JitPack to `allprojects.repositories` in `android/build.gradle`, set `QartveloAds_admobEnabled=true` for fallback.
 3. If the AdMob adapter is used, make sure the manifest has the app's own AdMob App ID: `<meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="ca-app-pub-...~..."/>` (missing -> crash at start-up). Keep any existing AdMob setup.
 4. Initialize once at start-up with test mode in debug builds:
