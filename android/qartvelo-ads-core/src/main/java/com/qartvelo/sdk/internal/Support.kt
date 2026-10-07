@@ -7,6 +7,8 @@ import android.content.Intent
 import android.content.res.Resources
 import android.net.Uri
 import android.os.Build
+import com.qartvelo.sdk.DEFAULT_BASE_URL
+import com.qartvelo.sdk.QartveloAds
 import com.qartvelo.sdk.QartveloAdsListener
 import com.qartvelo.sdk.fallback.FallbackAdapter
 import java.util.concurrent.CopyOnWriteArrayList
@@ -157,4 +159,23 @@ internal object ClickOpener {
             false
         }
     }
+}
+
+/**
+ * The "Ad" badge on Qartvelo Ads creatives links to the Qartvelo Ads website with
+ * `ref=<host app package>`, so the network can see which app a visitor came from. It is not an ad
+ * click: no event is sent and the advertiser's destination is not opened.
+ */
+internal object AboutLink {
+    fun url(context: Context): String {
+        val base = QartveloAds.engine()?.options?.baseUrl?.takeIf { it.isNotBlank() } ?: DEFAULT_BASE_URL
+        return Uri.parse(base).buildUpon()
+            .path("/")
+            .clearQuery()
+            .appendQueryParameter("ref", context.packageName)
+            .build()
+            .toString()
+    }
+
+    fun open(context: Context): Boolean = ClickOpener.open(context, url(context))
 }

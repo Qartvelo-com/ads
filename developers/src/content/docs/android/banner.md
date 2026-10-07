@@ -77,6 +77,7 @@ fun QartveloBanner(placementId: String, modifier: Modifier = Modifier) {
 - **Fallback**: on Qartvelo Ads no-fill, timeout, error or creative failure the view renders your AdMob anchored adaptive banner instead. A visible AdMob banner refreshes itself (AdMob settings apply); a later Qartvelo Ads fill replaces it.
 - **One visible banner per placement code.** Use distinct placement codes for banners that are on screen at the same time.
 - **No leaks.** The view never holds an Activity after it is detached; AdMob views are re-parented through a context wrapper.
+- The **Ad** badge in the corner of a Qartvelo Ads banner opens the Qartvelo Ads website (`https://ads.qartvelo.com/?ref=<your package name>`). Tapping it is not an ad click: no click event, no `onClicked`, no advertiser page.
 - Qartvelo Ads banner creatives keep their aspect ratio within the view width. Supported creative sizes are 320x50, 320x100, 300x250, 468x60 and 728x90.
 
 ## Banner events

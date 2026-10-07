@@ -396,6 +396,9 @@ internal class BannerController(private val engine: Engine, val placementId: Str
             cornerRadius = 3 * d
             setColor(0x99000000.toInt())
         }
+        // Opens the Qartvelo Ads website (not the advertiser) and consumes the tap.
+        contentDescription = context.getString(R.string.qartvelo_about_ads)
+        setOnClickListener { v -> AboutLink.open(v.context) }
     }
 
     private fun infoFor(c: Content): QartveloAdsAdInfo = when (c) {

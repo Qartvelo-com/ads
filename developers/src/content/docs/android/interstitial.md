@@ -50,6 +50,7 @@ Concurrent loads of the same placement share one request.
 - A Qartvelo Ads ad is shown at most once and never after its expiry (30 minutes after the request).
 - Rotation and Activity re-creation do not restart the ad or repeat events.
 - Tapping the ad records the click, then opens the advertiser's URL in the browser.
+- Tapping the **Ad** badge in the top corner opens the Qartvelo Ads website (`https://ads.qartvelo.com/?ref=<your package name>`) instead. It is not an ad click, and the ad stays on screen.
 
 ## Listeners
 
