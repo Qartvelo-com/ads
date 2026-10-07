@@ -27,6 +27,7 @@ Use `QartveloAds.isRewardedReady("reward_coins")` to enable or hide the "watch a
 - `onReward` fires **at most once per show** and **only after confirmed completion**, whether Qartvelo Ads or the AdMob fallback served the ad.
 - Qartvelo Ads rewards are `QartveloAdsReward(type = "reward", amount = 1)`. AdMob rewards carry the type and amount configured on your AdMob unit (`onUserEarnedReward` is mapped to `onReward`). Most apps ignore the amount and grant their own fixed reward.
 - Closing a Qartvelo Ads video early asks the user for confirmation and forfeits the reward.
+- The **Ad** badge opens the Qartvelo Ads website with `?ref=<your package name>`; it is not an ad click, and the video pauses while the browser is open.
 - Rotation and Activity re-creation neither restart the video nor repeat events.
 - The SDK reports the completion to the backend (`POST /events/reward`) for auditing; your app should grant the reward from the callback, not wait for the server.
 

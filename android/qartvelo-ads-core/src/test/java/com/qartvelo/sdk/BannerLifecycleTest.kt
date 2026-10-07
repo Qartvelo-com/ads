@@ -1,6 +1,7 @@
 package com.qartvelo.sdk
 
 import android.app.Activity
+import android.content.Intent
 import android.content.MutableContextWrapper
 import android.view.View
 import android.widget.FrameLayout
@@ -11,6 +12,7 @@ import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.android.controller.ActivityController
 
 class BannerLifecycleTest : SdkTest() {
@@ -50,6 +52,24 @@ class BannerLifecycleTest : SdkTest() {
             .apply { isAccessible = true }
             .invoke(root, visible)
         settle(20)
+    }
+
+    @Test
+    fun adBadgeOpensQartveloSiteWithRefAndIsNotAClick() {
+        backend.adResponses.add(bannerFill())
+        assertTrue(init())
+        val banner = newBanner(listener)
+        banner.load()
+        awaitMain(message = "banner impression") { listener.has("impression") }
+
+        banner.findByDescription("Ad. About Qartvelo Ads")!!.performClick()
+        val opened: Intent = shadowOf(host.get()).nextStartedActivity
+        assertEquals(Intent.ACTION_VIEW, opened.action)
+        assertEquals("${backend.baseUrl}?ref=${host.get().packageName}", opened.dataString)
+
+        settle()
+        assertEquals(0, backend.count("/api/v1/events/click"))
+        assertFalse(listener.has("clicked"))
     }
 
     @Test

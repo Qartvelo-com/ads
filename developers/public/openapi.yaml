@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Qartvelo Ads SDK API
-  version: 0.3.1
+  version: 0.3.2
   summary: The HTTP API used by the Qartvelo Ads Android and React Native SDKs.
   description: |
     Stateless JSON API for initializing an SDK session, requesting ads and reporting ad events.
@@ -43,7 +43,7 @@ paths:
             example:
               app_key: app_xxxxxxxxxxxxxxxxxxxxxxxx
               package_name: com.example.app
-              sdk_version: 0.3.1
+              sdk_version: 0.3.2
               app_version: 1.0.0
               platform: android
               os_version: '14'

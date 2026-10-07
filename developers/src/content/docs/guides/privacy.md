@@ -20,6 +20,8 @@ Campaigns can target country (derived on the server from the request's network a
 
 The HTTP user agent contains the SDK version, Android version and package name.
 
+When a user taps the **Ad** badge on a Qartvelo Ads creative, the browser opens `https://ads.qartvelo.com/?ref=<app package name>`. Only the app's package name is passed; nothing about the user.
+
 ## Data the SDK never collects
 
 - No Advertising ID (GAID), Android ID, IMEI, serial number or any other device identifier.

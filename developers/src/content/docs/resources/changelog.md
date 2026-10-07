@@ -5,6 +5,13 @@ description: Release history of the Qartvelo Ads SDKs.
 
 Releases are tagged in [Qartvelo-com/ads](https://github.com/Qartvelo-com/ads). The Android SDK, the AdMob adapter and the React Native plugin share one version number.
 
+## 0.3.2
+
+- The "Ad" badge on Qartvelo Ads banners, interstitials and rewarded videos is now a link: tapping
+  it opens the Qartvelo Ads website with `?ref=<app package name>`. It is not an ad click: no click
+  event is sent, `onClicked` is not called and the advertiser's page is not opened. AdMob fallback
+  ads are unchanged.
+
 ## 0.3.1
 
 - React Native plugin: fixed the Android build on React Native versions before 0.87, where

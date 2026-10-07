@@ -72,6 +72,27 @@ class InterstitialLifecycleTest : SdkTest() {
     }
 
     @Test
+    fun adBadgeOpensQartveloSiteWithRefAndIsNotAClick() {
+        backend.adResponses.add(backend.fill("interstitial"))
+        assertTrue(init())
+        loadAndWait(AdFormat.INTERSTITIAL, "game_end")
+        val host = hostActivity().get()
+        QartveloAds.showInterstitial(host, "game_end")
+        val adActivity = launchedAdActivity(host)
+        awaitMain(message = "impression") { listener.has("impression") }
+
+        adActivity.get().window.decorView.findByDescription("Ad. About Qartvelo Ads")!!.performClick()
+        val opened: Intent = shadowOf(adActivity.get()).nextStartedActivity
+        assertEquals(Intent.ACTION_VIEW, opened.action)
+        assertEquals("${backend.baseUrl}?ref=${host.packageName}", opened.dataString)
+
+        settle()
+        assertEquals(0, backend.count("/api/v1/events/click"))
+        assertFalse(listener.has("clicked"))
+        assertFalse("the ad stays on screen", adActivity.get().isFinishing)
+    }
+
+    @Test
     fun concurrentLoadsJoinTheInFlightLoad() {
         backend.adResponses.add(backend.fill("interstitial"))
         backend.adDelayMs = 200

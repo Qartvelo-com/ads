@@ -28,7 +28,7 @@ npm install @qartvelo/react-native-ads
 
 ## 2. Add JitPack
 
-The plugin depends on the native SDK `com.qartvelo.ads:core:0.3.1` from JitPack. Add the repository to every project:
+The plugin depends on the native SDK `com.qartvelo.ads:core:0.3.2` from JitPack. Add the repository to every project:
 
 ```groovy title="android/build.gradle"
 allprojects {
@@ -47,8 +47,8 @@ By default only the core SDK is included and a Qartvelo Ads no-fill simply repor
 
 ```properties title="android/gradle.properties"
 QartveloAds_admobEnabled=true
-# Optional: pin a different native SDK version (default 0.3.1)
-# QartveloAds_sdkVersion=0.3.1
+# Optional: pin a different native SDK version (default 0.3.2)
+# QartveloAds_sdkVersion=0.3.2
 ```
 
 This adds `com.qartvelo.ads:admob`, which brings Google's `play-services-ads` (25.4.0). Google requires your AdMob App ID in the manifest, or the app crashes at start-up:

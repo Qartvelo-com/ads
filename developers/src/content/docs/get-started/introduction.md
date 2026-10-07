@@ -25,8 +25,8 @@ Your app ──> Qartvelo Ads SDK ──> Qartvelo Ads ad available?
 
 | Package | Install | Notes |
 |---|---|---|
-| Android core | `com.qartvelo.ads:core:0.3.1` | JitPack. API client, caching, rendering, events, banner view |
-| Android AdMob adapter | `com.qartvelo.ads:admob:0.3.1` | Optional. Depends on Google's `play-services-ads` |
+| Android core | `com.qartvelo.ads:core:0.3.2` | JitPack. API client, caching, rendering, events, banner view |
+| Android AdMob adapter | `com.qartvelo.ads:admob:0.3.2` | Optional. Depends on Google's `play-services-ads` |
 | React Native | `npm install @qartvelo/react-native-ads` | Android only for now; iOS calls reject with `unsupported_platform` |
 
 The SDK source is MIT-licensed at [github.com/Qartvelo-com/ads](https://github.com/Qartvelo-com/ads). The production API is `https://ads.qartvelo.com/`, which is also the SDK's default base URL.
