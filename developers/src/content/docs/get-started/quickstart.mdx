@@ -1,0 +1,189 @@
+---
+title: Quickstart
+description: Show your first Qartvelo Ads test ad in an Android or React Native app in about ten minutes.
+---
+
+import { Steps, Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+<Steps>
+
+1. **Create a publisher account and register your app.**
+
+   Sign up at [ads.qartvelo.com](https://ads.qartvelo.com/register) as a publisher and verify your email. Under **Apps**, add your app with its exact Android package name (`applicationId`). Copy the **app key** shown on the app page (`app_...`). See [Account and apps](/publishers/account-and-apps/).
+
+   <Aside type="tip">You do not have to wait for approval: test mode works for apps that are still pending review.</Aside>
+
+2. **Create placements.**
+
+   On the app page, add one placement per ad slot, for example:
+
+   | Name | Code | Format |
+   |---|---|---|
+   | Home banner | `home_banner` | banner |
+   | Level complete | `game_end` | interstitial |
+   | Free coins | `reward_coins` | rewarded |
+
+   If you use AdMob, choose **AdMob** as fallback and paste your AdMob ad unit id. See [Placements](/publishers/placements/).
+
+3. **Add the SDK.**
+
+   <Tabs syncKey="platform">
+   <TabItem label="Android (Kotlin)">
+
+   ```kotlin title="settings.gradle.kts"
+   dependencyResolutionManagement {
+       repositories {
+           google()
+           mavenCentral()
+           maven("https://jitpack.io")
+       }
+   }
+   ```
+
+   ```kotlin title="app/build.gradle.kts"
+   dependencies {
+       implementation("com.qartvelo.ads:core:0.3.0")
+       implementation("com.qartvelo.ads:admob:0.3.0") // optional AdMob fallback
+   }
+   ```
+
+   </TabItem>
+   <TabItem label="React Native">
+
+   ```sh
+   npm install @qartvelo/react-native-ads
+   ```
+
+   ```groovy title="android/build.gradle"
+   allprojects {
+       repositories {
+           maven {
+               url "https://jitpack.io"
+               content { includeGroup("com.qartvelo.ads") }
+           }
+       }
+   }
+   ```
+
+   ```properties title="android/gradle.properties"
+   # Optional: enable the AdMob fallback adapter
+   QartveloAds_admobEnabled=true
+   ```
+
+   </TabItem>
+   </Tabs>
+
+   If you enabled the AdMob adapter, add **your** AdMob App ID to `AndroidManifest.xml`, or Google's SDK crashes the app at start-up:
+
+   ```xml title="AndroidManifest.xml"
+   <application>
+       <meta-data
+           android:name="com.google.android.gms.ads.APPLICATION_ID"
+           android:value="ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY" />
+   </application>
+   ```
+
+4. **Initialize in test mode.**
+
+   <Tabs syncKey="platform">
+   <TabItem label="Android (Kotlin)">
+
+   ```kotlin title="MyApp.kt"
+   class MyApp : Application() {
+       override fun onCreate() {
+           super.onCreate()
+           QartveloAds.initialize(
+               this,
+               "app_xxxxxxxxxxxxxxxxxxxxxxxx",
+               QartveloAdsOptions(testMode = BuildConfig.DEBUG),
+           )
+       }
+   }
+   ```
+
+   Register `MyApp` with `android:name=".MyApp"` on the `<application>` element. `BuildConfig.DEBUG` needs `buildFeatures { buildConfig = true }` in `app/build.gradle.kts`.
+
+   </TabItem>
+   <TabItem label="React Native">
+
+   ```tsx title="App.tsx"
+   import { useEffect } from 'react';
+   import { QartveloAds } from '@qartvelo/react-native-ads';
+
+   useEffect(() => {
+     QartveloAds.initialize({
+       appKey: 'app_xxxxxxxxxxxxxxxxxxxxxxxx',
+       testMode: __DEV__,
+     }).catch(() => {
+       // The SDK keeps working on its cached config and the AdMob fallback.
+     });
+   }, []);
+   ```
+
+   </TabItem>
+   </Tabs>
+
+5. **Show an ad.**
+
+   <Tabs syncKey="platform">
+   <TabItem label="Android (Kotlin)">
+
+   ```kotlin
+   // Preload early, for example when the level starts
+   QartveloAds.loadInterstitial("game_end")
+
+   // Show at a natural break
+   QartveloAds.showInterstitial(this, "game_end", object : QartveloAdsListener {
+       override fun onDismissed(info: QartveloAdsAdInfo) = continueGame()
+       override fun onNoAdAvailable(placementId: String, format: AdFormat) = continueGame()
+   })
+   ```
+
+   ```xml title="activity_main.xml"
+   <com.qartvelo.sdk.QartveloAdsBannerView
+       android:id="@+id/banner"
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content"
+       app:qartvelo_placementId="home_banner" />
+   ```
+
+   ```kotlin
+   findViewById<QartveloAdsBannerView>(R.id.banner).load()
+   ```
+
+   </TabItem>
+   <TabItem label="React Native">
+
+   ```tsx
+   import { QartveloAds, QartveloAdsBanner } from '@qartvelo/react-native-ads';
+
+   await QartveloAds.loadInterstitial('game_end');
+   const { shown } = await QartveloAds.showInterstitial('game_end'); // resolves on dismiss
+
+   <QartveloAdsBanner placementId="home_banner" style={{ width: '100%' }} />;
+   ```
+
+   Rebuild the native app after installing: `npx react-native run-android`.
+
+   </TabItem>
+   </Tabs>
+
+   You should see a purple creative labelled **TEST AD**. Set `testForceNoFill` to `true` as well to see your AdMob fallback (Google's test ad) instead.
+
+6. **Go live.**
+
+   Wait for the app to be approved, turn test mode off for release builds and work through the [release checklist](/android/release-checklist/).
+
+</Steps>
+
+## Use an AI assistant instead
+
+Paste this into Claude Code, Cursor or Copilot Chat in your project:
+
+```text
+Integrate the Qartvelo Ads Android SDK into this app following https://developers.qartvelo.com/llms-full.txt.
+App key: app_xxxxxxxxxxxxxxxxxxxxxxxx. Placements: home_banner (banner), game_end (interstitial),
+reward_coins (rewarded). Use test mode in debug builds and keep my existing AdMob units as fallback.
+```
+
+More prompts and the MCP server are in [Build with AI](/ai/overview/).

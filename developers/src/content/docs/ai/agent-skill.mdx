@@ -1,0 +1,65 @@
+---
+title: Agent skill and rules
+description: Drop-in instructions for Claude Code, Cursor, GitHub Copilot, Codex and other coding agents.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+One file, [`SKILL.md`](/skills/qartvelo-ads/SKILL.md), teaches an agent the exact package names, the integration steps, the rules (test mode, reward once, continue after every show) and the release checklist. Install it in the format your tool reads.
+
+<Tabs>
+<TabItem label="Claude Code">
+
+Claude Code loads skills from `.claude/skills/<name>/SKILL.md` in your project (or `~/.claude/skills/` for all projects) and uses them automatically when relevant:
+
+```sh
+mkdir -p .claude/skills/qartvelo-ads
+curl -sL https://developers.qartvelo.com/skills/qartvelo-ads/SKILL.md \
+  -o .claude/skills/qartvelo-ads/SKILL.md
+```
+
+</TabItem>
+<TabItem label="Cursor">
+
+```sh
+mkdir -p .cursor/rules
+{ printf -- '---\ndescription: Qartvelo Ads SDK integration rules\nglobs: ["**/*.kt", "**/*.kts", "**/*.tsx", "**/*.ts", "**/AndroidManifest.xml"]\nalwaysApply: false\n---\n'; \
+  curl -sL https://developers.qartvelo.com/skills/qartvelo-ads/SKILL.md | sed '1,/^---$/d'; } \
+  > .cursor/rules/qartvelo-ads.mdc
+```
+
+</TabItem>
+<TabItem label="GitHub Copilot">
+
+Append the instructions to the repository's custom instructions:
+
+```sh
+mkdir -p .github
+curl -sL https://developers.qartvelo.com/skills/qartvelo-ads/SKILL.md \
+  | sed '1,/^---$/d' >> .github/copilot-instructions.md
+```
+
+</TabItem>
+<TabItem label="AGENTS.md">
+
+Codex, Jules, Aider, Zed and other agents read `AGENTS.md` at the repository root:
+
+```sh
+curl -sL https://developers.qartvelo.com/skills/qartvelo-ads/SKILL.md \
+  | sed '1,/^---$/d' >> AGENTS.md
+```
+
+</TabItem>
+</Tabs>
+
+The `sed` commands strip the skill's YAML front matter for tools that do not use it.
+
+## What the skill contains
+
+- Exact coordinates: `com.qartvelo.ads:core:0.3.0`, `com.qartvelo.ads:admob:0.3.0`, `@qartvelo/react-native-ads`, JitPack.
+- Exact names that models get wrong: `AdSource.QARTVELO`, `app:qartvelo_placementId`, `QartveloAds_admobEnabled`.
+- The seven integration steps, from dependencies to verifying test ads.
+- Rules: test mode in debug, reward only on completion, continue after every terminal callback, never embed the SDK secret, one banner per placement code.
+- Error codes and the release checklist.
+
+Combine the skill with the [MCP server](/ai/mcp-server/) for live docs search and test ad requests.

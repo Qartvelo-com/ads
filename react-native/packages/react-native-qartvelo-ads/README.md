@@ -30,8 +30,10 @@ subscription.remove();
 
 Android setup (Maven repository for `com.qartvelo.ads:core`, the optional AdMob adapter via
 `QartveloAds_admobEnabled=true`, the AdMob App ID), the full API, events, error codes, testing and
-troubleshooting are documented in
-[docs/react-native-integration.md](../../../docs/react-native-integration.md).
+troubleshooting are documented at
+[developers.qartvelo.com/react-native](https://developers.qartvelo.com/react-native/installation/).
+AI agents can use [llms.txt](https://developers.qartvelo.com/_llms-txt/react-native.txt) or the
+[MCP server](https://developers.qartvelo.com/ai/mcp-server/).
 
 ## Development
 
@@ -44,4 +46,4 @@ npm run build       # react-native-builder-bob -> lib/
 ```
 
 Kotlin unit tests run through the example app:
-`cd ../../example/android && ./gradlew :ourads_react-native:testDebugUnitTest`.
+`cd ../../example/android && ./gradlew :qartvelo_react-native-ads:testDebugUnitTest`.

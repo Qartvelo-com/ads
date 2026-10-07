@@ -1,8 +1,9 @@
 # Release: push a tag equal to the version (e.g. `git tag 0.3.0 && git push origin 0.3.0`).
 # - Android: com.qartvelo.ads:core / qartvelo-ads-admob to GitHub Packages.
 #   JitPack builds the same tag on first request (see jitpack.yml).
-# - npm: @qartvelo/react-native-ads, only when the NPM_TOKEN secret is set.
-# The tag must match `version` in android/build.gradle.kts and the npm package.json.
+# - npm: @qartvelo/react-native-ads and the docs MCP server @qartvelo/ads-mcp, only when the
+#   NPM_TOKEN secret is set.
+# The tag must match `version` in android/build.gradle.kts and both npm package.json files.
 
 name: Publish
 
@@ -58,3 +59,25 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npm ci --no-audit --no-fund && npm publish --access public
+
+  mcp:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+    defaults:
+      run:
+        working-directory: developers/mcp
+    steps:
+      - uses: actions/checkout@v4
+        if: env.NPM_TOKEN != ''
+      - uses: actions/setup-node@v4
+        if: env.NPM_TOKEN != ''
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+      - name: Publish @qartvelo/ads-mcp
+        if: env.NPM_TOKEN != ''
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm ci --no-audit --no-fund && npm test && npm publish --access public

@@ -1,0 +1,111 @@
+---
+title: MCP server
+description: Give AI agents Qartvelo Ads tools - docs search, code generation, error lookup and test ad requests - over the Model Context Protocol.
+---
+
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+`@qartvelo/ads-mcp` is a [Model Context Protocol](https://modelcontextprotocol.io) server. It runs locally over stdio, bundles these docs (so search works offline), and exposes tools your agent can call while it edits your project.
+
+## Tools
+
+| Tool | What it does | Network |
+|---|---|---|
+| `search_docs` | Ranked keyword search over the docs; returns sections, excerpts and paths | No |
+| `read_doc` | Returns a full page as Markdown (`android/banner`, `api/ad-request`, ...) | No |
+| `list_docs` | Lists all pages | No |
+| `generate_integration` | Gradle, manifest, initialization and per-placement code for an app key and placements, for Android or React Native. Flags common mistakes such as an AdMob App ID used as an ad unit id | No |
+| `explain_code` | Meaning and fix for any SDK error, API error, event rejection, no-fill or fallback reason | No |
+| `get_app_config` | Opens a **test-mode** session for an app key + package and returns the placements, fallback units, timeouts and kill switches | Yes |
+| `test_ad_request` | Test-mode session plus one ad request for a placement, with timings; tokens are redacted | Yes |
+
+It also provides every docs page as a resource (`qartvelo-docs://android/banner`) and a prompt, `integrate-qartvelo-ads`, that walks the agent through a full integration.
+
+<Aside>
+The network tools only send `test_mode` requests to `https://ads.qartvelo.com/` (or `QARTVELO_ADS_BASE_URL`). Test traffic is never billed, works before your app is approved, and no impression or click events are sent.
+</Aside>
+
+## Install
+
+Requires Node.js 18 or newer.
+
+<Tabs>
+<TabItem label="Claude Code">
+
+```sh
+claude mcp add qartvelo-ads -- npx -y @qartvelo/ads-mcp
+```
+
+Add `--scope project` to share it with your team through `.mcp.json`.
+
+</TabItem>
+<TabItem label="Cursor">
+
+```json title=".cursor/mcp.json"
+{
+  "mcpServers": {
+    "qartvelo-ads": {
+      "command": "npx",
+      "args": ["-y", "@qartvelo/ads-mcp"]
+    }
+  }
+}
+```
+
+</TabItem>
+<TabItem label="VS Code / Copilot">
+
+```json title=".vscode/mcp.json"
+{
+  "servers": {
+    "qartvelo-ads": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@qartvelo/ads-mcp"]
+    }
+  }
+}
+```
+
+</TabItem>
+<TabItem label="Claude Desktop">
+
+```json title="claude_desktop_config.json"
+{
+  "mcpServers": {
+    "qartvelo-ads": {
+      "command": "npx",
+      "args": ["-y", "@qartvelo/ads-mcp"]
+    }
+  }
+}
+```
+
+</TabItem>
+<TabItem label="Windsurf / others">
+
+Any MCP client that supports stdio servers: command `npx`, arguments `-y @qartvelo/ads-mcp`.
+
+</TabItem>
+</Tabs>
+
+### From source
+
+```sh
+git clone https://github.com/Qartvelo-com/ads
+cd ads/developers/mcp
+npm install && npm run bundle-docs
+claude mcp add qartvelo-ads -- node "$PWD/src/index.js"
+```
+
+### Configuration
+
+| Environment variable | Default | Meaning |
+|---|---|---|
+| `QARTVELO_ADS_BASE_URL` | `https://ads.qartvelo.com/` | API origin for `get_app_config` and `test_ad_request` (for example a local backend) |
+
+## Example session
+
+> **You:** Add an interstitial after each level and a rewarded "double coins" button. App key `app_...`, package `com.example.game`.
+>
+> **Agent:** calls `get_app_config` and finds the placements `level_done` (interstitial) and `double_coins` (rewarded); calls `generate_integration` for Android; edits `settings.gradle.kts`, `app/build.gradle.kts`, `GameApp.kt`, `LevelActivity.kt` and `ShopFragment.kt`; runs `test_ad_request` for both placements to confirm a `fill` with the test creative; then reads `android/release-checklist` and reports what is left for release.

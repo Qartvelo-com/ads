@@ -1,0 +1,94 @@
+/* Qartvelo Ads brand: the dashboard's rose accent on Starlight's neutral grays. */
+:root {
+	--sl-color-accent-low: #4c0519;
+	--sl-color-accent: #e11d48;
+	--sl-color-accent-high: #fecdd3;
+	--sl-font: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+:root[data-theme='light'] {
+	--sl-color-accent-low: #ffe4e6;
+	--sl-color-accent: #9f1239;
+	--sl-color-accent-high: #4c0519;
+}
+
+/* Page actions next to the title: Copy as Markdown, view .md, open in an AI assistant. */
+.page-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	margin-top: 0.75rem;
+}
+
+.page-actions button,
+.page-actions a,
+.page-actions summary {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	padding: 0.3rem 0.7rem;
+	border: 1px solid var(--sl-color-gray-5);
+	border-radius: 0.4rem;
+	background: var(--sl-color-bg);
+	color: var(--sl-color-gray-2);
+	font-size: var(--sl-text-xs);
+	line-height: 1.4;
+	text-decoration: none;
+	cursor: pointer;
+}
+
+.page-actions button:hover,
+.page-actions a:hover,
+.page-actions summary:hover {
+	border-color: var(--sl-color-accent);
+	color: var(--sl-color-white);
+}
+
+.page-actions details {
+	position: relative;
+}
+
+.page-actions summary {
+	list-style: none;
+}
+
+.page-actions summary::-webkit-details-marker {
+	display: none;
+}
+
+.page-actions .menu {
+	position: absolute;
+	z-index: 10;
+	top: calc(100% + 0.3rem);
+	left: 0;
+	display: flex;
+	flex-direction: column;
+	min-width: 13rem;
+	padding: 0.3rem;
+	border: 1px solid var(--sl-color-gray-5);
+	border-radius: 0.5rem;
+	background: var(--sl-color-bg-nav);
+	box-shadow: var(--sl-shadow-md);
+}
+
+.page-actions .menu a {
+	border: 0;
+	background: transparent;
+	padding: 0.45rem 0.6rem;
+}
+
+.page-actions .menu a:hover {
+	background: var(--sl-color-gray-6);
+}
+
+/* Landing page hero. */
+.hero .tagline {
+	max-width: 38rem;
+}
+
+/* Keep the full site name visible next to the logo on phones. */
+@media (max-width: 50rem) {
+	.site-title {
+		font-size: var(--sl-text-base);
+	}
+}

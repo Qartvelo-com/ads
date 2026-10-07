@@ -1,0 +1,68 @@
+# Developer docs (developers/): build the Starlight site, lint the OpenAPI spec and test the MCP
+# server on every change. On main, deploy to GitHub Pages (https://developers.qartvelo.com) once the
+# repository variable DOCS_PAGES_ENABLED is "true" (see developers/README.md).
+
+name: Docs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'developers/**'
+      - '.github/workflows/docs.yml'
+  pull_request:
+    paths:
+      - 'developers/**'
+      - '.github/workflows/docs.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: developers
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # "Last updated" dates come from git history
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            developers/package-lock.json
+            developers/mcp/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: npm run build
+      - name: Lint OpenAPI spec
+        run: npx -y @redocly/cli@2.60.0 lint public/openapi.yaml
+      - name: MCP server tests
+        working-directory: developers/mcp
+        run: npm ci --no-audit --no-fund && npm test
+      - uses: actions/upload-pages-artifact@v3
+        if: github.ref == 'refs/heads/main' && vars.DOCS_PAGES_ENABLED == 'true'
+        with:
+          path: developers/dist
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main' && vars.DOCS_PAGES_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

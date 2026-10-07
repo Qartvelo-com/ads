@@ -54,7 +54,7 @@ QartveloAds.loadInterstitial("game_end")
 QartveloAds.showInterstitial(activity, "game_end")
 ```
 
-Full guide: [docs/android-integration.md](docs/android-integration.md).
+Full guide: [developers.qartvelo.com/android](https://developers.qartvelo.com/android/installation/).
 
 ## React Native quick start
 
@@ -75,17 +75,32 @@ if (result.rewarded) {
 <QartveloAdsBanner placementId="home_banner" style={{ width: '100%' }} />;
 ```
 
-Add JitPack to `android/build.gradle` as shown in
-[docs/react-native-integration.md](docs/react-native-integration.md).
+Add JitPack to `android/build.gradle` as shown in the
+[React Native guide](https://developers.qartvelo.com/react-native/installation/).
 
 ## Documentation
 
-- [Android integration](docs/android-integration.md)
-- [React Native integration](docs/react-native-integration.md)
-- [AdMob fallback](docs/admob-fallback.md): you use your own AdMob app and ad units; Qartvelo Ads
-  never owns, proxies or receives your AdMob revenue.
-- [Privacy](docs/privacy.md): contextual targeting only, no advertising ID, no GPS, no persistent
-  user identifier.
+**https://developers.qartvelo.com** (source in [`developers/`](developers/)):
+
+- [Quickstart](https://developers.qartvelo.com/get-started/quickstart/)
+- [Android SDK](https://developers.qartvelo.com/android/installation/) and
+  [React Native](https://developers.qartvelo.com/react-native/installation/)
+- [AdMob fallback](https://developers.qartvelo.com/guides/admob-fallback/): you use your own AdMob
+  app and ad units; Qartvelo Ads never owns, proxies or receives your AdMob revenue.
+- [Privacy](https://developers.qartvelo.com/guides/privacy/): contextual targeting only, no
+  advertising ID, no GPS, no persistent user identifier.
+- [REST API](https://developers.qartvelo.com/api/overview/) with an
+  [OpenAPI spec](https://developers.qartvelo.com/openapi.yaml)
+
+### Build with AI
+
+- [`llms.txt`](https://developers.qartvelo.com/llms.txt) /
+  [`llms-full.txt`](https://developers.qartvelo.com/llms-full.txt), and every page as Markdown
+  (append `.md` to its URL)
+- MCP server for Claude Code, Cursor, VS Code and other agents:
+  `claude mcp add qartvelo-ads -- npx -y @qartvelo/ads-mcp` ([developers/mcp](developers/mcp/))
+- [Agent skill](https://developers.qartvelo.com/skills/qartvelo-ads/SKILL.md) for Claude Code,
+  Cursor rules, Copilot instructions and `AGENTS.md`
 
 ## Repository layout
 
@@ -95,7 +110,8 @@ android/qartvelo-ads-admob/    optional AdMob fallback adapter (com.qartvelo.adm
 android/sample-app/            native sample (com.qartvelo.sample)
 react-native/packages/react-native-qartvelo-ads/   @qartvelo/react-native-ads
 react-native/example/          React Native example app
-docs/                          integration guides
+developers/                    developer docs site (Astro Starlight) and the MCP server (developers/mcp)
+docs/                          pointers to the docs site
 ```
 
 ## Development
@@ -113,8 +129,9 @@ emulator); point them at `https://ads.qartvelo.com/` for the live service.
 
 ## Releasing
 
-Bump `version` in `android/build.gradle.kts`, `SDK_VERSION` in `QartveloAds.kt` and the npm
-`package.json`, then push a matching tag (`git tag 0.2.1 && git push origin 0.2.1`). The
+Bump `version` in `android/build.gradle.kts`, `SDK_VERSION` in `QartveloAds.kt`, the npm
+`package.json` files (React Native plugin and `developers/mcp`) and the version strings in
+`developers/` (see its README), then push a matching tag (`git tag 0.2.1 && git push origin 0.2.1`). The
 [Publish](.github/workflows/publish.yml) workflow publishes to GitHub Packages (and npm when the
 `NPM_TOKEN` secret is set); JitPack builds the tag on first request.
 
