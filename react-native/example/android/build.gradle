@@ -22,10 +22,10 @@ apply plugin: "com.facebook.react.rootproject"
 
 allprojects {
     repositories {
-        // QartveloAds Android SDK artifacts (com.qartvelo:qartvelo-ads-core / qartvelo-ads-admob) are installed into
+        // QartveloAds Android SDK artifacts (com.qartvelo.ads:core / qartvelo-ads-admob) are installed into
         // ~/.m2 with `./gradlew publishToMavenLocal` from the repository's android/ project.
         mavenLocal {
-            content { includeGroup("com.qartvelo") }
+            content { includeGroup("com.qartvelo.ads") }
         }
     }
 }

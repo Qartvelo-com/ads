@@ -23,7 +23,7 @@ placement is not left empty.
    units for rewarded placements.
 2. Add the AdMob App ID to your `AndroidManifest.xml`
    (`com.google.android.gms.ads.APPLICATION_ID` meta-data), as Google requires.
-3. Add the adapter dependency: `implementation("com.github.Qartvelo-com.qartvelo-ads-sdk:qartvelo-ads-admob:0.2.0")` (JitPack).
+3. Add the adapter dependency: `implementation("com.qartvelo.ads:admob:0.3.0")` (JitPack).
 4. Map each placement code to your ad unit id, either in the publisher dashboard (placement form,
    "AdMob ad unit ID") or in code:
 

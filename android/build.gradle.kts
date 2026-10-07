@@ -4,16 +4,16 @@ plugins {
     alias(libs.plugins.kotlin.android) apply false
 }
 
-// Shared coordinates for the published SDK artifacts. GitHub Packages and mavenLocal use
-// com.qartvelo; JitPack builds set GROUP/ARTIFACT and serve them as
-// com.github.Qartvelo-com.qartvelo-ads-sdk.
+// Shared coordinates for the published SDK artifacts: com.qartvelo.ads:core and
+// com.qartvelo.ads:admob everywhere. JitPack sets GROUP/ARTIFACT (com.qartvelo + ads, via the
+// git.qartvelo.com custom-domain TXT record), which yields the same group.
 val jitpackGroup = System.getenv("GROUP")?.let { group -> "$group.${System.getenv("ARTIFACT")}" }
 allprojects {
-    group = jitpackGroup ?: "com.qartvelo"
-    version = "0.2.0"
+    group = jitpackGroup ?: "com.qartvelo.ads"
+    version = "0.3.0"
 }
 
-// GitHub Packages: https://maven.pkg.github.com/Qartvelo-com/qartvelo-ads-sdk
+// GitHub Packages: https://maven.pkg.github.com/Qartvelo-com/ads
 // `./gradlew publishAllPublicationsToGitHubPackagesRepository` (run by
 // .github/workflows/publish.yml). Credentials come from GITHUB_ACTOR/GITHUB_TOKEN in
 // CI, or gpr.user/gpr.key in ~/.gradle/gradle.properties locally.
@@ -23,7 +23,7 @@ subprojects {
             repositories {
                 maven {
                     name = "GitHubPackages"
-                    url = uri("https://maven.pkg.github.com/Qartvelo-com/qartvelo-ads-sdk")
+                    url = uri("https://maven.pkg.github.com/Qartvelo-com/ads")
                     credentials {
                         username = findProperty("gpr.user") as String? ?: System.getenv("GITHUB_ACTOR")
                         password = findProperty("gpr.key") as String? ?: System.getenv("GITHUB_TOKEN")

@@ -1,7 +1,8 @@
-# JitPack builds a git tag (e.g. 0.2.0) and serves the result as
-#   com.github.Qartvelo-com.qartvelo-ads-sdk:qartvelo-ads-core:<tag>
-#   com.github.Qartvelo-com.qartvelo-ads-sdk:qartvelo-ads-admob:<tag>
-# android/build.gradle.kts switches the Maven group from GROUP/ARTIFACT, which JitPack sets.
+# JitPack builds a git tag (e.g. 0.3.0) and serves the result as
+#   com.qartvelo.ads:core:<tag>
+#   com.qartvelo.ads:admob:<tag>
+# com.qartvelo comes from the git.qartvelo.com TXT record (-> github.com/Qartvelo-com);
+# android/build.gradle.kts builds the group from GROUP/ARTIFACT, which JitPack sets.
 jdk:
   - openjdk17
 install:

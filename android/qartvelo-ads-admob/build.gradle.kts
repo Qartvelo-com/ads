@@ -61,7 +61,7 @@ afterEvaluate {
             create<MavenPublication>("release") {
                 from(components["release"])
                 groupId = project.group.toString()
-                artifactId = "qartvelo-ads-admob"
+                artifactId = "admob"
                 version = project.version.toString()
                 pom {
                     name.set("QartveloAds AdMob fallback adapter")

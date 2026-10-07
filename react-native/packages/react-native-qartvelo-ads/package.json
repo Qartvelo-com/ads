@@ -1,6 +1,6 @@
 {
   "name": "@qartvelo/react-native-ads",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Qartvelo Ads React Native plugin for Android: banner, interstitial and rewarded ads with automatic AdMob fallback.",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
@@ -125,15 +125,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Qartvelo-com/qartvelo-ads-sdk.git",
+    "url": "git+https://github.com/Qartvelo-com/ads.git",
     "directory": "react-native/packages/react-native-qartvelo-ads"
   },
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
   },
-  "homepage": "https://github.com/Qartvelo-com/qartvelo-ads-sdk#readme",
+  "homepage": "https://github.com/Qartvelo-com/ads#readme",
   "bugs": {
-    "url": "https://github.com/Qartvelo-com/qartvelo-ads-sdk/issues"
+    "url": "https://github.com/Qartvelo-com/ads/issues"
   }
 }

@@ -6,11 +6,11 @@ optional adapter module.
 
 | Artifact (JitPack) | Contents | Required |
 |---|---|---|
-| `com.github.Qartvelo-com.qartvelo-ads-sdk:qartvelo-ads-core:0.2.0` | API client, caching, rendering, event tracking, banner view | yes |
-| `com.github.Qartvelo-com.qartvelo-ads-sdk:qartvelo-ads-admob:0.2.0` | Google Mobile Ads fallback adapter (depends on `play-services-ads`) | optional |
+| `com.qartvelo.ads:core:0.3.0` | API client, caching, rendering, event tracking, banner view | yes |
+| `com.qartvelo.ads:admob:0.3.0` | Google Mobile Ads fallback adapter (depends on `play-services-ads`) | optional |
 
-The same artifacts are on GitHub Packages as `com.qartvelo:qartvelo-ads-core` and
-`com.qartvelo:qartvelo-ads-admob` (see below).
+The same artifacts are on GitHub Packages as `com.qartvelo.ads:core` and
+`com.qartvelo.ads:admob` (see below).
 
 Requirements: `minSdk 23`, `compileSdk` 35 or newer, Java 17 toolchain, AndroidX.
 Core pulls in OkHttp 4.12, Media3 ExoPlayer 1.8 and AndroidX core. It does not depend on Google
@@ -19,7 +19,7 @@ your own version wins if it is newer).
 
 ## 1. Gradle setup
 
-The SDK is published from [Qartvelo-com/qartvelo-ads-sdk](https://github.com/Qartvelo-com/qartvelo-ads-sdk).
+The SDK is published from [Qartvelo-com/ads](https://github.com/Qartvelo-com/ads).
 JitPack needs no account or token:
 
 ```kotlin
@@ -36,19 +36,19 @@ dependencyResolutionManagement {
 ```kotlin
 // app/build.gradle.kts
 dependencies {
-    implementation("com.github.Qartvelo-com.qartvelo-ads-sdk:qartvelo-ads-core:0.2.0")
+    implementation("com.qartvelo.ads:core:0.3.0")
     // Optional AdMob fallback. Leave it out to run Qartvelo Ads only.
-    implementation("com.github.Qartvelo-com.qartvelo-ads-sdk:qartvelo-ads-admob:0.2.0")
+    implementation("com.qartvelo.ads:admob:0.3.0")
 }
 ```
 
 **GitHub Packages alternative.** Add the repository
-`https://maven.pkg.github.com/Qartvelo-com/qartvelo-ads-sdk` with credentials (your GitHub user and a
+`https://maven.pkg.github.com/Qartvelo-com/ads` with credentials (your GitHub user and a
 token with `read:packages`; GitHub Packages always requires one, even for public packages) and
-depend on `com.qartvelo:qartvelo-ads-core:0.2.0` / `com.qartvelo:qartvelo-ads-admob:0.2.0`.
+depend on `com.qartvelo.ads:core:0.3.0` / `com.qartvelo.ads:admob:0.3.0`.
 
 **Developing the SDK itself.** `./gradlew publishToMavenLocal` in `android/` installs
-`com.qartvelo:*:0.2.0` into `~/.m2`; add `mavenLocal()` to use it.
+`com.qartvelo.ads:*:0.3.0` into `~/.m2`; add `mavenLocal()` to use it.
 
 Without `qartvelo-ads-admob` the SDK works normally and reports `onNoAdAvailable` when Qartvelo Ads has no ad.
 The adapter is discovered automatically at runtime (`com.qartvelo.admob.AdMobFallbackAdapter`); no

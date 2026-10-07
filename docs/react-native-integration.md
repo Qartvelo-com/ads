@@ -20,7 +20,7 @@ only validates arguments, converts results into typed objects and forwards event
 |---|---|
 | React Native | 0.79 or newer with the New Architecture enabled (`newArchEnabled=true`, the default) |
 | Android | minSdk 23 (React Native itself needs 24), compileSdk 35 or newer |
-| Native SDK | `qartvelo-ads-core` 0.2.0 from JitPack, optionally `qartvelo-ads-admob` (resolved automatically) |
+| Native SDK | `qartvelo-ads-core` 0.3.0 from JitPack, optionally `qartvelo-ads-admob` (resolved automatically) |
 | Build JDK | 17 |
 
 ## 1. Install
@@ -33,7 +33,7 @@ Inside this repository the example app uses the local package instead:
 `"@qartvelo/react-native-ads": "file:../packages/react-native-qartvelo-ads"`.
 
 The plugin pulls the native SDK from JitPack
-(`com.github.Qartvelo-com.qartvelo-ads-sdk:qartvelo-ads-core:0.2.0`); no account or token is needed.
+(`com.qartvelo.ads:core:0.3.0`); no account or token is needed.
 
 ## 2. Android Gradle configuration
 
@@ -48,15 +48,15 @@ allprojects {
     repositories {
         maven {
             url "https://jitpack.io"
-            content { includeGroup("com.github.Qartvelo-com.qartvelo-ads-sdk") }
+            content { includeGroup("com.qartvelo.ads") }
         }
     }
 }
 ```
 
-To use GitHub Packages or a local SDK build instead, set `QartveloAds_sdkGroup=com.qartvelo` in
-`android/gradle.properties` and add that repository (`mavenLocal()` after
-`./gradlew publishToMavenLocal` in the SDK's `android/` directory).
+The same coordinates (`com.qartvelo.ads:core`) are also on GitHub Packages and in `mavenLocal()`
+after `./gradlew publishToMavenLocal` in the SDK's `android/` directory; add either repository
+instead of JitPack if you prefer.
 
 ### AdMob fallback (optional)
 
@@ -67,8 +67,8 @@ reports "no ad". To let Qartvelo Ads fall back to your own AdMob ad units, enabl
 ```properties
 # android/gradle.properties
 QartveloAds_admobEnabled=true
-# Optional: pin a different SDK version (default 0.2.0)
-# QartveloAds_sdkVersion=0.2.0
+# Optional: pin a different SDK version (default 0.3.0)
+# QartveloAds_sdkVersion=0.3.0
 ```
 
 `qartvelo-ads-admob` brings in `com.google.android.gms:play-services-ads` (25.4.0). Google's SDK requires
@@ -344,7 +344,7 @@ Without a mock it behaves as on iOS (the Jest preset reports iOS): promises reje
 
 | Symptom | Fix |
 |---|---|
-| `Could not find ...qartvelo-ads-core:0.2.0` | Add JitPack to `allprojects.repositories` (section 2). With `QartveloAds_sdkGroup=com.qartvelo`, run `./gradlew publishToMavenLocal` in the SDK project and add `mavenLocal()`. |
+| `Could not find ...qartvelo-ads-core:0.3.0` | Add JitPack to `allprojects.repositories` (section 2). For a local SDK build, run `./gradlew publishToMavenLocal` in the SDK project and add `mavenLocal()`. |
 | App crashes at start with "The Google Mobile Ads SDK was initialized incorrectly" | `QartveloAds_admobEnabled=true` without the AdMob `APPLICATION_ID` meta-data. Add it, or disable the adapter. |
 | Promises reject with `module_unavailable` | The app binary predates the package. Rebuild with `npx react-native run-android`. |
 | Promises reject with `unsupported_platform` | Running on iOS or web; only Android has an SDK today. |

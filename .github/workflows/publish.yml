@@ -1,5 +1,5 @@
-# Release: push a tag equal to the version (e.g. `git tag 0.2.0 && git push origin 0.2.0`).
-# - Android: com.qartvelo:qartvelo-ads-core / qartvelo-ads-admob to GitHub Packages.
+# Release: push a tag equal to the version (e.g. `git tag 0.3.0 && git push origin 0.3.0`).
+# - Android: com.qartvelo.ads:core / qartvelo-ads-admob to GitHub Packages.
 #   JitPack builds the same tag on first request (see jitpack.yml).
 # - npm: @qartvelo/react-native-ads, only when the NPM_TOKEN secret is set.
 # The tag must match `version` in android/build.gradle.kts and the npm package.json.

@@ -2,8 +2,8 @@
 // Gradle, Kotlin and React Native Gradle plugins come from the host's build classpath.
 //
 // Host gradle.properties switches:
-//   QartveloAds_admobEnabled=true   adds com.qartvelo:qartvelo-ads-admob (AdMob fallback, play-services-ads)
-//   QartveloAds_sdkVersion=0.2.0    version of the QartveloAds Android SDK artifacts
+//   QartveloAds_admobEnabled=true   adds com.qartvelo.ads:admob (AdMob fallback, play-services-ads)
+//   QartveloAds_sdkVersion=0.3.0    version of the QartveloAds Android SDK artifacts
 
 apply plugin: "com.android.library"
 if (project.extensions.findByName("kotlin") == null) {
@@ -20,32 +20,29 @@ def qartveloProperty(name, fallback) {
   return value != null ? value.toString().trim() : fallback
 }
 
-def qartveloSdkVersion = qartveloProperty("QartveloAds_sdkVersion", "0.2.0")
-// JitPack serves the public SDK without a login. Set QartveloAds_sdkGroup=com.qartvelo to use
-// mavenLocal (SDK development) or GitHub Packages instead.
-def qartveloSdkGroup = qartveloProperty("QartveloAds_sdkGroup", "com.github.Qartvelo-com.qartvelo-ads-sdk")
+def qartveloSdkVersion = qartveloProperty("QartveloAds_sdkVersion", "0.3.0")
 def qartveloAdmobEnabled = qartveloProperty("QartveloAds_admobEnabled", "false").toBoolean()
 
 repositories {
   // The QartveloAds SDK is installed into ~/.m2 with `./gradlew publishToMavenLocal` (android/ project).
   // The host app must list mavenLocal() too: its runtime classpath resolves these artifacts.
   mavenLocal {
-    content { includeGroup("com.qartvelo") }
+    content { includeGroup("com.qartvelo.ads") }
   }
   // Published SDK: GitHub Packages needs a GitHub token with read:packages, read from
   // gpr.user/gpr.key (gradle.properties) or GITHUB_ACTOR/GITHUB_TOKEN. The host app must
   // list this repository too: its runtime classpath resolves these artifacts.
   maven {
     url "https://jitpack.io"
-    content { includeGroup("com.github.Qartvelo-com.qartvelo-ads-sdk") }
+    content { includeGroup("com.qartvelo.ads") }
   }
   maven {
-    url "https://maven.pkg.github.com/Qartvelo-com/qartvelo-ads-sdk"
+    url "https://maven.pkg.github.com/Qartvelo-com/ads"
     credentials {
       username = (project.findProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")) ?: ""
       password = (project.findProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")) ?: ""
     }
-    content { includeGroup("com.qartvelo") }
+    content { includeGroup("com.qartvelo.ads") }
   }
   google()
   mavenCentral()
@@ -78,10 +75,10 @@ android {
 
 dependencies {
   implementation "com.facebook.react:react-android"
-  api "${qartveloSdkGroup}:qartvelo-ads-core:${qartveloSdkVersion}"
+  api "com.qartvelo.ads:core:${qartveloSdkVersion}"
   if (qartveloAdmobEnabled) {
     // Discovered by qartvelo-ads-core through reflection; nothing in this module references it.
-    implementation "${qartveloSdkGroup}:qartvelo-ads-admob:${qartveloSdkVersion}"
+    implementation "com.qartvelo.ads:admob:${qartveloSdkVersion}"
   }
 
   testImplementation "junit:junit:4.13.2"

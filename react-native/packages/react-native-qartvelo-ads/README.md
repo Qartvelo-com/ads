@@ -28,7 +28,7 @@ subscription.remove();
 <QartveloAdsBanner placementId="home_banner" style={{ width: '100%' }} />;
 ```
 
-Android setup (Maven repository for `com.qartvelo:qartvelo-ads-core`, the optional AdMob adapter via
+Android setup (Maven repository for `com.qartvelo.ads:core`, the optional AdMob adapter via
 `QartveloAds_admobEnabled=true`, the AdMob App ID), the full API, events, error codes, testing and
 troubleshooting are documented in
 [docs/react-native-integration.md](../../../docs/react-native-integration.md).

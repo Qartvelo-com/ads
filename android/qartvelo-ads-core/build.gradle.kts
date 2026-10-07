@@ -71,7 +71,7 @@ afterEvaluate {
             create<MavenPublication>("release") {
                 from(components["release"])
                 groupId = project.group.toString()
-                artifactId = "qartvelo-ads-core"
+                artifactId = "core"
                 version = project.version.toString()
                 pom {
                     name.set("QartveloAds Android SDK core")
