@@ -92,7 +92,7 @@ Add JitPack to `android/build.gradle` as shown in
 ```
 android/qartvelo-ads-core/     Kotlin SDK (com.qartvelo.sdk)
 android/qartvelo-ads-admob/    optional AdMob fallback adapter (com.qartvelo.admob)
-android/sample-app/            native sample (com.qartvelo.ads)
+android/sample-app/            native sample (com.qartvelo.sample)
 react-native/packages/react-native-qartvelo-ads/   @qartvelo/react-native-ads
 react-native/example/          React Native example app
 docs/                          integration guides

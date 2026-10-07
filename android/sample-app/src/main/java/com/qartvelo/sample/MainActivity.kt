@@ -1,4 +1,4 @@
-package com.qartvelo.ads
+package com.qartvelo.sample
 
 import android.app.Activity
 import android.content.Intent

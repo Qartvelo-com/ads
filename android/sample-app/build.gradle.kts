@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.qartvelo.ads"
+    namespace = "com.qartvelo.sample"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.qartvelo.ads"
+        applicationId = "com.qartvelo.sample"
         minSdk = 23
         targetSdk = 36
         versionCode = 1
