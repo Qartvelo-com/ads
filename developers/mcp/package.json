@@ -1,6 +1,6 @@
 {
   "name": "@qartvelo/ads-mcp",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "MCP server for Qartvelo Ads: search the developer docs, generate SDK integration code and send test-mode ad requests from AI agents.",
   "type": "module",
   "bin": {

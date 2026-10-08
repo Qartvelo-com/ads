@@ -26,10 +26,10 @@ Your app ──> Qartvelo Ads SDK ──> Qartvelo Ads ad available?
 
 | Package | Install | Notes |
 |---|---|---|
-| Android core | `com.qartvelo.ads:core:0.4.0` | Maven Central. API client, caching, rendering, events, banner view |
-| Android AdMob adapter | `com.qartvelo.ads:admob:0.4.0` | Optional. Depends on Google's `play-services-ads` |
-| iOS core | `QartveloAds` 0.4.0 | Swift Package Manager (`https://github.com/Qartvelo-com/ads`) or CocoaPods |
-| iOS AdMob adapter | `QartveloAdsAdMob` 0.4.0 | Optional. Depends on Google's `Google-Mobile-Ads-SDK` 12 |
+| Android core | `com.qartvelo.ads:core:0.4.1` | Maven Central. API client, caching, rendering, events, banner view |
+| Android AdMob adapter | `com.qartvelo.ads:admob:0.4.1` | Optional. Depends on Google's `play-services-ads` |
+| iOS core | `QartveloAds` 0.4.1 | Swift Package Manager (`https://github.com/Qartvelo-com/ads`) or CocoaPods |
+| iOS AdMob adapter | `QartveloAdsAdMob` 0.4.1 | Optional. Depends on Google's `Google-Mobile-Ads-SDK` 12 |
 | React Native | `npm install @qartvelo/react-native-ads` | Android and iOS; TurboModule and Fabric banner, CocoaPods autolinking on iOS |
 
 The SDK source is MIT-licensed at [github.com/Qartvelo-com/ads](https://github.com/Qartvelo-com/ads). The production API is `https://ads.qartvelo.com/`, which is also the SDK's default base URL.

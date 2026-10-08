@@ -27,7 +27,7 @@ npm install @qartvelo/react-native-ads
 # or: yarn add @qartvelo/react-native-ads
 ```
 
-## iOS setup
+## iOS setup (0.4.1+)
 
 ```sh
 cd ios
@@ -57,9 +57,9 @@ Simulator, debug, TestFlight, and other non-App Store installations always use n
 traffic. `testMode: false` does not make these installations billable. `testModeInDebugBuilds` is
 ignored on iOS. Real campaigns are billable only in eligible App Store installations with test mode off.
 
-## 2. Android native SDK repository
+## 2. Native SDK repository (Android)
 
-The plugin depends on the native SDK `com.qartvelo.ads:core:0.4.0`, published on Maven Central. React Native and Expo projects already list `mavenCentral()`, so there is nothing to add. (Pinning a version before 0.4.0 with `QartveloAds_sdkVersion` needs JitPack: `maven { url "https://jitpack.io" }` in `allprojects.repositories`.)
+The plugin depends on the native SDK `com.qartvelo.ads:core:0.4.1`, published on Maven Central. React Native and Expo projects already list `mavenCentral()`, so there is nothing to add. (Pinning a version before 0.3.4 with `QartveloAds_sdkVersion` needs JitPack: `maven { url "https://jitpack.io" }` in `allprojects.repositories`.)
 
 ## 3. Enable the AdMob fallback (optional)
 
@@ -67,8 +67,8 @@ By default only the core SDK is included and a Qartvelo Ads no-fill simply repor
 
 ```properties title="android/gradle.properties"
 QartveloAds_admobEnabled=true
-# Optional: pin a different native SDK version (default 0.4.0)
-# QartveloAds_sdkVersion=0.4.0
+# Optional: pin a different native SDK version (default 0.4.1)
+# QartveloAds_sdkVersion=0.4.1
 ```
 
 This adds `com.qartvelo.ads:admob`, which brings Google's `play-services-ads` (25.4.0). Google requires your AdMob App ID in the manifest, or the app crashes at start-up:

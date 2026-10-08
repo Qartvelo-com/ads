@@ -23,11 +23,11 @@ React Native app ──> @qartvelo/react-native-ads ──> Qartvelo Ads Kotlin 
 
 | Package | Where | Install |
 |---|---|---|
-| Android core | Maven Central | `com.qartvelo.ads:core:0.4.0` |
-| Android AdMob adapter (optional) | Maven Central | `com.qartvelo.ads:admob:0.4.0` |
-| Same, also on | JitPack, GitHub Packages (`maven.pkg.github.com/Qartvelo-com/ads`) | `com.qartvelo.ads:core:0.4.0` |
-| iOS core | Swift Package Manager (`https://github.com/Qartvelo-com/ads`) | `QartveloAds` 0.4.0 |
-| iOS AdMob adapter (optional) | same | `QartveloAdsAdMob` 0.4.0 |
+| Android core | Maven Central | `com.qartvelo.ads:core:0.4.1` |
+| Android AdMob adapter (optional) | Maven Central | `com.qartvelo.ads:admob:0.4.1` |
+| Same, also on | JitPack, GitHub Packages (`maven.pkg.github.com/Qartvelo-com/ads`) | `com.qartvelo.ads:core:0.4.1` |
+| iOS core | Swift Package Manager (`https://github.com/Qartvelo-com/ads`) | `QartveloAds` 0.4.1 |
+| iOS AdMob adapter (optional) | same | `QartveloAdsAdMob` 0.4.1 |
 | React Native (Android and iOS) | npm | `npm install @qartvelo/react-native-ads` |
 
 The React Native plugin bridges both native SDKs through one JavaScript API.
@@ -45,8 +45,8 @@ dependencyResolutionManagement {
 
 // app/build.gradle.kts
 dependencies {
-    implementation("com.qartvelo.ads:core:0.4.0")
-    implementation("com.qartvelo.ads:admob:0.4.0") // optional
+    implementation("com.qartvelo.ads:core:0.4.1")
+    implementation("com.qartvelo.ads:admob:0.4.1") // optional
 }
 ```
 
@@ -69,13 +69,13 @@ Full guide: [developers.qartvelo.com/android](https://developers.qartvelo.com/an
 
 1. In Xcode, choose **File > Add Package Dependencies**.
 2. Paste `https://github.com/Qartvelo-com/ads`.
-3. Choose **Up to Next Minor Version**, starting at **0.4.0**.
+3. Choose **Up to Next Minor Version**, starting at **0.4.1**.
 4. Add **QartveloAds** to your app target. Also add **QartveloAdsAdMob** for the optional fallback.
 
 Xcode downloads and manages the SDK and its dependencies. For a Swift package app target:
 
 ```swift
-.package(url: "https://github.com/Qartvelo-com/ads", .upToNextMinor(from: "0.4.0"))
+.package(url: "https://github.com/Qartvelo-com/ads", .upToNextMinor(from: "0.4.1"))
 ```
 
 CocoaPods is an alternative when the pod specifications have been published to trunk;
@@ -165,7 +165,7 @@ docs/                          pointers to the docs site
 
 ```sh
 cd android && ./gradlew :qartvelo-ads-core:testDebugUnitTest :qartvelo-ads-admob:testDebugUnitTest
-cd android && ./gradlew publishToMavenLocal        # com.qartvelo.ads:*:0.4.0 into ~/.m2
+cd android && ./gradlew publishToMavenLocal        # com.qartvelo.ads:*:0.4.1 into ~/.m2
 
 # iOS (on a Mac): open ios/Package.swift in Xcode and run the tests, or
 cd ios

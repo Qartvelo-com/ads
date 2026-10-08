@@ -9,7 +9,7 @@ Qartvelo Ads is a direct-sold ad network for Android and iOS apps in Georgia. Th
 
 ## Facts that must be exact
 
-- Version **0.4.0**. Android artifacts on Maven Central: `com.qartvelo.ads:core:0.4.0` (required), `com.qartvelo.ads:admob:0.4.0` (optional AdMob fallback). Repository `mavenCentral()`; versions before 0.4.0 are only on JitPack.
+- Version **0.4.1**. Android artifacts on Maven Central: `com.qartvelo.ads:core:0.4.1` (required), `com.qartvelo.ads:admob:0.4.1` (optional AdMob fallback). Repository `mavenCentral()`; versions before 0.3.4 are only on JitPack.
 - Kotlin package `com.qartvelo.sdk`, entry point `object QartveloAds`. Options class `QartveloAdsOptions`. Listener `QartveloAdsListener` (all methods have default bodies, main thread).
 - `AdSource` is `QARTVELO` or `ADMOB` (React Native: `'qartvelo'` or `'admob'`). There is no `OURADS` value.
 - Banner view `com.qartvelo.sdk.QartveloAdsBannerView`, XML attribute **`app:qartvelo_placementId`**.
@@ -24,9 +24,9 @@ Qartvelo Ads is a direct-sold ad network for Android and iOS apps in Georgia. Th
 
 1. Ask for (or find) the app key and the placement codes and formats. If missing, tell the user to create them at https://ads.qartvelo.com (Apps -> app -> placements).
 2. Add the dependencies:
-   - Android: `mavenCentral()` in `settings.gradle.kts` `dependencyResolutionManagement.repositories` (usually already there), then `implementation("com.qartvelo.ads:core:0.4.0")` and, for fallback, `implementation("com.qartvelo.ads:admob:0.4.0")`.
+   - Android: `mavenCentral()` in `settings.gradle.kts` `dependencyResolutionManagement.repositories` (usually already there), then `implementation("com.qartvelo.ads:core:0.4.1")` and, for fallback, `implementation("com.qartvelo.ads:admob:0.4.1")`.
    - iOS: add the Swift package (or pods) above.
-   - React Native: install the package (the native SDK comes from Maven Central, nothing to add), set `QartveloAds_admobEnabled=true` for fallback.
+   - React Native: install `@qartvelo/react-native-ads`. Android resolves its SDK from Maven Central; enable fallback with `QartveloAds_admobEnabled=true`. On iOS run `pod install` (the npm package includes the Swift SDK); enable fallback with `ENV['QARTVELO_ADS_ADMOB_ENABLED'] = 'true'` in the Podfile and the iOS AdMob App ID in Info.plist. Rebuild the app.
 3. If the AdMob adapter is used, make sure the manifest has the app's own AdMob App ID: `<meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="ca-app-pub-...~..."/>` (missing -> crash at start-up). Keep any existing AdMob setup.
 4. Initialize once at start-up with test mode in debug builds:
 

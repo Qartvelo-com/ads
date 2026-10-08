@@ -3,7 +3,7 @@
 //
 // Host gradle.properties switches:
 //   QartveloAds_admobEnabled=true   adds com.qartvelo.ads:admob (AdMob fallback, play-services-ads)
-//   QartveloAds_sdkVersion=0.4.0    version of the QartveloAds Android SDK artifacts
+//   QartveloAds_sdkVersion=0.4.1    version of the QartveloAds Android SDK artifacts
 
 apply plugin: "com.android.library"
 if (project.extensions.findByName("kotlin") == null) {
@@ -20,7 +20,7 @@ def qartveloProperty(name, fallback) {
   return value != null ? value.toString().trim() : fallback
 }
 
-def qartveloSdkVersion = qartveloProperty("QartveloAds_sdkVersion", "0.4.0")
+def qartveloSdkVersion = qartveloProperty("QartveloAds_sdkVersion", "0.4.1")
 def qartveloAdmobEnabled = qartveloProperty("QartveloAds_admobEnabled", "false").toBoolean()
 
 repositories {

@@ -1,7 +1,7 @@
 // Generates integration code tailored to an app key and its placements. The output mirrors the
 // Quickstart and platform pages of the developer docs.
 
-export const SDK_VERSION = '0.4.0';
+export const SDK_VERSION = '0.4.1';
 const CODE_PATTERN = /^[a-z0-9_]{2,64}$/;
 const FORMATS = ['banner', 'interstitial', 'rewarded'];
 

@@ -5,6 +5,23 @@ description: Release history of the Qartvelo Ads SDKs.
 
 Releases are tagged in [Qartvelo-com/ads](https://github.com/Qartvelo-com/ads). The Android SDK, the iOS SDK, the AdMob adapters and the React Native plugin share one version number.
 
+## 0.4.1
+
+- **React Native iOS support**: the same JavaScript API now bridges the Swift SDK through a
+  TurboModule and Fabric adaptive banner. Initialization, interstitials, rewarded results,
+  readiness, privacy and lifecycle events are supported. Simulator and non-App Store installs
+  keep the native SDK's non-billable test mode, even with `testMode: false`.
+- **Simple iOS installation**: the npm package includes the canonical Swift SDK sources and
+  privacy manifest. CocoaPods autolinks `RNQartveloAds`; no separate Qartvelo pod publication or
+  Swift Package Manager dependency is needed. Enable the optional AdMob adapter with
+  `ENV['QARTVELO_ADS_ADMOB_ENABLED'] = 'true'` in the Podfile and set the iOS AdMob App ID.
+- **React Native example cleanup**: starts automatically in test mode, with banner Hide/Show,
+  interstitial and rewarded Load/Show buttons and an optional event log. Configuration lives in
+  `src/AppConfig.ts`; the backend URL input and debug controls were removed.
+- CI builds the React Native iOS example with and without AdMob. Developer docs, AI skill and
+  MCP integration guidance now cover React Native iOS.
+- Native Android and iOS SDKs: shared version bump; ad-serving behavior is unchanged.
+
 ## 0.4.0
 
 - **iOS SDK**: `QartveloAds` and the optional `QartveloAdsAdMob` adapter (Google Mobile Ads 12) for
