@@ -17,30 +17,31 @@ import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
 ## Add the package
 
-<Aside type="caution" title="0.4.0 is a development version">
-The iOS SDK's `0.4.0` release tag has not been published yet. To use this checkout now, choose
-**File > Add Package Dependencies > Add Local** in Xcode, select the `ios` folder containing
-`Package.swift`, and add `QartveloAds` to your app target. The repository root also contains a
-compatible Swift package manifest. The version-based examples below apply after the release is
-published; CocoaPods also requires its pod specifications to be published.
-</Aside>
+**Swift Package Manager is the recommended installation method.** Xcode downloads the SDK,
+resolves its dependencies and manages version updates automatically.
 
 <Tabs>
 <TabItem label="Swift Package Manager">
 
-In Xcode choose **File > Add Package Dependencies**, enter
+1. In Xcode, choose **File > Add Package Dependencies**.
+2. Paste this repository URL:
 
 ```
 https://github.com/Qartvelo-com/ads
 ```
 
-pick **Up to Next Major Version** from `0.4.0`, and add the `QartveloAds` product to your app target. Add `QartveloAdsAdMob` too if you want the AdMob fallback.
+3. Choose **Up to Next Minor Version**, starting from **0.4.0** (`0.4.0..<0.5.0`).
+4. Click **Add Package**, select **QartveloAds**, and choose your app target.
+5. Also select **QartveloAdsAdMob** if you want the AdMob fallback.
+
+You can now use `import QartveloAds`. For later updates, choose **File > Packages > Update to Latest
+Package Versions**. The version rule keeps updates within the 0.4 series.
 
 In a `Package.swift`:
 
 ```swift title="Package.swift"
 dependencies: [
-    .package(url: "https://github.com/Qartvelo-com/ads", from: "0.4.0"),
+    .package(url: "https://github.com/Qartvelo-com/ads", .upToNextMinor(from: "0.4.0")),
 ],
 targets: [
     .target(name: "MyApp", dependencies: [
@@ -52,6 +53,10 @@ targets: [
 
 </TabItem>
 <TabItem label="CocoaPods">
+
+Swift Package Manager is available directly from the Git release tag. CocoaPods installation
+requires these pod specifications to be published to CocoaPods trunk separately. If CocoaPods
+cannot find `0.4.0`, use the Swift Package Manager tab.
 
 ```ruby title="Podfile"
 platform :ios, '13.0'
@@ -65,6 +70,9 @@ end
 
 </TabItem>
 </Tabs>
+
+For SDK development from a checkout, use **Add Local** and select its `ios` folder. The repository
+root manifest exposes the same products for installation by URL.
 
 ## Register the AdMob adapter
 

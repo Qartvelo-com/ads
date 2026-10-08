@@ -26,7 +26,7 @@ React Native app ──> @qartvelo/react-native-ads ──> Qartvelo Ads Kotlin 
 | Android core | Maven Central | `com.qartvelo.ads:core:0.4.0` |
 | Android AdMob adapter (optional) | Maven Central | `com.qartvelo.ads:admob:0.4.0` |
 | Same, also on | JitPack, GitHub Packages (`maven.pkg.github.com/Qartvelo-com/ads`) | `com.qartvelo.ads:core:0.4.0` |
-| iOS core | Swift Package Manager (`https://github.com/Qartvelo-com/ads`) or CocoaPods | `QartveloAds` 0.4.0 |
+| iOS core | Swift Package Manager (`https://github.com/Qartvelo-com/ads`) | `QartveloAds` 0.4.0 |
 | iOS AdMob adapter (optional) | same | `QartveloAdsAdMob` 0.4.0 |
 | React Native (Android) | npm | `npm install @qartvelo/react-native-ads` |
 
@@ -67,8 +67,19 @@ Full guide: [developers.qartvelo.com/android](https://developers.qartvelo.com/an
 
 ## iOS quick start
 
-In Xcode, **File > Add Package Dependencies**, `https://github.com/Qartvelo-com/ads`, products
-`QartveloAds` and (optional) `QartveloAdsAdMob`. Or with CocoaPods: `pod 'QartveloAds', '~> 0.4'`.
+1. In Xcode, choose **File > Add Package Dependencies**.
+2. Paste `https://github.com/Qartvelo-com/ads`.
+3. Choose **Up to Next Minor Version**, starting at **0.4.0**.
+4. Add **QartveloAds** to your app target. Also add **QartveloAdsAdMob** for the optional fallback.
+
+Xcode downloads and manages the SDK and its dependencies. For a Swift package app target:
+
+```swift
+.package(url: "https://github.com/Qartvelo-com/ads", .upToNextMinor(from: "0.4.0"))
+```
+
+CocoaPods is an alternative when the pod specifications have been published to trunk;
+see the [installation guide](https://developers.qartvelo.com/ios/installation/).
 
 ```swift
 import QartveloAds
