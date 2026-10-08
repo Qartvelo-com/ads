@@ -61,5 +61,5 @@ try {
 | `ad_expired` | The ad expired before it was shown |
 | `internal_error` | Unexpected native failure, or an unknown code |
 | `invalid_argument` | A JavaScript argument was rejected before reaching native code |
-| `unsupported_platform` | Called on a platform without the SDK (iOS, web) |
-| `module_unavailable` | The native module is missing: rebuild the Android app |
+| `unsupported_platform` | Called on a platform without the SDK (web) |
+| `module_unavailable` | The native module is missing: rebuild the native app |

@@ -22,9 +22,9 @@ import type { QartveloAdsEventMap } from './types';
 import { toEvent } from './wire';
 
 export interface BannerSize {
-  /** dp */
+  /** Logical units: dp on Android, points on iOS. */
   width: number;
-  /** dp */
+  /** Logical units: dp on Android, points on iOS. */
   height: number;
 }
 
@@ -111,7 +111,7 @@ function deliver(callbacks: Callbacks, raw: NativeBannerAdEvent): void {
 }
 
 /**
- * Android banner. Re-renders never reach the SDK: the native props are only `placementId`, style
+ * Native banner. Re-renders never reach the SDK: the native props are only `placementId`, style
  * and two event handlers whose identity is stable for the component's lifetime, so new inline
  * callbacks from the parent cause no native updates. Remounting reuses the SDK's cached banner for
  * the placement instead of requesting a new one.
@@ -202,7 +202,7 @@ function UnsupportedBanner({
 }
 
 export function QartveloAdsBanner(props: QartveloAdsBannerProps) {
-  return Platform.OS === 'android' ? (
+  return Platform.OS === 'android' || Platform.OS === 'ios' ? (
     <NativeBanner {...props} />
   ) : (
     <UnsupportedBanner {...props} />

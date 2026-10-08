@@ -34,7 +34,7 @@ export default function App() {
 | `baseUrl` | `string` | `https://ads.qartvelo.com/` | API origin; change only for a self-hosted or local backend |
 | `requestTimeoutMs` | `number` | `800` | Qartvelo Ads time budget before falling back. The dashboard value per placement wins |
 | `testMode` | `boolean` | `false` | Non-billable test ads labelled "Test ad"; AdMob uses Google's test units |
-| `testModeInDebugBuilds` | `boolean` | `true` | Turn test mode on automatically in debuggable Android builds (debug and Expo development builds) |
+| `testModeInDebugBuilds` | `boolean` | `true` | Turn test mode on automatically in debuggable Android builds (debug and Expo development builds); ignored on iOS, where all non-App Store installs always use test mode |
 | `testForceNoFill` | `boolean` | `false` | Force Qartvelo Ads "no fill" to see the AdMob fallback |
 | `admobFallback` | `boolean` | `true` | Allow the AdMob adapter (needs `QartveloAds_admobEnabled=true`) |
 | `logLevel` | `'none' \| 'error' \| 'info' \| 'debug'` | `'error'` | Logcat verbosity (tag `QartveloAds`) |

@@ -10,8 +10,11 @@ jest.mock(
   () => require('react-native-safe-area-context/jest/mock').default,
 );
 
-// The Jest preset reports iOS, where QartveloAds is unsupported: the screen must still render, with the
-// banner reporting unsupported_platform instead of crashing.
+// JavaScript renderer tests do not link native components. Exercise native ads in the iOS example.
+jest.mock('@qartvelo/react-native-ads', () => ({
+  ...jest.requireActual('@qartvelo/react-native-ads'),
+  QartveloAdsBanner: require('react-native').View,
+}));
 test('renders the demo screen', async () => {
   let renderer: ReactTestRenderer.ReactTestRenderer | undefined;
   await ReactTestRenderer.act(() => {
@@ -19,5 +22,5 @@ test('renders the demo screen', async () => {
   });
   const text = JSON.stringify(renderer!.toJSON());
   expect(text).toContain('QartveloAds React Native example');
-  expect(text).toContain('unsupported_platform');
+  expect(text).toContain('Waiting for initialize()');
 });

@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'QartveloAds'
-  s.version          = '0.4.0'
+  s.version          = '0.4.1'
   s.summary          = 'Qartvelo Ads iOS SDK: direct-sold ads for Georgian apps, with your own AdMob as fallback.'
   s.description      = <<-DESC
     Serves Qartvelo Ads banner, interstitial and rewarded campaigns. When there is no eligible campaign

@@ -15,7 +15,7 @@ import com.qartvelo.sdk.internal.ShowRegistry
  * delivers callbacks on the main thread. No networking or disk access happens on the caller's thread.
  */
 public object QartveloAds {
-    public const val SDK_VERSION: String = "0.4.0"
+    public const val SDK_VERSION: String = "0.4.1"
 
     private val lock = Any()
 

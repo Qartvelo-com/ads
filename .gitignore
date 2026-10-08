@@ -37,3 +37,8 @@ DerivedData/
 /ios/sample-app/qa-out-*/
 # Legacy generated workspace; the sample app lives under ios/sample-app.
 /AdsTest/
+
+# Canonical Swift SDK copies included in npm by sync-ios-sdk.cjs
+/react-native/packages/react-native-qartvelo-ads/ios/sdk/
+/react-native/example/ios/*.xcworkspace/
+/react-native/example/qa-out-*/

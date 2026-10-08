@@ -23,14 +23,14 @@ React Native app ──> @qartvelo/react-native-ads ──> Qartvelo Ads Kotlin 
 
 | Package | Where | Install |
 |---|---|---|
-| Android core | Maven Central | `com.qartvelo.ads:core:0.4.0` |
-| Android AdMob adapter (optional) | Maven Central | `com.qartvelo.ads:admob:0.4.0` |
-| Same, also on | JitPack, GitHub Packages (`maven.pkg.github.com/Qartvelo-com/ads`) | `com.qartvelo.ads:core:0.4.0` |
-| iOS core | Swift Package Manager (`https://github.com/Qartvelo-com/ads`) | `QartveloAds` 0.4.0 |
-| iOS AdMob adapter (optional) | same | `QartveloAdsAdMob` 0.4.0 |
-| React Native (Android) | npm | `npm install @qartvelo/react-native-ads` |
+| Android core | Maven Central | `com.qartvelo.ads:core:0.4.1` |
+| Android AdMob adapter (optional) | Maven Central | `com.qartvelo.ads:admob:0.4.1` |
+| Same, also on | JitPack, GitHub Packages (`maven.pkg.github.com/Qartvelo-com/ads`) | `com.qartvelo.ads:core:0.4.1` |
+| iOS core | Swift Package Manager (`https://github.com/Qartvelo-com/ads`) | `QartveloAds` 0.4.1 |
+| iOS AdMob adapter (optional) | same | `QartveloAdsAdMob` 0.4.1 |
+| React Native (Android and iOS) | npm | `npm install @qartvelo/react-native-ads` |
 
-The React Native plugin is Android only for now; native iOS apps use the Swift SDK.
+The React Native plugin bridges both native SDKs through one JavaScript API.
 
 ## Android quick start
 
@@ -45,8 +45,8 @@ dependencyResolutionManagement {
 
 // app/build.gradle.kts
 dependencies {
-    implementation("com.qartvelo.ads:core:0.4.0")
-    implementation("com.qartvelo.ads:admob:0.4.0") // optional
+    implementation("com.qartvelo.ads:core:0.4.1")
+    implementation("com.qartvelo.ads:admob:0.4.1") // optional
 }
 ```
 
@@ -69,13 +69,13 @@ Full guide: [developers.qartvelo.com/android](https://developers.qartvelo.com/an
 
 1. In Xcode, choose **File > Add Package Dependencies**.
 2. Paste `https://github.com/Qartvelo-com/ads`.
-3. Choose **Up to Next Minor Version**, starting at **0.4.0**.
+3. Choose **Up to Next Minor Version**, starting at **0.4.1**.
 4. Add **QartveloAds** to your app target. Also add **QartveloAdsAdMob** for the optional fallback.
 
 Xcode downloads and manages the SDK and its dependencies. For a Swift package app target:
 
 ```swift
-.package(url: "https://github.com/Qartvelo-com/ads", .upToNextMinor(from: "0.4.0"))
+.package(url: "https://github.com/Qartvelo-com/ads", .upToNextMinor(from: "0.4.1"))
 ```
 
 CocoaPods is an alternative when the pod specifications have been published to trunk;
@@ -115,7 +115,7 @@ if (result.rewarded) {
 <QartveloAdsBanner placementId="home_banner" style={{ width: '100%' }} />;
 ```
 
-The native SDK comes from Maven Central, which React Native projects already use; see the
+Android resolves the SDK from Maven Central; iOS includes the Swift SDK and autolinks through CocoaPods. See the
 [React Native guide](https://developers.qartvelo.com/react-native/installation/).
 
 ## Documentation
@@ -165,7 +165,7 @@ docs/                          pointers to the docs site
 
 ```sh
 cd android && ./gradlew :qartvelo-ads-core:testDebugUnitTest :qartvelo-ads-admob:testDebugUnitTest
-cd android && ./gradlew publishToMavenLocal        # com.qartvelo.ads:*:0.4.0 into ~/.m2
+cd android && ./gradlew publishToMavenLocal        # com.qartvelo.ads:*:0.4.1 into ~/.m2
 
 # iOS (on a Mac): open ios/Package.swift in Xcode and run the tests, or
 cd ios
@@ -190,8 +190,10 @@ cd react-native/packages/react-native-qartvelo-ads && npm ci && npm test && npm 
 cd react-native/example && npm install && npx react-native run-android   # uses the local SDK build
 ```
 
-The Android and React Native samples default to `http://10.0.2.2:8000/` (a backend on your machine, seen from the Android
+The Android and React Native Android samples default to `http://10.0.2.2:8000/` (a backend on your machine, seen from the Android
 emulator); point them at `https://ads.qartvelo.com/` for the live service.
+React Native example settings are in `react-native/example/src/AppConfig.ts`; its screen starts
+automatically in test mode with ad controls and an optional event log.
 The iOS sample uses the SDK's `https://ads.qartvelo.com/` default; its app key and placements are in
 `ios/sample-app/Sources/AppConfig.swift`. It explicitly enables test mode. The normal launch opens a
 manual dashboard: load all three formats or one at a time, show/hide the adaptive banner, show a
