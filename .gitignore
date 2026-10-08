@@ -29,3 +29,11 @@ react-native/example/vendor/
 Package.resolved
 xcuserdata/
 DerivedData/
+
+# iOS sample app generated project, builds, and QA captures
+/ios/sample-app/*.xcodeproj/
+/ios/sample-app/build/
+/ios/sample-app/build-*/
+/ios/sample-app/qa-out-*/
+# Legacy generated workspace; the sample app lives under ios/sample-app.
+/AdsTest/

@@ -111,6 +111,8 @@ final class RecordingDelegate: NSObject, QartveloAdsDelegate {
 final class StubAdapter: QartveloFallbackAdapter {
     let networkName = "stub"
     var loadedInterstitials: Set<String> = []
+    var preferredBannerHeight: CGFloat = 0
+    func adaptiveBannerSize(width: CGFloat) -> CGSize { CGSize(width: width, height: preferredBannerHeight) }
 
     func initialize(settings: QartveloFallbackSettings) {}
     func updateSettings(_ settings: QartveloFallbackSettings) {}

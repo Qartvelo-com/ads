@@ -3,7 +3,15 @@
 Mobile SDKs for [Qartvelo Ads](https://ads.qartvelo.com), the direct-sold ad network for Georgian
 Android and iOS apps. Qartvelo Ads campaigns are served first; when there is no eligible campaign, the
 request fails or it times out, the SDK automatically shows **your own** AdMob ad unit for the same
-placement.
+placement. In iOS test mode, if the app has no valid session, the SDK instead fetches Qartvelo's
+non-billable test creative from the public server assets, so testing does not require app registration.
+iOS banners use compact adaptive heights (50–90 points), matching the registered AdMob adapter's
+calculated size when available. Without the adapter, the height is calculated from logical width.
+Requests include container width and adaptive height in pixels; the server selects suitable horizontal
+creatives, and images preserve their proportions. Retina test artwork uses 960x150, 1320x204 and
+2184x270 PNGs. Set `usesAdaptiveSize = false` for inline rectangles or legacy creative-height sizing.
+The iOS Simulator and installations outside the App Store always use test mode, even when the app
+sets `testMode = false`; eligible real campaign creatives can be previewed without live stats or charges.
 
 ```
 React Native app ──> @qartvelo/react-native-ads ──> Qartvelo Ads Kotlin SDK
@@ -130,9 +138,12 @@ The native SDK comes from Maven Central, which React Native projects already use
 android/qartvelo-ads-core/     Kotlin SDK (com.qartvelo.sdk)
 android/qartvelo-ads-admob/    optional AdMob fallback adapter (com.qartvelo.admob)
 android/sample-app/            native sample (com.qartvelo.sample)
-ios/Sources/QartveloAds/       Swift SDK (Package.swift and the podspecs are at the repository root)
+Package.swift                 GitHub SwiftPM compatibility manifest; podspecs also live at the root
+ios/Package.swift             primary iOS Swift package manifest
+ios/Sources/QartveloAds/       Swift SDK
 ios/Sources/QartveloAdsAdMob/  optional AdMob fallback adapter
 ios/Tests/                     XCTest unit tests
+ios/sample-app/                iOS Simulator QA app (XcodeGen project)
 react-native/packages/react-native-qartvelo-ads/   @qartvelo/react-native-ads
 react-native/example/          React Native example app
 developers/                    developer docs site (Astro Starlight) and the MCP server (developers/mcp)
@@ -145,15 +156,42 @@ docs/                          pointers to the docs site
 cd android && ./gradlew :qartvelo-ads-core:testDebugUnitTest :qartvelo-ads-admob:testDebugUnitTest
 cd android && ./gradlew publishToMavenLocal        # com.qartvelo.ads:*:0.4.0 into ~/.m2
 
-# iOS (on a Mac): open Package.swift in Xcode and run the tests, or
+# iOS (on a Mac): open ios/Package.swift in Xcode and run the tests, or
+cd ios
 xcodebuild test -scheme QartveloAds-Package -destination 'platform=iOS Simulator,name=iPhone 16'
+cd ..
+
+# iOS sample app, using the SDK from this checkout:
+cd ios/sample-app
+xcodegen generate
+xcodebuild -project AdsTest.xcodeproj -scheme AdsTest -destination 'generic/platform=iOS Simulator' -derivedDataPath build build
+# Install build/Build/Products/Debug-iphonesimulator/AdsTest.app with xcrun simctl.
+# Launch normally for Load/Show controls for banner, interstitial and rewarded ads.
+# Run the automatic QA flow after installing: ./qa-run.sh <device-udid> qa-out-qartvelo
+# Exercise AdMob test ads: ./qa-run.sh <device-udid> qa-out-fallback -forceNoFill
+# Exercise adaptive sizing and cached resizing in a 160-point container:
+# ./qa-run.sh <device-udid> qa-out-adaptive -bannerOnly -bannerWidth 160
+# Show and measure Qartvelo and AdMob banners together at the same width:
+# ./qa-run.sh <device-udid> qa-out-comparison -compareBanners
+cd ../..
 
 cd react-native/packages/react-native-qartvelo-ads && npm ci && npm test && npm run typecheck
 cd react-native/example && npm install && npx react-native run-android   # uses the local SDK build
 ```
 
-The samples default to `http://10.0.2.2:8000/` (a backend on your machine, seen from the Android
+The Android and React Native samples default to `http://10.0.2.2:8000/` (a backend on your machine, seen from the Android
 emulator); point them at `https://ads.qartvelo.com/` for the live service.
+The iOS sample uses the SDK's `https://ads.qartvelo.com/` default; its app key and placements are in
+`ios/sample-app/Sources/AppConfig.swift`. It explicitly enables test mode. The normal launch opens a
+manual dashboard: load all three formats or one at a time, show/hide the adaptive banner, show a
+ready interstitial or rewarded video, and inspect rewards and the latest callback. Full-screen ads
+open only after tapping Show; close them using the ad's own close button. Load again after dismissal.
+The automated sequence is opt-in with `-autoRun` (added by `qa-run.sh`). `-forceNoFill` exercises AdMob
+test fallback; `-compareBanners` opens the banner measurement screen. QA output directories must be
+new `qa-out-*` folders inside the sample app so the runner cannot overwrite source or previous results.
+
+Keep product and dependency changes synchronized between `ios/Package.swift` and the repository-root
+SwiftPM manifest so local development and GitHub installations build the same SDK.
 
 ## Releasing
 

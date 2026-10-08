@@ -1,0 +1,27 @@
+name: AdsTest
+options:
+  deploymentTarget:
+    iOS: "15.0"
+packages:
+  QartveloAds:
+    path: ..
+targets:
+  AdsTest:
+    type: application
+    platform: iOS
+    sources: [Sources]
+    dependencies:
+      - package: QartveloAds
+        product: QartveloAds
+      - package: QartveloAds
+        product: QartveloAdsAdMob
+    info:
+      path: Sources/Info.plist
+      properties:
+        CFBundleShortVersionString: "1.0"
+        UILaunchScreen: {}
+        GADApplicationIdentifier: ca-app-pub-3940256099942544~1458002511
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: ge.qartvelo.AdsTest
+        CODE_SIGNING_ALLOWED: "NO"

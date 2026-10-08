@@ -10,8 +10,15 @@ Releases are tagged in [Qartvelo-com/ads](https://github.com/Qartvelo-com/ads). 
 - **iOS SDK**: `QartveloAds` and the optional `QartveloAdsAdMob` adapter (Google Mobile Ads 12) for
   iOS 13+, with Swift Package Manager (`https://github.com/Qartvelo-com/ads`) and CocoaPods. Banner
   view, interstitial and rewarded ads, the same remote configuration, fallback, test mode and event
-  rules as Android. The Simulator is always in test mode, and development builds are too unless
-  `testModeInDebugBuilds = false`. See [iOS installation](/ios/installation/).
+  rules as Android. The Simulator and all non-App Store installations (including TestFlight) always
+  use test mode, even when `testMode = false`; the legacy `testModeInDebugBuilds` option is ignored.
+  Only physical App Store installations with a production receipt present may serve live traffic.
+  When registration or fill is unavailable in test mode, iOS fetches
+  public server test creatives without requiring a valid app session. See [iOS installation](/ios/installation/).
+- **iOS adaptive banners**: compact 50–90 point heights, using the AdMob adapter's standard size
+  calculation when linked. Adaptive requests select horizontal creatives by slot proportions;
+  inline rectangles use `usesAdaptiveSize = false`. Public test banners have Retina artwork at
+  960x150, 1320x204 and 2184x270 pixels.
 - Backend: apps have a platform (Android or iOS, bundle ID for iOS), an app key only works on its
   own platform (`platform_mismatch`), and campaigns can target platforms.
 - Android and React Native: no changes besides the version number.

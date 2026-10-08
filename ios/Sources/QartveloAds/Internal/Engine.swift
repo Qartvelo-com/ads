@@ -77,13 +77,17 @@ final class Engine {
 
     let simulator: Bool
 
-    /// Test mode is purely the publisher's local option. The backend only echoes it back, so it is
-    /// never taken from (cached) remote config: a build that once ran in test mode must not stay in
-    /// test mode, unbilled and on Google test units, after the option is turned off.
-    /// Development builds are in test mode too unless `testModeInDebugBuilds` is false; the App Store
-    /// and TestFlight only take distribution builds, so users never see test ads.
-    /// The Simulator is always in test mode (the backend enforces it from `is_emulator` as well).
+    /// Test mode comes from SDK options and the current installation, never cached remote config.
+    /// An App Store installation can return to live traffic on the next launch after its explicit
+    /// test option is turned off; a previous test session must not keep it on Google test units.
+    /// The Simulator and every installation outside the App Store always use test mode, regardless
+    /// of either test option. This includes development, ad hoc, enterprise and TestFlight builds.
+    /// App Store installations may explicitly request test mode too.
     let testMode: Bool
+
+    static func shouldUseTestMode(_ options: QartveloAdsOptions) -> Bool {
+        options.testMode || !AppEnvironment.isAppStoreBuild
+    }
 
     /// Main thread.
     init(appKey: String, options: QartveloAdsOptions) {
@@ -97,7 +101,7 @@ final class Engine {
         )
         self.device = device
         self.simulator = simulator
-        testMode = options.testMode || simulator || (options.testModeInDebugBuilds && AppEnvironment.isDevelopmentBuild)
+        testMode = Self.shouldUseTestMode(options)
         api = client
         creatives = CreativeCache(api: client)
         events = EventQueue(api: client)
@@ -118,9 +122,15 @@ final class Engine {
         if simulator {
             Log.i("Simulator: test mode is on, ads are labelled \"Test ad\" and never billed")
         } else if testMode && !options.testMode {
-            Log.i("Development build: test mode is on, ads are labelled \"Test ad\" and never billed (testModeInDebugBuilds)")
+            Log.i("Non-App Store install: test mode is on, ads are labelled \"Test ad\" and never counted or billed")
         }
         let adapter = QartveloAds.registeredAdapter() ?? FallbackDiscovery.discover()
+        if testMode && appKey.isEmpty {
+            installAdapter(adapter)
+            Log.i("Empty app key in test mode; using public server test creatives without an app session")
+            finishInit(nil)
+            return
+        }
         io.async { [self] in
             if let cached = configStore.load() {
                 stateLock.lock()
@@ -141,14 +151,28 @@ final class Engine {
                 }
             }
             guard api.isConfigured else {
-                Main.post { [self] in finishInit(QartveloAdsError(.internalError, "Invalid baseURL")) }
+                Main.post { [self] in
+                    if testMode {
+                        Log.i("Backend URL unavailable in test mode; public server test creatives are unavailable")
+                        finishInit(nil)
+                    } else {
+                        finishInit(QartveloAdsError(.internalError, "Invalid baseURL"))
+                    }
+                }
                 return
             }
             stateLock.lock()
             configCheckedAt = Clock.now()
             stateLock.unlock()
             sessions.refreshAsync(force: true) { [self] error in
-                Main.post { [self] in finishInit(error.map { toInitError($0) }) }
+                Main.post { [self] in
+                    if let error = error, testMode {
+                        Log.i("Backend initialization unavailable in test mode; public test creatives are ready (\(SessionManager.describe(error)))")
+                        finishInit(nil)
+                    } else {
+                        finishInit(error.map { toInitError($0) })
+                    }
+                }
             }
         }
     }
@@ -310,31 +334,56 @@ final class Engine {
         return created
     }
 
+    func adaptiveBannerSize(width: CGFloat, screenHeight: CGFloat) -> CGSize {
+        AdaptiveBannerLayout.size(width: width, screenHeight: screenHeight, preferred: fallbackAdapter?.adaptiveBannerSize(width: width) ?? .zero)
+    }
+
     // MARK: - Fetch pipeline
 
     /// Requests a Qartvelo Ads ad bounded by `timeoutMs` (session acquisition included), then
     /// pre-downloads and validates the creative so that a creative failure becomes a fallback rather
     /// than a broken show. `onResult` is called exactly once, on the main thread. Main thread.
-    func fetchAd(_ placementId: String, format: QartveloAdFormat, timeoutMs: Int64, onResult: @escaping (FetchOutcome) -> Void) {
-        let tracker = CallTracker()
+    func fetchAd(_ placementId: String, format: QartveloAdFormat, timeoutMs: Int64, bannerWidth: Int? = nil, bannerHeight: Int? = nil, onResult: @escaping (FetchOutcome) -> Void) {
         var finished = false
-        var responded = false
         let finish: (FetchOutcome) -> Void = { outcome in
             guard !finished else { return }
             finished = true
             onResult(outcome)
         }
+        let useTestCreative: (QartveloAdsFailure) -> Void = { [self] fallback in
+            guard !finished else { return }
+            // Reserve the callback while the public asset is being downloaded. A late API response
+            // must not replace the fallback that was selected after timeout or request failure.
+            finished = true
+            serverTestOutcome(placementId, format: format, bannerWidth: bannerWidth, bannerHeight: bannerHeight, fallback: fallback) { outcome in onResult(outcome) }
+        }
+        if testMode && options.testForceNoFill {
+            Log.i("Forced no fill for '\(placementId)'; using test fallback")
+            finish(.failure(failure(QartveloAdsFailure.noFill)))
+            return
+        }
+        if testMode && appKey.isEmpty {
+            useTestCreative(failure(QartveloAdsFailure.error))
+            return
+        }
+
+        let tracker = CallTracker()
+        var responded = false
         let timeout = Main.postDelayed(timeoutMs) { [self] in
             if !responded && !finished {
                 tracker.cancel()
-                finish(.failure(failure(QartveloAdsFailure.timeout)))
+                if testMode {
+                    useTestCreative(failure(QartveloAdsFailure.timeout))
+                } else {
+                    finish(.failure(failure(QartveloAdsFailure.timeout)))
+                }
             }
         }
         let deadline = Clock.now() + timeoutMs
         io.async { [self] in
             let result: Result<AdResponse, Error>
             do {
-                result = .success(try requestWithSessionRetry(placementId, format: format, deadline: deadline, tracker: tracker))
+                result = .success(try requestWithSessionRetry(placementId, format: format, bannerWidth: bannerWidth, bannerHeight: bannerHeight, deadline: deadline, tracker: tracker))
             } catch {
                 result = .failure(error)
             }
@@ -344,14 +393,45 @@ final class Engine {
                 timeout.cancel()
                 switch result {
                 case .success(.fill(let ad)):
-                    prepareCreative(ad, format: format, tracker: tracker, done: finish)
+                    prepareCreative(ad, format: format, tracker: tracker) { [self] outcome in
+                        if case .failure(let creativeFailure) = outcome, testMode {
+                            useTestCreative(creativeFailure)
+                        } else {
+                            finish(outcome)
+                        }
+                    }
                 case .success(.noFill(_, let fallback, let reason)):
                     Log.i("Qartvelo Ads no fill for '\(placementId)' (\(reason ?? "unknown"))")
-                    finish(.failure(failure(QartveloAdsFailure.noFill, serverFallback: fallback)))
+                    let noFill = failure(QartveloAdsFailure.noFill, serverFallback: fallback)
+                    if testMode { useTestCreative(noFill) } else { finish(.failure(noFill)) }
                 case .failure(let error):
-                    finish(.failure(failureFor(error)))
+                    let requestFailure = failureFor(error)
+                    if testMode { useTestCreative(requestFailure) } else { finish(.failure(requestFailure)) }
                 }
             }
+        }
+    }
+
+    private func serverTestOutcome(_ placementId: String, format: QartveloAdFormat, bannerWidth: Int?, bannerHeight: Int?, fallback: QartveloAdsFailure, done: @escaping (FetchOutcome) -> Void) {
+        do {
+            let creative = ServerTestAds.creative(for: format, availableWidth: bannerWidth ?? device.screenWidth, availableHeight: bannerHeight)
+            guard let url = api.testCreativeURL(creative.filename) else {
+                throw NetworkError(message: "invalid base URL for public test creative")
+            }
+            let ad = ServerTestAds.make(placementId: placementId, format: format, creative: creative, creativeURL: url)
+            downloads.async { [self] in
+                do {
+                    ad.file = try creatives.fetch(ad)
+                    Log.i("Serving public Qartvelo test creative \(creative.filename) for '\(placementId)' after backend unavailable")
+                    Main.post { done(.success(ad)) }
+                } catch {
+                    Log.e("Public Qartvelo test creative unavailable: \(SessionManager.describe(error))")
+                    Main.post { done(.failure(fallback)) }
+                }
+            }
+        } catch {
+            Log.e("Public Qartvelo test creative unavailable: \(SessionManager.describe(error))")
+            Main.post { done(.failure(fallback)) }
         }
     }
 
@@ -364,7 +444,9 @@ final class Engine {
     /// Returns true when a refresh was started; the caller then asks the backend for an ad even if the
     /// stale config says Qartvelo Ads is off, because `/ads/request` re-checks every kill switch itself.
     func refreshConfigIfStale(_ placement: PlacementConfig?) -> Bool {
-        guard api.isConfigured else { return false }
+        // Without an app key there can be no valid session or remote placement config. Test-mode
+        // fallback uses the public `/test-ads/` files directly and must not trigger API requests.
+        guard api.isConfigured, !(testMode && appKey.isEmpty) else { return false }
         let enabled = qartveloEnabled(placement)
         let ttlMs = (remoteConfig?.configTtlSeconds ?? Self.defaultConfigTtlSeconds) * 1000
         stateLock.lock()
@@ -409,15 +491,15 @@ final class Engine {
     }
 
     /// Blocking. One transparent retry when the backend reports the session expired or invalid.
-    private func requestWithSessionRetry(_ placementId: String, format: QartveloAdFormat, deadline: Int64, tracker: CallTracker) throws -> AdResponse {
+    private func requestWithSessionRetry(_ placementId: String, format: QartveloAdFormat, bannerWidth: Int?, bannerHeight: Int?, deadline: Int64, tracker: CallTracker) throws -> AdResponse {
         var token = try sessions.acquire(deadline: deadline)
         do {
-            return try api.requestAd(body: adRequestBody(placementId, format: format, token: token), timeoutMs: remaining(deadline), tracker: tracker)
+            return try api.requestAd(body: adRequestBody(placementId, format: format, token: token, bannerWidth: bannerWidth, bannerHeight: bannerHeight), timeoutMs: remaining(deadline), tracker: tracker)
         } catch let error as ApiError where error.isSessionError {
             Log.i("Session rejected (\(error.code)); refreshing once")
             sessions.invalidate(token)
             token = try sessions.acquire(deadline: deadline)
-            return try api.requestAd(body: adRequestBody(placementId, format: format, token: token), timeoutMs: remaining(deadline), tracker: tracker)
+            return try api.requestAd(body: adRequestBody(placementId, format: format, token: token, bannerWidth: bannerWidth, bannerHeight: bannerHeight), timeoutMs: remaining(deadline), tracker: tracker)
         }
     }
 
@@ -475,8 +557,8 @@ final class Engine {
         ]
     }
 
-    private func adRequestBody(_ placementId: String, format: QartveloAdFormat, token: String) -> JSON {
-        [
+    private func adRequestBody(_ placementId: String, format: QartveloAdFormat, token: String, bannerWidth: Int?, bannerHeight: Int?) -> JSON {
+        var body: JSON = [
             "app_key": appKey,
             "placement": placementId,
             "format": format.wireName,
@@ -485,11 +567,13 @@ final class Engine {
             "os_version": device.osMajor,
             "app_version": device.appVersion,
             "sdk_version": QartveloAds.sdkVersion,
-            "screen_width": device.screenWidth,
+            "screen_width": format == .banner ? (bannerWidth ?? device.screenWidth) : device.screenWidth,
             "screen_height": device.screenHeight,
             "test_mode": testMode,
             "test_force_no_fill": options.testForceNoFill,
         ]
+        if format == .banner, let height = bannerHeight { body["banner_height"] = height }
+        return body
     }
 
     /// Two-letter language of the user's preferred language, for example `ka` or `en`.

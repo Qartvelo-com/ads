@@ -16,9 +16,15 @@ import UIKit
     @objc public weak var delegate: QartveloAdsDelegate?
     /// Presents the fallback network's click-through screens. Defaults to the nearest view controller.
     @objc public weak var rootViewController: UIViewController?
+    /// Compact anchored sizing by default. Set false for an inline creative such as 300x250.
+    @objc public var usesAdaptiveSize: Bool = true {
+        didSet { setNeedsLayout() }
+    }
 
     private var controller: BannerController?
     private var contentSize: CGSize = .zero
+    private var contentWidthConstraint: NSLayoutConstraint?
+    private var contentHeightConstraint: NSLayoutConstraint?
     private var appActive = true
     private var observers: [NSObjectProtocol] = []
     private(set) weak var renderedContent: AnyObject?
@@ -91,6 +97,11 @@ import UIKit
         notifyVisibility()
     }
 
+    public override func layoutSubviews() {
+        super.layoutSubviews()
+        controller?.onLayoutChanged(self)
+    }
+
     public override var isHidden: Bool {
         didSet { notifyVisibility() }
     }
@@ -100,6 +111,26 @@ import UIKit
     }
 
     // MARK: - Internal
+
+    var availableBannerWidth: CGFloat {
+        bounds.width > 0 ? bounds.width : (window?.bounds.width ?? UIScreen.main.bounds.width)
+    }
+
+    /// The API's existing screen_width field is in pixels on both native SDKs.
+    var bannerRequestWidth: Int {
+        Int(min(20_000, max(1, floor(availableBannerWidth * (window?.screen.scale ?? UIScreen.main.scale)))))
+    }
+
+    var adaptiveBannerSize: CGSize {
+        let screenHeight = window?.bounds.height ?? UIScreen.main.bounds.height
+        return QartveloAds.engine()?.adaptiveBannerSize(width: availableBannerWidth, screenHeight: screenHeight)
+            ?? AdaptiveBannerLayout.size(width: availableBannerWidth, screenHeight: screenHeight)
+    }
+
+    var bannerRequestHeight: Int? {
+        guard usesAdaptiveSize else { return nil }
+        return Int(ceil(adaptiveBannerSize.height * (window?.screen.scale ?? UIScreen.main.scale)))
+    }
 
     var isVisibleForAds: Bool {
         guard window != nil, appActive else { return false }
@@ -125,18 +156,34 @@ import UIKit
         clear()
         subview.translatesAutoresizingMaskIntoConstraints = false
         addSubview(subview)
+        let width = subview.widthAnchor.constraint(equalToConstant: size.width)
+        let height = subview.heightAnchor.constraint(equalToConstant: size.height)
         NSLayoutConstraint.activate([
             subview.centerXAnchor.constraint(equalTo: centerXAnchor),
             subview.centerYAnchor.constraint(equalTo: centerYAnchor),
-            subview.widthAnchor.constraint(equalToConstant: size.width),
-            subview.heightAnchor.constraint(equalToConstant: size.height),
+            width,
+            height,
         ])
+        contentWidthConstraint = width
+        contentHeightConstraint = height
         renderedContent = content
         contentSize = size
         invalidateIntrinsicContentSize()
     }
 
+    func updateContentSize(_ size: CGSize) {
+        guard contentSize != size else { return }
+        contentWidthConstraint?.constant = size.width
+        contentHeightConstraint?.constant = size.height
+        contentSize = size
+        invalidateIntrinsicContentSize()
+    }
+
     func clear() {
+        if let width = contentWidthConstraint { width.isActive = false }
+        if let height = contentHeightConstraint { height.isActive = false }
+        contentWidthConstraint = nil
+        contentHeightConstraint = nil
         subviews.forEach { $0.removeFromSuperview() }
         renderedContent = nil
         contentSize = .zero

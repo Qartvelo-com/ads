@@ -32,7 +32,17 @@ final class HomeViewController: UIViewController, QartveloAdsDelegate {
 }
 ```
 
-The height comes from the ad (`intrinsicContentSize`): zero until an ad is loaded, then the creative's height scaled to fit the width. Pin the leading and trailing edges and leave the height free.
+The view reports zero intrinsic height until an ad loads. By default, Qartvelo uses a **compact anchored adaptive slot** at the container's full width, with a height of **50–90 points**. Pin its leading and trailing edges and leave the height free.
+
+When the AdMob adapter is registered, both networks use Google's standard anchored adaptive size calculation, so their heights match for the same width and orientation. Without the adapter, Qartvelo calculates `floor(width × 50 / 320)`, bounded to 50–90 points and a 15% screen-height cap (with a 50-point minimum). This independent calculation approximates a compact banner; it is not Google's algorithm.
+
+The API receives `screen_width` and `banner_height` in **pixels**. For adaptive requests, the backend chooses the approved horizontal creative with the closest aspect ratio to that slot; inline rectangles such as 300x250 are excluded. Images use aspect fit and remain fully visible without stretching or cropping. A legacy creative may leave space around the image. Advertiser uploads accept **960x150, 1320x204 and 2184x270** Retina adaptive artwork, plus **320x50, 320x100, 300x250, 468x60 and 728x90** standard sizes. The dashboard includes sizing guidance and a copyable AI banner prompt.
+
+Public test artwork uses **960x150, 1320x204 and 2184x270** PNGs selected by slot proportions. These server-hosted images provide sharper lettering on Retina displays, including when app registration is unavailable.
+
+For an inline rectangle or the previous creative-height sizing, set `banner.usesAdaptiveSize = false` before `load()`. Those requests omit `banner_height` and retain the backend's widest-fit selection rule.
+
+When the container width changes, the loaded Qartvelo creative and adaptive height update immediately without another request or impression. The next scheduled refresh selects artwork for the new dimensions. AdMob applies a changed width on the next scheduled fallback load, preserving the placement's refresh interval.
 
 ## SwiftUI
 
@@ -52,7 +62,7 @@ struct BannerAd: UIViewRepresentable {
     func updateUIView(_ view: QartveloAdsBannerView, context: Context) {}
 }
 
-// BannerAd(placementId: "home_banner").frame(height: 50)
+// Match your SwiftUI container height to the banner's intrinsic height; it is not always 50.
 ```
 
 ## Behaviour

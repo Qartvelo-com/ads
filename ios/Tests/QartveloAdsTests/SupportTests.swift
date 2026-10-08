@@ -13,26 +13,85 @@ final class SupportTests: XCTestCase {
         XCTAssertFalse(AppEnvironment.provisionAllowsDebugging(Data("not a profile".utf8)))
     }
 
-    func testTestModeFollowsSimulatorDevelopmentBuildsAndTheOption() {
-        func engineTestMode(simulator: Bool, development: Bool, configure: (QartveloAdsOptions) -> Void = { _ in }) -> Bool {
+    func testAppStoreInstallRequiresProductionReceiptAndNoProvisioningProfile() {
+        let production = URL(fileURLWithPath: "/app/_MASReceipt/receipt")
+        let sandbox = URL(fileURLWithPath: "/app/_MASReceipt/sandboxReceipt")
+        XCTAssertTrue(AppEnvironment.isAppStoreInstall(receiptURL: production, receiptExists: true, hasProvisioningProfile: false))
+        XCTAssertFalse(AppEnvironment.isAppStoreInstall(receiptURL: sandbox, receiptExists: true, hasProvisioningProfile: false), "TestFlight is test traffic")
+        XCTAssertFalse(AppEnvironment.isAppStoreInstall(receiptURL: nil, receiptExists: false, hasProvisioningProfile: false), "unknown install source stays in test mode")
+        XCTAssertFalse(AppEnvironment.isAppStoreInstall(receiptURL: production, receiptExists: false, hasProvisioningProfile: false), "receipt URL alone does not prove an App Store install")
+        XCTAssertFalse(AppEnvironment.isAppStoreInstall(receiptURL: production, receiptExists: true, hasProvisioningProfile: true), "sideloaded development, ad hoc and enterprise builds stay in test mode")
+    }
+
+    func testTestModeOnlyAllowsAppStoreProductionTraffic() {
+        func engineTestMode(simulator: Bool, development: Bool, appStore: Bool, configure: (QartveloAdsOptions) -> Void = { _ in }) -> Bool {
             TestHooks.simulator = simulator
             TestHooks.developmentBuild = development
+            TestHooks.appStoreBuild = appStore
             let options = QartveloAdsOptions()
             configure(options)
             return Engine(appKey: "app_test", options: options).testMode
         }
 
-        XCTAssertFalse(engineTestMode(simulator: false, development: false))
-        XCTAssertTrue(engineTestMode(simulator: true, development: false))
-        XCTAssertTrue(engineTestMode(simulator: false, development: true))
-        XCTAssertFalse(engineTestMode(simulator: false, development: true) { $0.testModeInDebugBuilds = false })
-        XCTAssertTrue(engineTestMode(simulator: true, development: true) { $0.testModeInDebugBuilds = false })
-        XCTAssertTrue(engineTestMode(simulator: false, development: false) { $0.testMode = true })
+        XCTAssertFalse(engineTestMode(simulator: false, development: false, appStore: true))
+        XCTAssertTrue(engineTestMode(simulator: false, development: false, appStore: false))
+        XCTAssertTrue(engineTestMode(simulator: false, development: true, appStore: true))
+        XCTAssertTrue(engineTestMode(simulator: false, development: true, appStore: false) { $0.testModeInDebugBuilds = false })
+        XCTAssertTrue(engineTestMode(simulator: false, development: false, appStore: false) { $0.testModeInDebugBuilds = false })
+        XCTAssertTrue(engineTestMode(simulator: true, development: false, appStore: true) { $0.testModeInDebugBuilds = false })
+        XCTAssertTrue(engineTestMode(simulator: false, development: false, appStore: true) { $0.testMode = true })
     }
 
     func testAboutLinkCarriesTheBundleId() {
         let url = AboutLink.url(baseURL: URL(string: "https://ads.qartvelo.com/")!, bundleId: "ge.example.Game")
         XCTAssertEqual(url?.absoluteString, "https://ads.qartvelo.com/?ref=ge.example.Game")
+    }
+
+    func testPublicTestBannerMatchesTheBackendWidestFitRule() {
+        for (available, width, height) in [(0, 300, 250), (299, 300, 250), (300, 300, 250), (467, 320, 0), (468, 468, 60), (727, 468, 60), (728, 728, 90), (1320, 728, 90)] {
+            let creative = ServerTestAds.creative(for: .banner, availableWidth: available)
+            XCTAssertEqual(creative.width, width)
+            if width == 320 {
+                XCTAssertTrue([50, 100].contains(creative.height))
+            } else {
+                XCTAssertEqual(creative.height, height)
+            }
+            XCTAssertEqual(creative.filename, "banner_\(creative.width)x\(creative.height).png")
+            let ad = ServerTestAds.make(placementId: "home", format: .banner, creative: creative, creativeURL: URL(string: "https://ads.test/test-ads/\(creative.filename)")!)
+            XCTAssertEqual(ad.width, creative.width)
+            XCTAssertEqual(ad.height, creative.height)
+            XCTAssertTrue(ad.test)
+            XCTAssertTrue(ad.localTest, "public assets must not enqueue billable events")
+        }
+    }
+
+    func testAdaptiveSizeUsesLogicalWidthAndBoundsTheHeight() {
+        for (width, height) in [(320.0, 50.0), (375, 58), (390, 60), (393, 61), (402, 62), (414, 64), (430, 67), (440, 68), (728, 90)] {
+            XCTAssertEqual(AdaptiveBannerLayout.size(width: width, screenHeight: 956), CGSize(width: width, height: height))
+        }
+        XCTAssertEqual(AdaptiveBannerLayout.size(width: 844, screenHeight: 390).height, 58)
+        XCTAssertEqual(AdaptiveBannerLayout.size(width: 220, screenHeight: 956).height, 50)
+        XCTAssertEqual(AdaptiveBannerLayout.size(width: 393, screenHeight: 956, preferred: CGSize(width: 393, height: 63)).height, 63)
+        XCTAssertEqual(AdaptiveBannerLayout.size(width: 393, screenHeight: 956, preferred: CGSize(width: 440, height: 68)).height, 61)
+        XCTAssertEqual(AdaptiveBannerLayout.size(width: 393, screenHeight: 956, preferred: CGSize(width: 393, height: 250)).height, 61)
+    }
+
+    func testCoreUsesTheRegisteredAdaptersAdaptiveHeight() {
+        let engine = Engine(appKey: "app_test", options: QartveloAdsOptions())
+        let adapter = StubAdapter()
+        adapter.preferredBannerHeight = 63
+        engine.installAdapter(adapter)
+        XCTAssertEqual(engine.adaptiveBannerSize(width: 393, screenHeight: 956).height, 63)
+        adapter.preferredBannerHeight = 0
+        XCTAssertEqual(engine.adaptiveBannerSize(width: 393, screenHeight: 956).height, 61)
+    }
+
+    func testAdaptivePublicArtworkMatchesTheRequestedAspectRatio() {
+        for (width, height, filename) in [(960, 150, "960x150"), (1320, 204, "1320x204"), (2184, 270, "2184x270"), (780, 120, "1320x204")] {
+            let creative = ServerTestAds.creative(for: .banner, availableWidth: width, availableHeight: height)
+            XCTAssertEqual(creative.filename, "banner_adaptive_v1_\(filename).png")
+            XCTAssertTrue(creative.width >= width || filename == "2184x270")
+        }
     }
 
     func testImageSignaturesAndCacheNames() {
@@ -50,6 +109,7 @@ final class SupportTests: XCTestCase {
     func testFallbackUnitResolution() {
         TestHooks.simulator = false
         TestHooks.developmentBuild = false
+        TestHooks.appStoreBuild = true
         let options = QartveloAdsOptions()
         options.admobAdUnits = ["level_end": "ca-app-pub-1/local"]
         let engine = Engine(appKey: "app_test", options: options)

@@ -130,13 +130,12 @@ public let qartveloAdsDefaultBaseURL = URL(string: "https://ads.qartvelo.com/")!
     @objc public var admobFallback: Bool = true
     /// Qartvelo Ads request budget in milliseconds before falling back. A per-placement server value wins.
     @objc public var requestTimeoutMs: Int = 800
-    /// Never serve billable campaigns: ads are labelled "Test ad" and never billed; AdMob uses
-    /// Google's test units. Always on in the Simulator, and on automatically in debug builds,
-    /// see `testModeInDebugBuilds`.
+    /// Never serve billable campaigns: Qartvelo Ads uses public server test creatives if the backend
+    /// cannot serve a test ad, and AdMob uses Google's test units. Always on in the Simulator and
+    /// every installation outside the App Store, even when this option is false.
     @objc public var testMode: Bool = false
-    /// Turn test mode on automatically in development builds (signed with the `get-task-allow`
-    /// entitlement, as Xcode runs and development builds are), like AdMob test devices. App Store and
-    /// TestFlight builds are unaffected. Set to false to see exactly what a release build does.
+    /// Retained for source compatibility. All non-App Store iOS installations always use test mode.
+    @available(*, deprecated, message: "Non-App Store iOS installations always use test mode; this option is ignored.")
     @objc public var testModeInDebugBuilds: Bool = true
     /// In test mode, force Qartvelo Ads to answer "no fill" so the fallback path can be exercised.
     @objc public var testForceNoFill: Bool = false

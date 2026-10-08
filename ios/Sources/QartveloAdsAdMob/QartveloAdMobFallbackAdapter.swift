@@ -122,6 +122,10 @@ public final class QartveloAdMobFallbackAdapter: NSObject, QartveloFallbackAdapt
 
     // MARK: - Banner
 
+    public func adaptiveBannerSize(width: CGFloat) -> CGSize {
+        currentOrientationAnchoredAdaptiveBanner(width: width).size
+    }
+
     public func createBanner(
         placementId: String,
         adUnitId: String,

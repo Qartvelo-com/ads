@@ -40,7 +40,7 @@ final class ShowSession {
         guard !rendered, !closed else { return }
         rendered = true
         renderedAt = Clock.now()
-        engine.events.enqueue(.impression, ad: ad)
+        if !ad.localTest { engine.events.enqueue(.impression, ad: ad) }
         let info = self.info
         Listeners.emit(delegate) { $0.qartveloAdDidShow?(info) }
         Listeners.emit(delegate) { $0.qartveloAdDidRecordImpression?(info) }
@@ -64,7 +64,7 @@ final class ShowSession {
         videoCompleted = true
         if isRewarded && !rewardGranted {
             rewardGranted = true
-            engine.events.enqueue(.reward, ad: ad, completion: true)
+            if !ad.localTest { engine.events.enqueue(.reward, ad: ad, completion: true) }
             let info = self.info
             Listeners.emit(delegate) { $0.qartveloAd?(info, didEarnReward: QartveloAdsReward()) }
         }
@@ -93,7 +93,7 @@ final class ShowSession {
             Listeners.emit(delegate) { $0.qartveloAdNoAdAvailable?(placementId: info.placementId, format: info.format) }
             return
         }
-        if isRewarded && !rewardGranted {
+        if isRewarded && !rewardGranted && !ad.localTest {
             // Reported as incomplete so the backend can tell skips from completions.
             engine.events.enqueue(.reward, ad: ad, completion: false)
         }

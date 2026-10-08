@@ -1,6 +1,6 @@
 // swift-tools-version:5.9
-// GitHub Swift Package Manager compatibility entry point.
-// The primary iOS package is ios/Package.swift; keep products and dependencies in sync with it.
+// Qartvelo Ads iOS package. Sources/ and Tests/ use the standard Swift Package Manager layout.
+// Keep products and dependencies in sync with the repository-root compatibility manifest.
 import PackageDescription
 
 let package = Package(
@@ -16,7 +16,6 @@ let package = Package(
     targets: [
         .target(
             name: "QartveloAds",
-            path: "ios/Sources/QartveloAds",
             resources: [.copy("PrivacyInfo.xcprivacy")]
         ),
         .target(
@@ -24,13 +23,11 @@ let package = Package(
             dependencies: [
                 "QartveloAds",
                 .product(name: "GoogleMobileAds", package: "swift-package-manager-google-mobile-ads"),
-            ],
-            path: "ios/Sources/QartveloAdsAdMob"
+            ]
         ),
         .testTarget(
             name: "QartveloAdsTests",
-            dependencies: ["QartveloAds"],
-            path: "ios/Tests/QartveloAdsTests"
+            dependencies: ["QartveloAds"]
         ),
     ]
 )

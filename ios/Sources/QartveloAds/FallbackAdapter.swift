@@ -22,6 +22,10 @@ public protocol QartveloFallbackAdapter: AnyObject {
     /// Called when test mode or privacy signals change.
     func updateSettings(_ settings: QartveloFallbackSettings)
 
+    /// Preferred anchored banner size in points. Return .zero to use the core SDK's compact size.
+    /// This calculation must not load an ad or perform a network request.
+    func adaptiveBannerSize(width: CGFloat) -> CGSize
+
     func loadInterstitial(placementId: String, adUnitId: String, callback: QartveloFallbackLoadCallback)
     func isInterstitialReady(placementId: String) -> Bool
     func showInterstitial(placementId: String, from viewController: UIViewController, callback: QartveloFallbackShowCallback)
@@ -38,6 +42,10 @@ public protocol QartveloFallbackAdapter: AnyObject {
         rootViewController: UIViewController?,
         callback: QartveloFallbackBannerCallback
     ) -> QartveloFallbackBanner
+}
+
+public extension QartveloFallbackAdapter {
+    func adaptiveBannerSize(width: CGFloat) -> CGSize { .zero }
 }
 
 public struct QartveloFallbackSettings: Equatable {

@@ -73,7 +73,7 @@ final class QartveloAdsOptions: NSObject {
     var admobFallback = true
     var requestTimeoutMs = 800
     var testMode = false
-    var testModeInDebugBuilds = true
+    var testModeInDebugBuilds = true // deprecated, ignored; non-App Store installs always use test mode
     var testForceNoFill = false
     var logLevel: QartveloAdsLogLevel = .error
     var baseURL = URL(string: "https://ads.qartvelo.com/")!

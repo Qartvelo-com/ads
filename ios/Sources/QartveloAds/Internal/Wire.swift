@@ -118,6 +118,7 @@ final class ServedAd {
     let impressionToken: String
     let expiresAt: Int64
     let test: Bool
+    let localTest: Bool
 
     private let lock = NSLock()
     private var storedFile: URL?
@@ -131,7 +132,7 @@ final class ServedAd {
     init(
         requestId: String, adId: String, campaignId: String?, creativeId: String?, format: QartveloAdFormat,
         creativeType: CreativeType, creativeURL: URL, clickURL: String?, width: Int, height: Int,
-        durationSeconds: Int?, impressionToken: String, expiresAt: Int64, test: Bool
+        durationSeconds: Int?, impressionToken: String, expiresAt: Int64, test: Bool, localTest: Bool = false
     ) {
         self.requestId = requestId
         self.adId = adId
@@ -147,6 +148,7 @@ final class ServedAd {
         self.impressionToken = impressionToken
         self.expiresAt = expiresAt
         self.test = test
+        self.localTest = localTest
     }
 
     func isValid(now: Int64 = Clock.now()) -> Bool {

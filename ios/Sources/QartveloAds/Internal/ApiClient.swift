@@ -57,6 +57,12 @@ final class ApiClient {
 
     var isConfigured: Bool { base != nil }
 
+    /// Public built-in test creatives do not require an app session or authorization header.
+    func testCreativeURL(_ filename: String) -> URL? {
+        guard let base else { return nil }
+        return base.appendingPathComponent("test-ads", isDirectory: true).appendingPathComponent(filename)
+    }
+
     func initialize(body: JSON, timeoutMs: Int64, tracker: CallTracker? = nil) throws -> InitResult {
         let (json, serverNow) = try postJSON("api/v1/sdk/initialize", body: body, timeoutMs: timeoutMs, tracker: tracker)
         guard let token = json.string("session_token") else { throw NetworkError(message: "initialize: missing session_token") }

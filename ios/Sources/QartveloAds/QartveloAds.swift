@@ -18,7 +18,7 @@ import UIKit
     /// Initializes the SDK once (idempotent). Later calls are ignored apart from `completion`, which
     /// receives the result of the first initialization. `success == false` still leaves the SDK usable:
     /// it runs on the last cached remote configuration (if any), retries the session lazily and can
-    /// fall back to AdMob.
+    /// fall back to AdMob. In test mode, backend registration failures do not block local test ads.
     @objc public static func initialize(
         appKey: String,
         options: QartveloAdsOptions = QartveloAdsOptions(),
@@ -36,7 +36,7 @@ import UIKit
             }
             Log.level = logLevelOverride ?? options.logLevel
             let key = appKey.trimmingCharacters(in: .whitespacesAndNewlines)
-            if key.isEmpty {
+            if key.isEmpty && !Engine.shouldUseTestMode(options) {
                 lock.unlock()
                 Log.e("QartveloAds.initialize called with an empty appKey")
                 if let completion = completion {

@@ -59,6 +59,7 @@ enum Main {
 enum TestHooks {
     static var simulator: Bool?
     static var developmentBuild: Bool?
+    static var appStoreBuild: Bool?
     static var eventRetryBaseMs: Int64?
     static var creativeGraceMs: Int64?
     /// URL protocols put in front of the SDK's own URLSession (request stubs).
@@ -67,6 +68,7 @@ enum TestHooks {
     static func reset() {
         simulator = nil
         developmentBuild = nil
+        appStoreBuild = nil
         eventRetryBaseMs = nil
         creativeGraceMs = nil
         urlProtocols = []
@@ -133,11 +135,29 @@ enum AppEnvironment {
         #endif
     }
 
-    /// A development build: signed with the `get-task-allow` entitlement (what lets Xcode attach a
-    /// debugger), as builds run from Xcode and development/ad-hoc builds are. App Store and TestFlight
-    /// builds never have it. The iOS counterpart of Android's debuggable flag.
+    /// A development build signed with `get-task-allow`, allowing Xcode to attach a debugger.
+    /// Ad hoc and TestFlight builds need the separate install-source check below.
     static var isDevelopmentBuild: Bool {
         TestHooks.developmentBuild ?? signedForDevelopment
+    }
+
+    /// Only a physical App Store installation may serve live ads. A missing receipt, a sandbox
+    /// receipt (TestFlight), or an embedded provisioning profile keeps traffic in test mode.
+    /// This uses the receipt API available on the SDK's minimum supported version, iOS 13.
+    static var isAppStoreBuild: Bool {
+        guard !isSimulator, !isDevelopmentBuild else { return false }
+        if let override = TestHooks.appStoreBuild { return override }
+        let bundle = Bundle.main
+        let receiptURL = bundle.appStoreReceiptURL
+        return isAppStoreInstall(
+            receiptURL: receiptURL,
+            receiptExists: receiptURL.map { FileManager.default.fileExists(atPath: $0.path) } ?? false,
+            hasProvisioningProfile: bundle.url(forResource: "embedded", withExtension: "mobileprovision") != nil
+        )
+    }
+
+    static func isAppStoreInstall(receiptURL: URL?, receiptExists: Bool, hasProvisioningProfile: Bool) -> Bool {
+        !hasProvisioningProfile && receiptExists && receiptURL?.lastPathComponent == "receipt"
     }
 
     private static let signedForDevelopment: Bool = {

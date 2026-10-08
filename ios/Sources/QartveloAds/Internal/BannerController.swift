@@ -34,6 +34,7 @@ final class BannerController {
     private var loading = false
     private var lastRequestAt = Int64.min / 2
     private var pendingFallback: QartveloFallbackBanner?
+    private var fallbackWidth: CGFloat = 0
     private var refreshTask: DispatchWorkItem?
 
     init(engine: Engine, placementId: String) {
@@ -82,6 +83,11 @@ final class BannerController {
         hostVisible = visible
         if visible { onShownMaybe() }
         schedule()
+    }
+
+    func onLayoutChanged(_ view: QartveloAdsBannerView) {
+        guard hostView === view, let current = content else { return }
+        render(view, current)
     }
 
     // MARK: - Refresh
@@ -133,7 +139,7 @@ final class BannerController {
             onFailed(QartveloAdsFailure(reason: QartveloAdsFailure.disabled, error: QartveloAdsError(.noFill, "Qartvelo Ads serving is disabled for this placement")))
             return
         }
-        engine.fetchAd(placementId, format: .banner, timeoutMs: engine.effectiveTimeoutMs(placement)) { [weak self] outcome in
+        engine.fetchAd(placementId, format: .banner, timeoutMs: engine.effectiveTimeoutMs(placement), bannerWidth: hostView?.bannerRequestWidth, bannerHeight: hostView?.bannerRequestHeight) { [weak self] outcome in
             guard let self = self else { return }
             switch outcome {
             case .success(let ad): self.decode(ad)
@@ -176,7 +182,7 @@ final class BannerController {
 
     private func onFailed(_ failure: QartveloAdsFailure) {
         let unit = failure.serverFallback == "none" ? nil : engine.fallbackUnit(placementId, placement: engine.placement(placementId))
-        if unit != nil, case .fallback? = content {
+        if unit != nil, case .fallback? = content, abs(fallbackWidth - (hostView?.availableBannerWidth ?? UIScreen.main.bounds.width)) < 0.5 {
             // The fallback banner is already on screen and refreshes itself; keep it.
             loading = false
             schedule()
@@ -200,8 +206,7 @@ final class BannerController {
             return
         }
         let view = hostView
-        let hostWidth = view?.bounds.width ?? 0
-        let width = hostWidth > 0 ? hostWidth : UIScreen.main.bounds.width
+        let width = view?.availableBannerWidth ?? UIScreen.main.bounds.width
         let info = QartveloAdsAdInfo(placementId: placementId, format: .banner, source: .admob)
         let callback = BannerRelay()
         let banner = adapter.createBanner(
@@ -215,6 +220,7 @@ final class BannerController {
         callback.onSettled = { [weak self, weak banner] success, message in
             guard let self = self, let banner = banner else { return }
             if success {
+                self.fallbackWidth = width
                 self.onFallbackLoaded(banner)
             } else {
                 Log.i("Fallback banner failed for '\(self.placementId)': \(message ?? "")")
@@ -278,7 +284,7 @@ final class BannerController {
             return
         }
         item.impressed = true
-        engine.events.enqueue(.impression, ad: item.ad)
+        if !item.ad.localTest { engine.events.enqueue(.impression, ad: item.ad) }
         let info = infoFor(.qartvelo(item))
         emit { $0.qartveloAdDidShow?(info) }
         emit { $0.qartveloAdDidRecordImpression?(info) }
@@ -298,15 +304,19 @@ final class BannerController {
     private func render(_ view: QartveloAdsBannerView, _ content: Content) {
         switch content {
         case .qartvelo(let item):
-            if view.renderedContent === item { return }
-            let available = view.bounds.width > 0 ? view.bounds.width : UIScreen.main.bounds.width
+            let available = view.availableBannerWidth
             let width = min(CGFloat(max(item.ad.width, 1)), available)
             let height = width * CGFloat(max(item.ad.height, 1)) / CGFloat(max(item.ad.width, 1))
+            let size = view.usesAdaptiveSize ? view.adaptiveBannerSize : CGSize(width: width, height: height)
+            if view.renderedContent === item {
+                view.updateContentSize(size)
+                return
+            }
             let creative = BannerCreativeView(image: item.image, test: item.ad.test) { [weak self, weak item] in
                 guard let self = self, let item = item else { return }
                 self.onClick(item)
             }
-            view.show(creative, size: CGSize(width: width, height: height), content: item)
+            view.show(creative, size: size, content: item)
         case .fallback(let banner):
             if view.renderedContent === banner { return }
             banner.setRootViewController(view.hostViewController)
@@ -440,6 +450,7 @@ final class BannerCreativeView: UIView {
         badge.font = .systemFont(ofSize: 9, weight: .medium)
         badge.insets = UIEdgeInsets(top: 0, left: 4, bottom: 0, right: 4)
         badge.layer.cornerRadius = 3
+        badge.layer.maskedCorners = [.layerMaxXMinYCorner, .layerMaxXMaxYCorner]
         badge.accessibilityLabel = Strings.aboutAds
         badge.accessibilityTraits = .link
         badge.isUserInteractionEnabled = true
