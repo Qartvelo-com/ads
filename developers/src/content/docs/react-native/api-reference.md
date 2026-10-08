@@ -28,7 +28,7 @@ import {
 | `removeAllListeners(type?)` | `void` | |
 | `setLogLevel(level: LogLevel)` | `void` | No-op where unsupported |
 | `setPrivacy(privacy: QartveloAdsPrivacy)` | `void` | No-op where unsupported |
-| `isSupported()` | `boolean` | Android with the native module built in |
+| `isSupported()` | `boolean` | Android or iOS with the native module built in |
 
 ## QartveloAdsBanner props
 
@@ -120,4 +120,4 @@ jest.mock('@qartvelo/react-native-ads', () => ({
 }));
 ```
 
-Without a mock it behaves as on iOS (the Jest preset reports iOS): promises reject with `unsupported_platform` and the banner renders nothing.
+Without a native module mock, promise calls reject with `module_unavailable`. Mock the module and banner component in JavaScript tests.

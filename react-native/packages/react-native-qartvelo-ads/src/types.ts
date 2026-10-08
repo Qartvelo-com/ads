@@ -1,6 +1,5 @@
 /**
- * Public, platform-neutral types of `@qartvelo/react-native-ads`. They stay the same when an iOS SDK
- * is added; only the Android implementation exists today.
+ * Public, platform-neutral types of `@qartvelo/react-native-ads`. Shared by Android and iOS.
  */
 
 export type AdFormat = 'banner' | 'interstitial' | 'rewarded';
@@ -28,7 +27,7 @@ export type QartveloAdsErrorCode =
   /** Another full-screen ad is already on screen. */
   | 'already_showing'
   | 'internal_error'
-  /** The current platform has no QartveloAds SDK yet (iOS, web). */
+  /** The current platform has no QartveloAds SDK yet (web). */
   | 'unsupported_platform'
   /** The native module is missing: the app was not rebuilt after installing the package. */
   | 'module_unavailable'
@@ -42,7 +41,8 @@ export interface QartveloAdsInitOptions {
   requestTimeoutMs?: number;
   /**
    * Serve test ads: real ads labelled "Test ad" (or the built-in test ad), never billed. AdMob
-   * uses Google's test units. Also on automatically in debug builds, see `testModeInDebugBuilds`.
+   * uses Google's test units. Also on automatically in Android debug builds. On iOS, Simulator and all non-App Store
+   * installs are always non-billable, regardless of the test flags.
    */
   testMode?: boolean;
   /** In test mode, make QartveloAds answer "no fill" so the AdMob fallback can be exercised. */
@@ -50,10 +50,10 @@ export interface QartveloAdsInitOptions {
   /**
    * Turn test mode on automatically in debuggable (developer) Android builds, like AdMob test
    * devices. Release builds are unaffected. Default true; set false to see exactly what a release
-   * build does.
+   * build does. Ignored on iOS: all non-App Store installs always use test mode.
    */
   testModeInDebugBuilds?: boolean;
-  /** Allow the AdMob fallback (requires the `qartvelo-ads-admob` Android dependency). Default true. */
+  /** Allow the AdMob fallback (requires the optional native AdMob adapter). Default true. */
   admobFallback?: boolean;
   logLevel?: LogLevel;
   /** QartveloAds API base URL, e.g. `https://api.example.com/`. */

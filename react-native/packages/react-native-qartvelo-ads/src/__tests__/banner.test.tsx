@@ -41,7 +41,8 @@ beforeEach(() => {
   setPlatform('android');
 });
 
-describe('QartveloAdsBanner re-render behaviour', () => {
+describe.each(['android', 'ios'] as const)('QartveloAdsBanner on %s', (os) => {
+  beforeEach(() => setPlatform(os));
   it('keeps native props stable when the parent re-renders with new inline props', () => {
     const renderer = render(
       <QartveloAdsBanner
@@ -234,7 +235,7 @@ describe('QartveloAdsBanner re-render behaviour', () => {
 
 describe('QartveloAdsBanner on platforms without the SDK', () => {
   it('renders nothing and reports unsupported_platform once per placement', () => {
-    setPlatform('ios');
+    setPlatform('web');
     const onLoadFailed = jest.fn();
     const renderer = render(
       <QartveloAdsBanner

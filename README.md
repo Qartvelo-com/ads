@@ -28,9 +28,9 @@ React Native app ──> @qartvelo/react-native-ads ──> Qartvelo Ads Kotlin 
 | Same, also on | JitPack, GitHub Packages (`maven.pkg.github.com/Qartvelo-com/ads`) | `com.qartvelo.ads:core:0.4.0` |
 | iOS core | Swift Package Manager (`https://github.com/Qartvelo-com/ads`) | `QartveloAds` 0.4.0 |
 | iOS AdMob adapter (optional) | same | `QartveloAdsAdMob` 0.4.0 |
-| React Native (Android) | npm | `npm install @qartvelo/react-native-ads` |
+| React Native (Android and iOS) | npm | `npm install @qartvelo/react-native-ads` |
 
-The React Native plugin is Android only for now; native iOS apps use the Swift SDK.
+The React Native plugin bridges both native SDKs through one JavaScript API.
 
 ## Android quick start
 
@@ -115,7 +115,7 @@ if (result.rewarded) {
 <QartveloAdsBanner placementId="home_banner" style={{ width: '100%' }} />;
 ```
 
-The native SDK comes from Maven Central, which React Native projects already use; see the
+Android resolves the SDK from Maven Central; iOS includes the Swift SDK and autolinks through CocoaPods. See the
 [React Native guide](https://developers.qartvelo.com/react-native/installation/).
 
 ## Documentation
@@ -190,7 +190,7 @@ cd react-native/packages/react-native-qartvelo-ads && npm ci && npm test && npm 
 cd react-native/example && npm install && npx react-native run-android   # uses the local SDK build
 ```
 
-The Android and React Native samples default to `http://10.0.2.2:8000/` (a backend on your machine, seen from the Android
+The Android and React Native Android samples default to `http://10.0.2.2:8000/` (a backend on your machine, seen from the Android
 emulator); point them at `https://ads.qartvelo.com/` for the live service.
 The iOS sample uses the SDK's `https://ads.qartvelo.com/` default; its app key and placements are in
 `ios/sample-app/Sources/AppConfig.swift`. It explicitly enables test mode. The normal launch opens a

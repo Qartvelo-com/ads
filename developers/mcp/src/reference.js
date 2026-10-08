@@ -14,8 +14,8 @@ export const CODES = {
 	show_failed: { kind: 'SDK error', meaning: 'The ad could not be displayed, for example no foreground Activity.', fix: 'Show from a resumed Activity; continue your flow.' },
 	already_showing: { kind: 'SDK error', meaning: 'Another full-screen ad is on screen.', fix: 'Do not show two full-screen ads at once; wait for onDismissed.' },
 	internal_error: { kind: 'SDK error', meaning: 'Unexpected failure inside the SDK (it never throws into app code).', fix: 'Enable DEBUG logs (adb logcat -s QartveloAds) and report the log.' },
-	unsupported_platform: { kind: 'React Native error', meaning: 'Called on a platform without the SDK (iOS, web).', fix: 'Guard with QartveloAds.isSupported(); the React Native plugin supports Android only today (native iOS apps use the Swift SDK).' },
-	module_unavailable: { kind: 'React Native error', meaning: 'The native module is not linked into the app binary.', fix: 'Rebuild the Android app: npx react-native run-android. A JS reload is not enough.' },
+	unsupported_platform: { kind: 'React Native error', meaning: 'Called on an unsupported platform, such as web.', fix: 'Guard with QartveloAds.isSupported(); the React Native plugin supports Android and iOS.' },
+	module_unavailable: { kind: 'React Native error', meaning: 'The native module is not linked into the app binary.', fix: 'Rebuild the native app: npx react-native run-android or, after pod install, npx react-native run-ios. A JS reload is not enough.' },
 	invalid_argument: { kind: 'React Native error', meaning: 'A JavaScript argument was rejected before reaching native code.', fix: 'Pass a non-empty placement code string and valid options.' },
 	// Fallback reasons
 	error: { kind: 'fallback reason', meaning: 'Network or server error while requesting Qartvelo Ads.', fix: 'The fallback is used automatically.' },

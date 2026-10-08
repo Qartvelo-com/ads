@@ -1,5 +1,5 @@
 /**
- * Public imperative API. Every call delegates to the Kotlin QartveloAds SDK: campaign selection, timeouts,
+ * Public imperative API. Every call delegates to the native QartveloAds SDK: campaign selection, timeouts,
  * AdMob fallback, de-duplication of loads and the reward-once guarantee all live natively. This
  * layer only validates arguments, converts wire values into typed results and normalises errors.
  */
@@ -28,15 +28,16 @@ import {
   toRewardedShowResult,
 } from './wire';
 
-/** The only platform with a native QartveloAds SDK today. */
-const SUPPORTED_OS = 'android';
+function supportedPlatform(): boolean {
+  return Platform.OS === 'android' || Platform.OS === 'ios';
+}
 
 function availableNative(): Spec | null {
-  return Platform.OS === SUPPORTED_OS ? (NativeQartveloAds ?? null) : null;
+  return supportedPlatform() ? (NativeQartveloAds ?? null) : null;
 }
 
 function requireNative(): Spec {
-  if (Platform.OS !== SUPPORTED_OS) {
+  if (!supportedPlatform()) {
     throw new QartveloAdsError(
       'unsupported_platform',
       `QartveloAds is not available on ${Platform.OS} yet`
@@ -45,7 +46,7 @@ function requireNative(): Spec {
   if (!NativeQartveloAds) {
     throw new QartveloAdsError(
       'module_unavailable',
-      'The QartveloAds native module is not linked. Rebuild the Android app after installing @qartvelo/react-native-ads.'
+      'The QartveloAds native module is not linked. Rebuild the native app after installing @qartvelo/react-native-ads.'
     );
   }
   return NativeQartveloAds;
@@ -170,7 +171,7 @@ export const QartveloAds = {
     availableNative()?.setPrivacy(value);
   },
 
-  /** Whether this platform has a linked QartveloAds SDK (Android with the native module built in). */
+  /** Whether this platform has a linked QartveloAds SDK (Android or iOS with the native module built in). */
   isSupported(): boolean {
     return availableNative() !== null;
   },

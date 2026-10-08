@@ -141,7 +141,7 @@ export default defineConfig({
 						'',
 						'- Android: the Kotlin package is `com.qartvelo.sdk`; the entry point is the `QartveloAds` object.',
 						'- iOS (0.4.0+): Swift module `QartveloAds` (Swift Package Manager `https://github.com/Qartvelo-com/ads` or the `QartveloAds` pod), optional `QartveloAdsAdMob` registered with `QartveloAds.registerFallbackAdapter(QartveloAdMobFallbackAdapter())` before `QartveloAds.initialize(appKey:options:completion:)`. Callbacks go to `QartveloAdsDelegate`; the banner is `QartveloAdsBannerView(placementId:)` with `load()`.',
-						'- React Native is Android only today; it rejects with `unsupported_platform` on iOS.',
+						'- React Native supports Android and iOS through one JS API. iOS autolinks RNQartveloAds via CocoaPods; optional AdMob is enabled with QARTVELO_ADS_ADMOB_ENABLED=true in the Podfile. All non-App Store iOS installs are non-billable test traffic.',
 						'- Current version: 0.4.0. Gradle coordinates `com.qartvelo.ads:core:0.4.0` and optional `com.qartvelo.ads:admob:0.4.0` from Maven Central (`mavenCentral()`, no extra repository).',
 						'- Ads are addressed by placement **code** (for example `game_end`) created in the publisher dashboard, never by numeric id.',
 						'- The app key (`app_` + 24 characters) is public and goes in the app. The SDK secret must never be embedded in an app.',

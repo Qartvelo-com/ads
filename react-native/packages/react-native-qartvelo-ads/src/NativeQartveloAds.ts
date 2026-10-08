@@ -1,6 +1,6 @@
 /**
  * Codegen spec of the QartveloAds TurboModule. This is a private wire format between the TypeScript API
- * (`QartveloAds.ts`) and the Kotlin module; app code uses the typed public API instead.
+ * (`QartveloAds.ts`) and the native module; app code uses the typed public API instead.
  *
  * Strings that carry enums (format, source, error code, log level) are lower-case on the wire.
  */
@@ -82,5 +82,5 @@ export interface Spec extends TurboModule {
   readonly onAdEvent: CodegenTypes.EventEmitter<NativeAdEvent>;
 }
 
-/** `null` where the native module does not exist (iOS, web, or a host that did not autolink it). */
+/** `null` where the native module does not exist (web or a host that did not autolink it). */
 export default TurboModuleRegistry.get<Spec>('QartveloAds');

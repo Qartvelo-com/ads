@@ -1,9 +1,10 @@
 /**
- * QartveloAds React Native example: banner, interstitial and rewarded ads served by the QartveloAds Android
+ * QartveloAds React Native example: banner, interstitial and rewarded ads served by the QartveloAds native
  * SDK, with test mode and forced no-fill to demonstrate the automatic AdMob fallback.
  */
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import {
+  Platform,
   Pressable,
   ScrollView,
   StatusBar,
@@ -15,7 +16,8 @@ import {
 } from 'react-native';
 import {
   SafeAreaProvider,
-  useSafeAreaInsets,
+  SafeAreaView,
+  initialWindowMetrics,
 } from 'react-native-safe-area-context';
 import {
   QartveloAds,
@@ -26,9 +28,13 @@ import {
 } from '@qartvelo/react-native-ads';
 
 /** Seeded demo app (backend `php artisan migrate:fresh --seed`). */
-const APP_KEY = 'app_demo_rn_example_0001';
+const APP_KEY =
+  Platform.OS === 'ios'
+    ? 'app_dYWiPE5Pp2vvc0fuHkYi3ggo'
+    : 'app_demo_rn_example_0001';
 /** The host machine as seen from the Android emulator. */
-const DEFAULT_BASE_URL = 'http://10.0.2.2:8000/';
+const DEFAULT_BASE_URL =
+  Platform.OS === 'ios' ? 'https://ads.qartvelo.com/' : 'http://10.0.2.2:8000/';
 
 const PLACEMENTS = {
   banner: 'home_banner',
@@ -40,11 +46,18 @@ const PLACEMENTS = {
  * Google's public test ad units for the seeded placements. They let the AdMob fallback work even
  * before the QartveloAds backend has delivered its placement configuration.
  */
-const ADMOB_TEST_UNITS: Record<string, string> = {
-  home_banner: 'ca-app-pub-3940256099942544/9214589741',
-  game_end: 'ca-app-pub-3940256099942544/1033173712',
-  reward_coins: 'ca-app-pub-3940256099942544/5224354917',
-};
+const ADMOB_TEST_UNITS: Record<string, string> =
+  Platform.OS === 'ios'
+    ? {
+        home_banner: 'ca-app-pub-3940256099942544/2435281174',
+        game_end: 'ca-app-pub-3940256099942544/4411468910',
+        reward_coins: 'ca-app-pub-3940256099942544/1712485313',
+      }
+    : {
+        home_banner: 'ca-app-pub-3940256099942544/9214589741',
+        game_end: 'ca-app-pub-3940256099942544/1033173712',
+        reward_coins: 'ca-app-pub-3940256099942544/5224354917',
+      };
 
 const EVENT_TYPES: QartveloAdsEventType[] = [
   'loaded',
@@ -144,7 +157,7 @@ function useEventLog() {
 
 function App() {
   return (
-    <SafeAreaProvider>
+    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
       <StatusBar barStyle="dark-content" />
       <DemoScreen />
     </SafeAreaProvider>
@@ -152,7 +165,6 @@ function App() {
 }
 
 function DemoScreen() {
-  const insets = useSafeAreaInsets();
   const log = useEventLog();
 
   const [baseUrl, setBaseUrl] = useState(DEFAULT_BASE_URL);
@@ -263,161 +275,165 @@ function DemoScreen() {
   };
 
   return (
-    <ScrollView
-      style={styles.screen}
-      contentContainerStyle={[
-        styles.content,
-        { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 24 },
-      ]}
-      keyboardShouldPersistTaps="handled"
-    >
-      <Text style={styles.title}>QartveloAds React Native example</Text>
-      <Text style={styles.muted}>App key {APP_KEY}</Text>
+    <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
+      <ScrollView
+        style={styles.screen}
+        contentContainerStyle={[
+          styles.content,
+          { paddingTop: 12, paddingBottom: 24 },
+        ]}
+        keyboardShouldPersistTaps="handled"
+      >
+        <Text style={styles.title}>QartveloAds React Native example</Text>
+        <Text style={styles.muted}>App key {APP_KEY}</Text>
 
-      <Section title="1. Initialize">
-        <Text style={styles.label}>Backend base URL</Text>
-        <TextInput
-          value={baseUrl}
-          onChangeText={setBaseUrl}
-          editable={!initialized}
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType="url"
-          style={[styles.input, initialized && styles.inputLocked]}
-        />
-        <Toggle
-          label="Test mode (built-in test ads, nothing billed)"
-          value={testMode}
-          onValueChange={setTestMode}
-          disabled={initialized}
-        />
-        <Toggle
-          label="Force QartveloAds no-fill (shows the AdMob fallback)"
-          value={forceNoFill}
-          onValueChange={setForceNoFill}
-          disabled={initialized || !testMode}
-        />
-        {!testMode && forceNoFill ? (
-          <Text style={styles.muted}>
-            Forced no-fill only applies in test mode.
-          </Text>
-        ) : null}
-        <Button
-          title={
-            initState === 'initializing' ? 'Initializing...' : 'Initialize'
-          }
-          onPress={initialize}
-          disabled={initState !== 'idle'}
-        />
-        <Text style={[styles.status, initState === 'degraded' && styles.error]}>
-          {initMessage}
-        </Text>
-        {initialized ? (
-          <Text style={styles.muted}>
-            Options apply once per process. Restart the app to change them.
-          </Text>
-        ) : null}
-      </Section>
-
-      <Section title="2. Banner (home_banner)">
-        {bannerMounted ? (
-          <QartveloAdsBanner
-            placementId={PLACEMENTS.banner}
-            style={styles.banner}
-            onLoaded={event => setBannerStatus(`Loaded from ${event.source}`)}
-            onLoadFailed={event =>
-              setBannerStatus(
-                `Failed - ${event.error.code}: ${event.error.message}`,
-              )
-            }
-            onFallbackStarted={event =>
-              setBannerStatus(`Falling back to AdMob (${event.reason})`)
-            }
-            onClicked={() => setBannerStatus('Clicked')}
+        <Section title="1. Initialize">
+          <Text style={styles.label}>Backend base URL</Text>
+          <TextInput
+            value={baseUrl}
+            onChangeText={setBaseUrl}
+            editable={!initialized}
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="url"
+            style={[styles.input, initialized && styles.inputLocked]}
           />
-        ) : (
-          <Text style={styles.muted}>Banner unmounted</Text>
-        )}
-        <Text style={styles.status}>{bannerStatus}</Text>
-        <View style={styles.row}>
-          <Button
-            title={bannerMounted ? 'Unmount banner' : 'Mount banner'}
-            onPress={() => setBannerMounted(mounted => !mounted)}
-            compact
+          <Toggle
+            label="Test mode (test ads, nothing billed)"
+            value={testMode}
+            onValueChange={setTestMode}
+            disabled={initialized}
           />
-          <Button
-            title={`Re-render screen (${renderCount})`}
-            onPress={() => setRenderCount(count => count + 1)}
-            compact
+          <Toggle
+            label="Force QartveloAds no-fill (shows the AdMob fallback)"
+            value={forceNoFill}
+            onValueChange={setForceNoFill}
+            disabled={initialized || !testMode}
           />
-        </View>
-        <Text style={styles.muted}>
-          Re-renders and remounts reuse the loaded banner: watch the log, no new
-          "loaded" event appears until the placement's refresh interval.
-        </Text>
-      </Section>
-
-      <Section title="3. Interstitial (game_end)">
-        <View style={styles.row}>
-          <Button
-            title="Load"
-            onPress={loadInterstitial}
-            disabled={!initialized}
-            compact
-          />
-          <Button
-            title="Show"
-            onPress={showInterstitial}
-            disabled={!initialized}
-            compact
-          />
-        </View>
-        <Text style={styles.status}>{interstitialStatus}</Text>
-      </Section>
-
-      <Section title="4. Rewarded (reward_coins)">
-        <View style={styles.row}>
-          <Button
-            title="Load"
-            onPress={loadRewarded}
-            disabled={!initialized}
-            compact
-          />
-          <Button
-            title="Show"
-            onPress={showRewarded}
-            disabled={!initialized}
-            compact
-          />
-          <Button
-            title="isReady?"
-            onPress={checkReady}
-            disabled={!initialized}
-            compact
-          />
-        </View>
-        <Text style={styles.status}>{rewardedStatus}</Text>
-        <Text style={styles.coins}>Coins: {coins}</Text>
-      </Section>
-
-      <Section title="5. Event log">
-        <View style={styles.row}>
-          <Button title="Clear log" onPress={log.clear} compact />
-        </View>
-        {log.entries.length === 0 ? (
-          <Text style={styles.muted}>No events yet.</Text>
-        ) : (
-          log.entries.map(entry => (
-            <Text
-              key={entry.id}
-              style={[styles.logLine, toneStyles[entry.tone]]}
-            >
-              {entry.time} {entry.text}
+          {!testMode && forceNoFill ? (
+            <Text style={styles.muted}>
+              Forced no-fill only applies in test mode.
             </Text>
-          ))
-        )}
-      </Section>
-    </ScrollView>
+          ) : null}
+          <Button
+            title={
+              initState === 'initializing' ? 'Initializing...' : 'Initialize'
+            }
+            onPress={initialize}
+            disabled={initState !== 'idle'}
+          />
+          <Text
+            style={[styles.status, initState === 'degraded' && styles.error]}
+          >
+            {initMessage}
+          </Text>
+          {initialized ? (
+            <Text style={styles.muted}>
+              Options apply once per process. Restart the app to change them.
+            </Text>
+          ) : null}
+        </Section>
+
+        <Section title="2. Banner (home_banner)">
+          {bannerMounted ? (
+            <QartveloAdsBanner
+              placementId={PLACEMENTS.banner}
+              style={styles.banner}
+              onLoaded={event => setBannerStatus(`Loaded from ${event.source}`)}
+              onLoadFailed={event =>
+                setBannerStatus(
+                  `Failed - ${event.error.code}: ${event.error.message}`,
+                )
+              }
+              onFallbackStarted={event =>
+                setBannerStatus(`Falling back to AdMob (${event.reason})`)
+              }
+              onClicked={() => setBannerStatus('Clicked')}
+            />
+          ) : (
+            <Text style={styles.muted}>Banner unmounted</Text>
+          )}
+          <Text style={styles.status}>{bannerStatus}</Text>
+          <View style={styles.row}>
+            <Button
+              title={bannerMounted ? 'Unmount banner' : 'Mount banner'}
+              onPress={() => setBannerMounted(mounted => !mounted)}
+              compact
+            />
+            <Button
+              title={`Re-render screen (${renderCount})`}
+              onPress={() => setRenderCount(count => count + 1)}
+              compact
+            />
+          </View>
+          <Text style={styles.muted}>
+            Re-renders and remounts reuse the loaded banner: watch the log, no
+            new "loaded" event appears until the placement's refresh interval.
+          </Text>
+        </Section>
+
+        <Section title="3. Interstitial (game_end)">
+          <View style={styles.row}>
+            <Button
+              title="Load"
+              onPress={loadInterstitial}
+              disabled={!initialized}
+              compact
+            />
+            <Button
+              title="Show"
+              onPress={showInterstitial}
+              disabled={!initialized}
+              compact
+            />
+          </View>
+          <Text style={styles.status}>{interstitialStatus}</Text>
+        </Section>
+
+        <Section title="4. Rewarded (reward_coins)">
+          <View style={styles.row}>
+            <Button
+              title="Load"
+              onPress={loadRewarded}
+              disabled={!initialized}
+              compact
+            />
+            <Button
+              title="Show"
+              onPress={showRewarded}
+              disabled={!initialized}
+              compact
+            />
+            <Button
+              title="isReady?"
+              onPress={checkReady}
+              disabled={!initialized}
+              compact
+            />
+          </View>
+          <Text style={styles.status}>{rewardedStatus}</Text>
+          <Text style={styles.coins}>Coins: {coins}</Text>
+        </Section>
+
+        <Section title="5. Event log">
+          <View style={styles.row}>
+            <Button title="Clear log" onPress={log.clear} compact />
+          </View>
+          {log.entries.length === 0 ? (
+            <Text style={styles.muted}>No events yet.</Text>
+          ) : (
+            log.entries.map(entry => (
+              <Text
+                key={entry.id}
+                style={[styles.logLine, toneStyles[entry.tone]]}
+              >
+                {entry.time} {entry.text}
+              </Text>
+            ))
+          )}
+        </Section>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 

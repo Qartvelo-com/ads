@@ -14,7 +14,7 @@ it('rejects with module_unavailable and keeps void APIs harmless', async () => {
     QartveloAds.initialize({ appKey: 'app_x' })
   ).rejects.toMatchObject({
     code: 'module_unavailable',
-    message: expect.stringMatching(/Rebuild the Android app/),
+    message: expect.stringMatching(/Rebuild the native app/),
   });
   await expect(QartveloAds.showInterstitial('game_end')).rejects.toMatchObject({
     code: 'module_unavailable',

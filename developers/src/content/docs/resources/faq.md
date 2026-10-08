@@ -13,7 +13,7 @@ No network or disk work happens on your calling thread, loads are asynchronous, 
 
 ### Does Qartvelo Ads support iOS?
 
-Yes, natively since 0.4.0: the [iOS SDK](/ios/installation/) for Swift and Objective-C (Swift Package Manager or CocoaPods), with the same placements, fallback and test mode as Android. Register the iOS version as its own app (platform iOS, bundle ID). The React Native plugin is still Android only: it rejects with `unsupported_platform` on iOS, so shared code keeps working; use `QartveloAds.isSupported()` to hide ad UI there.
+Yes, natively since 0.4.0: the [iOS SDK](/ios/installation/) for Swift and Objective-C (Swift Package Manager or CocoaPods), with the same placements, fallback and test mode as Android. Register the iOS version as its own app (platform iOS, bundle ID). The [React Native package](/react-native/installation/) also supports iOS through the same JavaScript API as Android, with CocoaPods autolinking. Simulator and all non-App Store installations always use non-billable test traffic.
 
 ### Is the app key a secret?
 

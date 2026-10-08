@@ -1,7 +1,7 @@
 {
   "name": "@qartvelo/react-native-ads",
   "version": "0.4.0",
-  "description": "Qartvelo Ads React Native plugin for Android: banner, interstitial and rewarded ads with automatic AdMob fallback.",
+  "description": "Qartvelo Ads React Native plugin for Android and iOS: banner, interstitial and rewarded ads with automatic AdMob fallback.",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
   "exports": {
@@ -24,19 +24,24 @@
     "!**/__tests__",
     "!**/__fixtures__",
     "!**/__mocks__",
-    "!**/.*"
+    "!**/.*",
+    "ios",
+    "RNQartveloAds.podspec",
+    "scripts/sync-ios-sdk.cjs"
   ],
   "scripts": {
-    "prepare": "bob build",
-    "build": "bob build",
+    "prepare": "node scripts/sync-ios-sdk.cjs && bob build",
+    "build": "node scripts/sync-ios-sdk.cjs && bob build",
     "typecheck": "tsc",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
     "test": "jest",
-    "clean": "del-cli lib android/build android/.cxx"
+    "clean": "del-cli lib android/build android/.cxx",
+    "prepack": "node scripts/sync-ios-sdk.cjs"
   },
   "keywords": [
     "react-native",
     "android",
+    "ios",
     "ads",
     "advertising",
     "qartvelo",
@@ -99,6 +104,14 @@
     "jsSrcsDir": "src",
     "android": {
       "javaPackageName": "com.qartvelo.reactnative"
+    },
+    "ios": {
+      "modulesProvider": {
+        "QartveloAds": "RCTQartveloAds"
+      },
+      "componentProvider": {
+        "QartveloAdsBannerView": "RCTQartveloAdsBannerView"
+      }
     }
   },
   "jest": {
