@@ -1,0 +1,73 @@
+# Automatic release: after CI passes on main, if the shared version has no tag yet, create the tag
+# and a GitHub release (notes from the changelog), then run the Publish workflow for it.
+# To release, bump the version everywhere (see README "Releasing") and merge to main.
+#
+# Tags created with GITHUB_TOKEN do not trigger `push: tags` workflows, so Publish is started
+# explicitly with workflow_dispatch on the new tag (the one event GITHUB_TOKEN may trigger).
+
+name: Release
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  tag:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SHA }}
+          fetch-depth: 0
+
+      - name: Read and check the shared version
+        id: version
+        run: |
+          gradle=$(sed -nE 's/^\s*version = "([^"]+)".*/\1/p' android/build.gradle.kts | head -1)
+          sdk=$(sed -nE 's/.*SDK_VERSION: String = "([^"]+)".*/\1/p' android/qartvelo-ads-core/src/main/java/com/qartvelo/sdk/QartveloAds.kt)
+          rn=$(node -p "require('./react-native/packages/react-native-qartvelo-ads/package.json').version")
+          mcp=$(node -p "require('./developers/mcp/package.json').version")
+          echo "gradle=$gradle sdk=$sdk rn=$rn mcp=$mcp"
+          if [ -z "$gradle" ] || [ "$gradle" != "$sdk" ] || [ "$gradle" != "$rn" ] || [ "$gradle" != "$mcp" ]; then
+            echo "::error::Versions differ; not releasing."
+            exit 1
+          fi
+          echo "version=$gradle" >> "$GITHUB_OUTPUT"
+          if git ls-remote --exit-code --tags origin "refs/tags/$gradle" >/dev/null; then
+            echo "Tag $gradle already exists; nothing to release."
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create the tag and GitHub release
+        if: steps.version.outputs.exists == 'false'
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          awk -v v="## $VERSION" '$0 == v { on = 1; next } on && /^## / { exit } on' \
+            developers/src/content/docs/resources/changelog.md > notes.md
+          if [ ! -s notes.md ]; then echo "Release $VERSION" > notes.md; fi
+          gh release create "$VERSION" --target "$SHA" --title "$VERSION" --notes-file notes.md
+
+      - name: Publish
+        if: steps.version.outputs.exists == 'false'
+        run: gh workflow run publish.yml --ref "${{ steps.version.outputs.version }}"

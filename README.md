@@ -131,9 +131,11 @@ emulator); point them at `https://ads.qartvelo.com/` for the live service.
 
 Bump `version` in `android/build.gradle.kts`, `SDK_VERSION` in `QartveloAds.kt`, the npm
 `package.json` files (React Native plugin and `developers/mcp`) and the version strings in
-`developers/` (see its README), then push a matching tag (`git tag 0.2.1 && git push origin 0.2.1`). The
-[Publish](.github/workflows/publish.yml) workflow publishes to GitHub Packages (and npm when the
-`NPM_TOKEN` secret is set); JitPack builds the tag on first request.
+`developers/` (see its README), add a `## x.y.z` section to the changelog, and merge to `main`.
+When CI passes on `main` and that version has no tag yet, the [Release](.github/workflows/release.yml)
+workflow creates the tag and GitHub release (notes from the changelog) and starts
+[Publish](.github/workflows/publish.yml), which publishes to GitHub Packages (and npm when the
+`NPM_TOKEN` secret is set); JitPack builds the tag on first request. Pushing a tag by hand still works.
 
 ## License
 
