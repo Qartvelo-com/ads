@@ -3,7 +3,7 @@ title: Introduction
 description: What Qartvelo Ads is, who it is for, and how the pieces fit together.
 ---
 
-Qartvelo Ads is a direct-sold ad network for Android apps in Georgia. Local advertisers buy CPM campaigns that run inside publishers' apps as banners, interstitials and rewarded videos. Publishers integrate one SDK and earn a revenue share on every Qartvelo Ads impression, while unfilled requests go to their **own** AdMob account so no inventory is wasted.
+Qartvelo Ads is a direct-sold ad network for Android and iOS apps in Georgia. Local advertisers buy CPM campaigns that run inside publishers' apps as banners, interstitials and rewarded videos. Publishers integrate one SDK and earn a revenue share on every Qartvelo Ads impression, while unfilled requests go to their **own** AdMob account so no inventory is wasted.
 
 ```
 Your app ──> Qartvelo Ads SDK ──> Qartvelo Ads ad available?
@@ -16,6 +16,7 @@ Your app ──> Qartvelo Ads SDK ──> Qartvelo Ads ad available?
 | You are | Start here |
 |---|---|
 | An Android developer (Kotlin or Java) | [Quickstart](/get-started/quickstart/), then [Android SDK](/android/installation/) |
+| An iOS developer (Swift or Objective-C) | [iOS SDK](/ios/installation/) |
 | A React Native developer | [React Native installation](/react-native/installation/) |
 | Building your own client or debugging traffic | [REST API](/api/overview/) and the [OpenAPI spec](/openapi.yaml) |
 | An advertiser or agency | [Campaigns](/advertisers/campaigns/) and [creative specs](/advertisers/creatives/) |
@@ -25,15 +26,17 @@ Your app ──> Qartvelo Ads SDK ──> Qartvelo Ads ad available?
 
 | Package | Install | Notes |
 |---|---|---|
-| Android core | `com.qartvelo.ads:core:0.3.4` | Maven Central. API client, caching, rendering, events, banner view |
-| Android AdMob adapter | `com.qartvelo.ads:admob:0.3.4` | Optional. Depends on Google's `play-services-ads` |
+| Android core | `com.qartvelo.ads:core:0.4.0` | Maven Central. API client, caching, rendering, events, banner view |
+| Android AdMob adapter | `com.qartvelo.ads:admob:0.4.0` | Optional. Depends on Google's `play-services-ads` |
+| iOS core | `QartveloAds` 0.4.0 | Swift Package Manager (`https://github.com/Qartvelo-com/ads`) or CocoaPods |
+| iOS AdMob adapter | `QartveloAdsAdMob` 0.4.0 | Optional. Depends on Google's `Google-Mobile-Ads-SDK` 12 |
 | React Native | `npm install @qartvelo/react-native-ads` | Android only for now; iOS calls reject with `unsupported_platform` |
 
 The SDK source is MIT-licensed at [github.com/Qartvelo-com/ads](https://github.com/Qartvelo-com/ads). The production API is `https://ads.qartvelo.com/`, which is also the SDK's default base URL.
 
 ## Key concepts
 
-- **App**: an Android application registered in the publisher dashboard by its package name. Each app gets a public **app key** (`app_` + 24 characters) that you put in your code.
+- **App**: an Android or iOS application registered in the publisher dashboard by its package name (Android) or bundle ID (iOS). Each app gets a public **app key** (`app_` + 24 characters) that you put in your code.
 - **Placement**: an ad slot in your app, identified by a short **code** such as `home_banner`, `game_end` or `reward_coins`. A placement has one format: `banner`, `interstitial` or `rewarded`. Your code only ever uses the placement code.
 - **Fallback**: when Qartvelo Ads cannot serve a placement (no eligible campaign, timeout, error, kill switch), the SDK shows your AdMob ad unit for that placement instead.
 - **Test mode**: a switch in the SDK options that serves built-in test creatives that are never billed, and makes AdMob use Google's public test units.
@@ -45,7 +48,8 @@ The SDK source is MIT-licensed at [github.com/Qartvelo-com/ads](https://github.c
 |---|---|
 | Android, native (Kotlin/Java) | Supported, minSdk 23 |
 | Android, React Native 0.79+ (New Architecture) | Supported, minSdk 24 |
-| iOS | Not yet. The React Native API is platform-neutral so iOS can be added without API changes |
+| iOS, native (Swift/Objective-C) | Supported, iOS 13+ |
+| iOS, React Native | Not yet. The React Native API is platform-neutral so iOS can be added without API changes |
 
 ## Next steps
 

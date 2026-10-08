@@ -9,7 +9,8 @@ Qartvelo Ads targeting is **contextual only**: it uses the app and the request, 
 |---|---|---|
 | Country | ISO 3166-1 alpha-2 code, for example `GE` | Derived from the network address at the edge. Requests without a known country count as Georgia |
 | Languages | `ka`, `en`, `ru` (several) | The device language, else the app's default language |
-| Android versions | `6` to `16` (several) | The device's Android major version. Requests without a version do not match a campaign that targets versions |
+| Platforms | Android, iOS (several) | The app's platform |
+| Android versions | `6` to `16` (several) | The device's Android major version. A campaign that targets versions runs on Android apps only |
 | App categories | games, news, entertainment, education, lifestyle, sports, finance, shopping, social, tools, travel, health, music, other | The publisher's app category |
 | Apps | Up to 500 approved apps | Specific apps |
 | Formats | banner, interstitial, rewarded | The placement's format |

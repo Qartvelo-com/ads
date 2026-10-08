@@ -11,30 +11,35 @@ Never click or watch live (billable) ads in your own app: it generates invalid t
 
 Since SDK 0.3.3 test mode also turns itself on in **debug builds** (any build where the app is debuggable, such as `./gradlew installDebug`, `npx react-native run-android` or an Expo development build), like AdMob test devices. Release builds are not debuggable, and Google Play rejects debuggable builds, so your users never get test ads. The SDK logs `Debuggable build: test mode is on` at info level when this happens.
 
+On **iOS** (SDK 0.4.0+) the **Simulator and all installations outside the App Store always use test mode**, even with `testMode = false`. This includes Xcode, development, ad hoc, enterprise and TestFlight installations. Live ads require a physical App Store installation with its production receipt present. A missing or sandbox receipt keeps the app in test mode. The legacy `testModeInDebugBuilds` option cannot disable this protection on iOS.
+
 You can also turn it on explicitly, for example for a QA release build:
 
 | Platform | Option |
 |---|---|
 | Android | `QartveloAdsOptions(testMode = true)` |
+| iOS | `options.testMode = true` on `QartveloAdsOptions` |
 | React Native | `QartveloAds.initialize({ appKey, testMode: true })` |
 | REST API | `"test_mode": true` on `/sdk/initialize` and `/ads/request` |
 
-To see exactly what a release build does from a debug build (live, billable ads: don't tap them), opt out with `testModeInDebugBuilds = false` (`testModeInDebugBuilds: false` in React Native).
+On Android, opting out with `testModeInDebugBuilds = false` (`testModeInDebugBuilds: false` in React Native) allows live traffic from a physical debug device. iOS installations outside the App Store cannot opt out; they can still preview eligible real campaign creatives as non-billable test ads.
 
-Test mode is read only from your code and the build; it is never cached, so turning it off takes effect on the next app start.
+Test mode is computed from your code and the current installation; it is never cached. Explicit option changes take effect on the next app start, subject to the automatic test-mode protections above.
 
 ## What changes
 
 - **Real ads, labelled "Test ad".** For an approved app the backend picks the creative a live request would win, with the same targeting and ranking, so you see the ads your users will see. The SDK shows **Test ad** instead of **Ad** on the badge. No budget is reserved and the advertiser is never charged.
-- **Built-in test ads** when your app is not approved yet, or no live campaign matches the request:
+- **Built-in server test ads** when your app is not approved yet, or no live campaign matches the request:
 
   | Format | Creative |
   |---|---|
-  | banner | 320x50 PNG |
+  | banner | iOS adaptive: closest-proportion Retina PNG (960x150, 1320x204 or 2184x270). Legacy/Android: widest fitting standard banner; equal widths rotate |
   | interstitial | 1080x1920 PNG |
   | rewarded | 15 s, 720x1280 MP4 |
 
-- Impressions, clicks and rewards are validated and de-duplicated exactly like live ones, so you can test your event handling, but they are never billed, never earn revenue and never appear in reports. Tapping a test ad opens the advertiser's page like a live ad would.
+- **iOS works without app registration in test mode.** An empty app key skips session initialization. If a registered app key or bundle ID is rejected, the ad request fails, or there is no fill, SDK 0.4.0 downloads the matching public test creative from `/test-ads/` without an app session. Initialization succeeds in test mode, so you can verify the ad UI before registering the app. These public creatives do not send impression, click, or reward events to the backend. When a valid test session returns a fill, the backend-served ad and its test events work as usual.
+
+- **Backend-served test events** are validated and de-duplicated exactly like live ones, so you can test your event handling, but they are never billed, never earn revenue and never appear in reports. Tapping a backend-served test ad opens the advertiser's page like a live ad would. Public iOS fallback creatives have no click destination and do not send events.
 - The app does not need to be approved yet: test sessions skip the approval check.
 - The AdMob adapter replaces your unit ids with Google's public test units:
 
@@ -46,7 +51,7 @@ Test mode is read only from your code and the build; it is never cached, so turn
 
 ## Exercise the fallback
 
-Add `testForceNoFill = true` (`testForceNoFill: true` in React Native). Every Qartvelo Ads request answers `no_fill` with reason `test_no_fill`, so each load emits `onFallbackStarted` and then shows a Google test ad. Google's rewarded test unit grants 10 coins.
+Add `testForceNoFill = true` (`testForceNoFill: true` in React Native). Each load skips the Qartvelo creative and exercises the fallback, so it emits `onFallbackStarted` and then shows a Google test ad. On iOS this works without app registration and does not need a backend request. Google's rewarded test unit grants 10 coins.
 
 ## Logs
 
@@ -61,6 +66,8 @@ Debug logs include request timing, fallback decisions and event delivery. Tokens
 ## Sample apps
 
 The [SDK repository](https://github.com/Qartvelo-com/ads) contains a native sample (`android/sample-app`) and a React Native example (`react-native/example`). Both have Load/Show buttons, a banner screen, test-mode and force-no-fill switches, an editable base URL and an on-screen event log.
+
+The iOS QA app is in `ios/sample-app` and uses the SDK from the same checkout. Generate its project with XcodeGen, build and install it in Simulator, then run `qa-run.sh` to capture banner, interstitial and rewarded screenshots and logs. Pass `-forceNoFill` to exercise Google test ads. See the repository README for build commands.
 
 :::caution
 Before you publish, make sure release builds use `testMode = false` and `testForceNoFill = false`, and that your release build is not debuggable. Test traffic earns nothing.

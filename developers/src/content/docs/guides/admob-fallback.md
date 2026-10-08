@@ -10,14 +10,14 @@ Qartvelo Ads is the primary ad source. When it has no eligible campaign, fails, 
 - You create your own AdMob account, your own AdMob app and your own ad units (one per placement and format) and give those ids to Qartvelo Ads.
 - Qartvelo Ads never owns, shares, proxies or pools AdMob inventory and never routes several publishers through one AdMob account.
 - Google pays AdMob revenue directly to you. Qartvelo Ads does not receive, report, take a share of, or have access to your AdMob revenue or account.
-- The adapter uses Google's official `com.google.android.gms:play-services-ads` artifact as a normal Gradle dependency, never a modified copy.
+- The adapter uses Google's official SDK as a normal dependency (`com.google.android.gms:play-services-ads` on Android, `Google-Mobile-Ads-SDK` 12 on iOS), never a modified copy.
 - You remain responsible for complying with AdMob policies (placement, invalid traffic, consent).
 
 ## Setup
 
 1. In AdMob, create an app for your package and ad units that match your placements: banner units for banner placements, interstitial units for interstitial placements, rewarded units for rewarded placements.
-2. Add the AdMob **App ID** (contains `~`) to `AndroidManifest.xml` as `com.google.android.gms.ads.APPLICATION_ID` meta-data.
-3. Add the adapter: `implementation("com.qartvelo.ads:admob:0.3.4")`, or `QartveloAds_admobEnabled=true` in React Native.
+2. Add the AdMob **App ID** (contains `~`) to `AndroidManifest.xml` as `com.google.android.gms.ads.APPLICATION_ID` meta-data, or on iOS to `Info.plist` as `GADApplicationIdentifier`.
+3. Add the adapter: `implementation("com.qartvelo.ads:admob:0.4.0")`, or `QartveloAds_admobEnabled=true` in React Native. On iOS add the `QartveloAdsAdMob` product (or pod) and call `QartveloAds.registerFallbackAdapter(QartveloAdMobFallbackAdapter())` before `initialize` ([iOS installation](/ios/installation/#register-the-admob-adapter)).
 4. Map each placement to its ad unit **ID** (contains `/`), either on the placement in the dashboard (fallback provider **AdMob**) or in code:
 
    ```kotlin
@@ -30,7 +30,7 @@ Qartvelo Ads is the primary ad source. When it has no eligible campaign, fails, 
    )
    ```
 
-   The in-code mapping wins over the dashboard value for the same placement code.
+   On iOS: `options.admobAdUnits = ["game_end": "ca-app-pub-XXX/222"]`. The in-code mapping wins over the dashboard value for the same placement code.
 
 No other code is needed. The SDK discovers the adapter automatically, initializes Google Mobile Ads once on a background thread and reports AdMob ads through the same callbacks with `info.source == AdSource.ADMOB` (`'admob'` in React Native).
 

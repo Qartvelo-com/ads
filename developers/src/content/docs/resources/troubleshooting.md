@@ -10,7 +10,8 @@ Start with debug logging: `logLevel = QartveloAdsLogLevel.DEBUG` (`logLevel: 'de
 | Symptom | Cause and fix |
 |---|---|
 | `NOT_INITIALIZED` with `invalid_app_key` in the log | Wrong app key. Copy it from the app page in the dashboard |
-| `package_mismatch` | The running `applicationId` differs from the registered package name. Check `applicationIdSuffix` in debug builds and flavors |
+| `package_mismatch` | The running `applicationId` (or iOS bundle ID) differs from the registered one. Check `applicationIdSuffix` in debug builds and flavors, or per-configuration bundle IDs in Xcode |
+| `platform_mismatch` | The iOS app uses the Android app's key or the other way round. Register each platform as its own app and use its key |
 | `app_not_approved` | The app is still pending. Use test mode until it is approved |
 | `NETWORK_ERROR` / `TIMEOUT` | No connectivity, a custom `baseUrl` that is wrong, or cleartext HTTP blocked for a local backend |
 | The listener never reports a second result | `initialize` is idempotent; only the first call's options count. Restart the process |
@@ -39,7 +40,7 @@ Initialization failure is not fatal: the SDK keeps running on its cached configu
 
 | Error | Fix |
 |---|---|
-| `Could not find com.qartvelo.ads:core:0.3.4` | Add `mavenCentral()` to the repositories used for dependencies (`dependencyResolutionManagement` or `allprojects`). Versions before 0.3.4 are only on JitPack (`maven("https://jitpack.io")`) |
+| `Could not find com.qartvelo.ads:core:0.4.0` | Add `mavenCentral()` to the repositories used for dependencies (`dependencyResolutionManagement` or `allprojects`). Versions before 0.4.0 are only on JitPack (`maven("https://jitpack.io")`) |
 | `AAPT: error: attribute qartvelo_placementId not found` | Declare `xmlns:app="http://schemas.android.com/apk/res-auto"` and make sure `com.qartvelo.ads:core` is a dependency of that module |
 | `attribute ourads_placementId not found` | Old attribute name from pre-release snippets. Use `app:qartvelo_placementId` |
 | `Unresolved reference: OURADS` | The enum value is `AdSource.QARTVELO` |

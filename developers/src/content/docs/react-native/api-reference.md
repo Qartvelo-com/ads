@@ -1,6 +1,6 @@
 ---
 title: API reference
-description: Complete TypeScript API of @qartvelo/react-native-ads 0.3.4.
+description: Complete TypeScript API of @qartvelo/react-native-ads 0.4.0.
 ---
 
 ```ts

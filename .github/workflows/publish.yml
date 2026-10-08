@@ -5,6 +5,8 @@
 #   JitPack builds the same tag on first request (see jitpack.yml).
 # - npm: @qartvelo/react-native-ads and the docs MCP server @qartvelo/ads-mcp, only when the
 #   NPM_TOKEN secret is set.
+# - iOS: Swift Package Manager reads the tag directly (Package.swift at the repository root). The
+#   QartveloAds and QartveloAdsAdMob pods go to CocoaPods trunk only when COCOAPODS_TRUNK_TOKEN is set.
 # Run manually with "mcp_only" to publish just the MCP server between SDK releases.
 # The tag must match `version` in android/build.gradle.kts and both npm package.json files.
 
@@ -76,6 +78,21 @@ jobs:
             sleep 20
           done
           echo "Still validating after 20 minutes; check https://central.sonatype.com/publishing/deployments"
+
+  cocoapods:
+    if: ${{ !inputs.mcp_only }}
+    runs-on: macos-15
+    timeout-minutes: 45
+    env:
+      COCOAPODS_TRUNK_TOKEN: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        if: env.COCOAPODS_TRUNK_TOKEN != ''
+      - name: Publish QartveloAds and QartveloAdsAdMob to CocoaPods trunk
+        if: env.COCOAPODS_TRUNK_TOKEN != ''
+        run: |
+          pod trunk push QartveloAds.podspec --allow-warnings --synchronous
+          pod trunk push QartveloAdsAdMob.podspec --allow-warnings --synchronous
 
   npm:
     if: ${{ !inputs.mcp_only }}

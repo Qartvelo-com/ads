@@ -17,7 +17,8 @@ Content-Type: application/json
 | `format` | `banner` \| `interstitial` \| `rewarded` | yes | Must match the placement's format |
 | `session_token` | string | yes | From `/sdk/initialize` |
 | `language` | string, max 35 | no | Content language such as `ka` or `en-US` (primary subtag used). Defaults to the app's language |
-| `android_version` | string | no | `14` or `14.0.1`; the major version is used for targeting |
+| `android_version` | string | no | Android only. `14` or `14.0.1`; the major version is used for targeting |
+| `os_version` | string, max 32 | no | iOS: the system version, for example `18` (informational) |
 | `app_version`, `sdk_version` | string | no | Informational |
 | `screen_width`, `screen_height` | integer 0..20000 | no | Pixels. Used to pick a banner that fits and an interstitial matching the orientation |
 | `test_mode` | boolean | no | Serve a never-billed test ad (also implied by a test session) |
@@ -26,7 +27,7 @@ Content-Type: application/json
 ```json
 {"app_key":"app_xxxxxxxxxxxxxxxxxxxxxxxx","placement":"game_end","format":"interstitial",
  "session_token":"<opaque>","language":"ka","android_version":"14","app_version":"1.0.0",
- "sdk_version":"0.3.4","screen_width":1080,"screen_height":2400}
+ "sdk_version":"0.4.0","screen_width":1080,"screen_height":2400}
 ```
 
 ## Response 200: fill
@@ -87,7 +88,7 @@ Content-Type: application/json
 2. Placement found and format matches; kill switches; placement frequency cap.
 3. Test mode returns a test ad (the top-ranked live creative for an approved app, without reserving budget, else the built-in one). Otherwise:
 4. Eligible campaigns: active, within schedule, budget left, advertiser approved with balance, country matches (or any), at least one approved creative of the requested format.
-5. Targeting: formats, languages, app ids, app categories, Android versions. Empty means any. A campaign that targets Android versions is skipped when the request has none.
+5. Targeting: platforms, formats, languages, app ids, app categories, Android versions. Empty means any. A campaign that targets Android versions only runs on Android apps and is skipped when the request has no version.
 6. Campaign frequency cap for this session.
 7. Highest CPM bid first (ties random), with daily budget pacing.
 8. The cost of one impression is reserved atomically; if a campaign cannot reserve, the next one is tried.

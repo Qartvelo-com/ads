@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Qartvelo Ads SDK API
-  version: 0.3.4
+  version: 0.4.0
   summary: The HTTP API used by the Qartvelo Ads Android and React Native SDKs.
   description: |
     Stateless JSON API for initializing an SDK session, requesting ads and reporting ad events.
@@ -43,7 +43,7 @@ paths:
             example:
               app_key: app_xxxxxxxxxxxxxxxxxxxxxxxx
               package_name: com.example.app
-              sdk_version: 0.3.4
+              sdk_version: 0.4.0
               app_version: 1.0.0
               platform: android
               os_version: '14'
@@ -181,10 +181,10 @@ components:
       required: [app_key, package_name]
       properties:
         app_key: { type: string, maxLength: 64, description: '`app_` + 24 alphanumerics from the publisher dashboard' }
-        package_name: { type: string, maxLength: 255, description: 'Android application id, compared exactly' }
+        package_name: { type: string, maxLength: 255, description: 'Android application id or iOS bundle ID, compared exactly' }
         sdk_version: { type: [string, 'null'], maxLength: 32 }
         app_version: { type: [string, 'null'], maxLength: 64 }
-        platform: { type: [string, 'null'], enum: [android, null] }
+        platform: { type: [string, 'null'], enum: [android, ios, null], description: Must match the app's platform; defaults to android }
         os_version: { type: [string, 'null'], maxLength: 32 }
         test_mode: { type: [boolean, 'null'], description: Skips the approval check; the session only gets test ads }
         is_emulator: { type: [boolean, 'null'], description: The device is an emulator; emulator sessions are always test sessions }
@@ -228,7 +228,8 @@ components:
         format: { $ref: '#/components/schemas/AdFormat' }
         session_token: { type: string, maxLength: 2048 }
         language: { type: [string, 'null'], maxLength: 35, description: 'Content language, e.g. ka or en-US' }
-        android_version: { type: [string, 'null'], maxLength: 32 }
+        android_version: { type: [string, 'null'], maxLength: 32, description: Android only }
+        os_version: { type: [string, 'null'], maxLength: 32, description: 'iOS system version, informational' }
         app_version: { type: [string, 'null'], maxLength: 64 }
         sdk_version: { type: [string, 'null'], maxLength: 32 }
         screen_width: { type: [integer, 'null'], minimum: 0, maximum: 20000 }
@@ -298,7 +299,7 @@ components:
           properties:
             code:
               type: string
-              enum: [invalid_app_key, invalid_session, session_expired, package_mismatch, app_not_approved, placement_not_found, format_mismatch, validation_failed, rate_limited, server_error]
+              enum: [invalid_app_key, invalid_session, session_expired, package_mismatch, platform_mismatch, app_not_approved, placement_not_found, format_mismatch, validation_failed, rate_limited, server_error]
             message: { type: string }
             fields:
               type: object
@@ -341,7 +342,7 @@ components:
         application/json:
           schema: { $ref: '#/components/schemas/Error' }
     Forbidden:
-      description: package_mismatch or app_not_approved
+      description: package_mismatch, platform_mismatch or app_not_approved
       content:
         application/json:
           schema: { $ref: '#/components/schemas/Error' }

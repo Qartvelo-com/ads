@@ -1,18 +1,19 @@
 ---
 name: qartvelo-ads
-description: Integrate or debug the Qartvelo Ads SDK (Android Kotlin com.qartvelo.ads:core, React Native @qartvelo/react-native-ads) - banner, interstitial and rewarded ads with automatic fallback to the app's own AdMob units. Use when adding ads to a Georgian Android app, when code mentions QartveloAds, or when asked about Qartvelo Ads placements, test mode, AdMob fallback or its REST API.
+description: Integrate or debug the Qartvelo Ads SDK (Android Kotlin com.qartvelo.ads:core, iOS Swift QartveloAds, React Native @qartvelo/react-native-ads) - banner, interstitial and rewarded ads with automatic fallback to the app's own AdMob units. Use when adding ads to a Georgian Android or iOS app, when code mentions QartveloAds, or when asked about Qartvelo Ads placements, test mode, AdMob fallback or its REST API.
 ---
 
 # Qartvelo Ads integration
 
-Qartvelo Ads is a direct-sold ad network for Android apps in Georgia. The SDK serves Qartvelo Ads campaigns first and falls back to the publisher's **own** AdMob ad units. Full docs: https://developers.qartvelo.com (Markdown: https://developers.qartvelo.com/llms-full.txt, any page as `<url>.md`).
+Qartvelo Ads is a direct-sold ad network for Android and iOS apps in Georgia. The SDK serves Qartvelo Ads campaigns first and falls back to the publisher's **own** AdMob ad units. Full docs: https://developers.qartvelo.com (Markdown: https://developers.qartvelo.com/llms-full.txt, any page as `<url>.md`).
 
 ## Facts that must be exact
 
-- Version **0.3.4**. Android artifacts on Maven Central: `com.qartvelo.ads:core:0.3.4` (required), `com.qartvelo.ads:admob:0.3.4` (optional AdMob fallback). Repository `mavenCentral()`; versions before 0.3.4 are only on JitPack.
+- Version **0.4.0**. Android artifacts on Maven Central: `com.qartvelo.ads:core:0.4.0` (required), `com.qartvelo.ads:admob:0.4.0` (optional AdMob fallback). Repository `mavenCentral()`; versions before 0.4.0 are only on JitPack.
 - Kotlin package `com.qartvelo.sdk`, entry point `object QartveloAds`. Options class `QartveloAdsOptions`. Listener `QartveloAdsListener` (all methods have default bodies, main thread).
 - `AdSource` is `QARTVELO` or `ADMOB` (React Native: `'qartvelo'` or `'admob'`). There is no `OURADS` value.
 - Banner view `com.qartvelo.sdk.QartveloAdsBannerView`, XML attribute **`app:qartvelo_placementId`**.
+- iOS (0.4.0+): Swift Package Manager `https://github.com/Qartvelo-com/ads` (products `QartveloAds`, optional `QartveloAdsAdMob`) or pods `QartveloAds` / `QartveloAdsAdMob` `~> 0.4`. iOS 13+. Entry point `QartveloAds` (static methods), `QartveloAdsOptions` (class, set properties), `QartveloAdsDelegate` (optional `@objc` methods), `QartveloAdsBannerView(placementId:)` + `load()`. AdMob adapter: `QartveloAds.registerFallbackAdapter(QartveloAdMobFallbackAdapter())` before `initialize`, plus `GADApplicationIdentifier` in Info.plist. The iOS app is its own app in the dashboard (platform iOS, bundle ID) with its own app key.
 - React Native: `npm install @qartvelo/react-native-ads`, New Architecture, Android only (iOS rejects with `unsupported_platform`). AdMob adapter enabled with `QartveloAds_admobEnabled=true` in `android/gradle.properties`. Rebuild the native app after installing.
 - Ads are addressed by **placement code** (`[a-z0-9_]{2,64}`, e.g. `game_end`) created in the publisher dashboard. Each placement has one format: banner, interstitial or rewarded.
 - The app key (`app_` + 24 chars) is public and goes in the app. The **SDK secret never goes in an app**.
@@ -23,7 +24,8 @@ Qartvelo Ads is a direct-sold ad network for Android apps in Georgia. The SDK se
 
 1. Ask for (or find) the app key and the placement codes and formats. If missing, tell the user to create them at https://ads.qartvelo.com (Apps -> app -> placements).
 2. Add the dependencies:
-   - Android: `mavenCentral()` in `settings.gradle.kts` `dependencyResolutionManagement.repositories` (usually already there), then `implementation("com.qartvelo.ads:core:0.3.4")` and, for fallback, `implementation("com.qartvelo.ads:admob:0.3.4")`.
+   - Android: `mavenCentral()` in `settings.gradle.kts` `dependencyResolutionManagement.repositories` (usually already there), then `implementation("com.qartvelo.ads:core:0.4.0")` and, for fallback, `implementation("com.qartvelo.ads:admob:0.4.0")`.
+   - iOS: add the Swift package (or pods) above.
    - React Native: install the package (the native SDK comes from Maven Central, nothing to add), set `QartveloAds_admobEnabled=true` for fallback.
 3. If the AdMob adapter is used, make sure the manifest has the app's own AdMob App ID: `<meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="ca-app-pub-...~..."/>` (missing -> crash at start-up). Keep any existing AdMob setup.
 4. Initialize once at start-up with test mode in debug builds:
@@ -37,6 +39,12 @@ Qartvelo Ads is a direct-sold ad network for Android apps in Georgia. The SDK se
    }
    ```
 
+   ```swift
+   // AppDelegate.application(_:didFinishLaunchingWithOptions:)
+   QartveloAds.registerFallbackAdapter(QartveloAdMobFallbackAdapter()) // only with QartveloAdsAdMob
+   QartveloAds.initialize(appKey: "app_xxx")
+   ```
+
    ```tsx
    QartveloAds.initialize({ appKey: 'app_xxx', testMode: __DEV__ }).catch(() => {});
    ```
@@ -44,7 +52,8 @@ Qartvelo Ads is a direct-sold ad network for Android apps in Georgia. The SDK se
 5. Add each placement:
    - Banner: `QartveloAdsBannerView` with `app:qartvelo_placementId="code"`, call `load()`, call `destroy()` in `onDestroy`. RN: `<QartveloAdsBanner placementId="code" style={{ width: '100%' }} />`.
    - Interstitial: `QartveloAds.loadInterstitial("code")` early; `showInterstitial(activity, "code", listener)` at a natural break. Continue the flow from `onDismissed`, `onNoAdAvailable` **and** `onLoadFailed`. RN: `await loadInterstitial`, `await showInterstitial` (resolves on dismiss or `{ shown: false }`).
-   - Rewarded: `loadRewarded`, then `showRewarded`; grant the reward **only** in `onReward` (RN: `result.rewarded`), exactly once. Never grant from `onDismissed`.
+   - iOS: `QartveloAdsBannerView(placementId:)` + `load()`; `QartveloAds.loadInterstitial("code", delegate: self)` then `showInterstitial("code", from: viewController, delegate: self)`.
+   - Rewarded: `loadRewarded`, then `showRewarded`; grant the reward **only** in `onReward` (Swift: `qartveloAd(_:didEarnReward:)`, RN: `result.rewarded`), exactly once. Never grant from `onDismissed`.
 6. Reload after each full-screen show for the next opportunity.
 7. Verify: debug builds are in test mode automatically (SDK 0.3.3+; emulators always, SDK 0.3.4+): ads carry a "Test ad" label (real creatives for approved apps, purple "TEST AD" placeholders otherwise) and are never billed; `testForceNoFill = true` shows the AdMob fallback (Google test ads). Logs: `adb logcat -s QartveloAds` with `logLevel = QartveloAdsLogLevel.DEBUG`.
 
@@ -55,7 +64,7 @@ Qartvelo Ads is a direct-sold ad network for Android apps in Georgia. The SDK se
 - Do not call `initialize` more than once or with different options; it is idempotent per process.
 - Do not parse, log or store session or impression tokens.
 - One visible banner per placement code at a time.
-- Do not invent APIs. If unsure, read the page: e.g. https://developers.qartvelo.com/android/api-reference.md or https://developers.qartvelo.com/react-native/api-reference.md
+- Do not invent APIs. If unsure, read the page: e.g. https://developers.qartvelo.com/android/api-reference.md, https://developers.qartvelo.com/ios/api-reference.md or https://developers.qartvelo.com/react-native/api-reference.md
 
 ## Error codes
 

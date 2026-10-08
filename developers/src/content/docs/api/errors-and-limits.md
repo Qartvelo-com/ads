@@ -18,7 +18,8 @@ Every non-2xx response except event rejections uses:
 | `invalid_app_key` | 401 | Unknown app key | Check the key on the app page |
 | `invalid_session` | 401 | Session token malformed, forged or for another app | Initialize again |
 | `session_expired` | 401 | Session token expired | Initialize again |
-| `package_mismatch` | 403 | Package name differs from the registered app | Fix the `applicationId` or the registration |
+| `package_mismatch` | 403 | Package name differs from the registered app | Fix the `applicationId` (or iOS bundle ID) or the registration |
+| `platform_mismatch` | 403 | The app key belongs to the other platform's app | Use the app key of the Android or iOS app you are building |
 | `app_not_approved` | 403 | App not approved and not in test mode | Use test mode until approved |
 | `placement_not_found` | 404 | No placement with that code in this app | Create it, or fix the code |
 | `format_mismatch` | 422 | Requested format differs from the placement | Use the matching load method |

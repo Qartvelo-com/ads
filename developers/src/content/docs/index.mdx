@@ -1,9 +1,9 @@
 ---
 title: Qartvelo Ads for developers
-description: Monetize Georgian Android apps with direct-sold ads and keep your AdMob units as an automatic fallback.
+description: Monetize Georgian Android and iOS apps with direct-sold ads and keep your AdMob units as an automatic fallback.
 template: splash
 hero:
-  tagline: Direct-sold banner, interstitial and rewarded ads for Georgian Android apps. Qartvelo Ads campaigns are served first; when there is no ad, the SDK shows your own AdMob unit for the same slot.
+  tagline: Direct-sold banner, interstitial and rewarded ads for Georgian Android and iOS apps. Qartvelo Ads campaigns are served first; when there is no ad, the SDK shows your own AdMob unit for the same slot.
   image:
     file: ../../assets/logo.svg
   actions:
@@ -25,7 +25,8 @@ import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
 ## Pick your platform
 
 <CardGrid>
-	<LinkCard title="Android (Kotlin)" description="com.qartvelo.ads:core 0.3.4 from Maven Central. Banner view, interstitial and rewarded APIs." href="/android/installation/" />
+	<LinkCard title="Android (Kotlin)" description="com.qartvelo.ads:core 0.4.0 from Maven Central. Banner view, interstitial and rewarded APIs." href="/android/installation/" />
+	<LinkCard title="iOS (Swift)" description="QartveloAds 0.4.0 with Swift Package Manager or CocoaPods. Banner view, interstitial and rewarded APIs." href="/ios/installation/" />
 	<LinkCard title="React Native" description="@qartvelo/react-native-ads: a TurboModule and Fabric banner on top of the Kotlin SDK." href="/react-native/installation/" />
 	<LinkCard title="REST API" description="The four endpoints the SDKs use, with an OpenAPI spec, for custom integrations and debugging." href="/api/overview/" />
 	<LinkCard title="Advertisers" description="Campaign setup, creative specifications, contextual targeting and prepaid billing." href="/advertisers/campaigns/" />

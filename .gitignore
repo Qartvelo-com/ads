@@ -22,3 +22,18 @@ react-native/packages/react-native-qartvelo-ads/lib/
 # React Native example
 react-native/example/ios/Pods/
 react-native/example/vendor/
+
+# iOS (Swift package)
+.build/
+.swiftpm/
+Package.resolved
+xcuserdata/
+DerivedData/
+
+# iOS sample app generated project, builds, and QA captures
+/ios/sample-app/*.xcodeproj/
+/ios/sample-app/build/
+/ios/sample-app/build-*/
+/ios/sample-app/qa-out-*/
+# Legacy generated workspace; the sample app lives under ios/sample-app.
+/AdsTest/
