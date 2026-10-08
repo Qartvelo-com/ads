@@ -58,11 +58,20 @@ jobs:
       - run: xcodebuild -version
       - name: Build and test the Swift package (iOS Simulator)
         run: |
-          set -o pipefail
-          udid=$(xcrun simctl list devices available | grep -m1 -E '^\s+iPhone' | grep -oE '[0-9A-F]{8}-([0-9A-F]{4}-){3}[0-9A-F]{12}')
+          set -euo pipefail
+          udid=$(xcrun simctl list devices available --json | python3 -c 'import json, sys; devices = json.load(sys.stdin)["devices"]; print(next(device["udid"] for group in devices.values() for device in group if device.get("isAvailable") and device["name"].startswith("iPhone")))')
           echo "Simulator $udid"
-          xcodebuild test -scheme QartveloAds-Package -destination "id=$udid" -skipPackagePluginValidation | tee xcodebuild.log | grep -E '^(Test Case|Test Suite|\*\*|.*error:|.*warning: .*QartveloAds)' || true
+          xcrun simctl bootstatus "$udid" -b
+          xcodebuild test -scheme QartveloAds-Package -destination "id=$udid" -parallel-testing-enabled NO -resultBundlePath TestResults.xcresult -skipPackagePluginValidation | tee xcodebuild.log
           grep -q '\*\* TEST SUCCEEDED \*\*' xcodebuild.log
+      - name: Save Swift package test diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-test-diagnostics
+          path: |
+            xcodebuild.log
+            TestResults.xcresult
       - name: Lint the podspecs
         run: |
           pod lib lint QartveloAds.podspec --allow-warnings
