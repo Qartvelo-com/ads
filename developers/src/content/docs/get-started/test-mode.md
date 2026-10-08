@@ -1,23 +1,30 @@
 ---
 title: Test mode
-description: Develop and QA with non-billable test ads, and force a no-fill to see your AdMob fallback.
+description: Debug builds get real ads labelled "Test ad" that are never billed, like AdMob test devices. Force a no-fill to see your AdMob fallback.
 ---
 
-Never click or watch live ads in your own app: it generates invalid traffic, which is rejected and can get your app suspended. Use test mode for every debug and QA build.
+Never click or watch live (billable) ads in your own app: it generates invalid traffic, which is rejected and can get your app suspended. Test mode lets you see and tap real ads safely.
 
 ## Turn it on
 
+Since SDK 0.3.3 test mode turns itself on in **debug builds** (any build where the app is debuggable, such as `./gradlew installDebug`, `npx react-native run-android` or an Expo development build), like AdMob test devices. Release builds are not debuggable, and Google Play rejects debuggable builds, so your users never get test ads. The SDK logs `Debuggable build: test mode is on` at info level when this happens.
+
+You can also turn it on explicitly, for example for a QA release build:
+
 | Platform | Option |
 |---|---|
-| Android | `QartveloAdsOptions(testMode = BuildConfig.DEBUG)` |
-| React Native | `QartveloAds.initialize({ appKey, testMode: __DEV__ })` |
+| Android | `QartveloAdsOptions(testMode = true)` |
+| React Native | `QartveloAds.initialize({ appKey, testMode: true })` |
 | REST API | `"test_mode": true` on `/sdk/initialize` and `/ads/request` |
 
-Test mode is read only from your code; it is never cached, so turning it off takes effect on the next app start.
+To see exactly what a release build does from a debug build (live, billable ads: don't tap them), opt out with `testModeInDebugBuilds = false` (`testModeInDebugBuilds: false` in React Native).
+
+Test mode is read only from your code and the build; it is never cached, so turning it off takes effect on the next app start.
 
 ## What changes
 
-- The backend never selects live campaigns and never reserves budget. It returns built-in creatives labelled **TEST AD**:
+- **Real ads, labelled "Test ad".** For an approved app the backend picks the creative a live request would win, with the same targeting and ranking, so you see the ads your users will see. The SDK shows **Test ad** instead of **Ad** on the badge. No budget is reserved and the advertiser is never charged.
+- **Built-in test ads** when your app is not approved yet, or no live campaign matches the request:
 
   | Format | Creative |
   |---|---|
@@ -25,7 +32,7 @@ Test mode is read only from your code; it is never cached, so turning it off tak
   | interstitial | 1080x1920 PNG |
   | rewarded | 15 s, 720x1280 MP4 |
 
-- Impressions, clicks and rewards are validated and de-duplicated exactly like live ones, so you can test your event handling, but they are never billed, never earn revenue and never appear in reports.
+- Impressions, clicks and rewards are validated and de-duplicated exactly like live ones, so you can test your event handling, but they are never billed, never earn revenue and never appear in reports. Tapping a test ad opens the advertiser's page like a live ad would.
 - The app does not need to be approved yet: test sessions skip the approval check.
 - The AdMob adapter replaces your unit ids with Google's public test units:
 
@@ -54,5 +61,5 @@ Debug logs include request timing, fallback decisions and event delivery. Tokens
 The [SDK repository](https://github.com/Qartvelo-com/ads) contains a native sample (`android/sample-app`) and a React Native example (`react-native/example`). Both have Load/Show buttons, a banner screen, test-mode and force-no-fill switches, an editable base URL and an on-screen event log.
 
 :::caution
-Before you publish, make sure release builds use `testMode = false` and `testForceNoFill = false`. Test traffic earns nothing.
+Before you publish, make sure release builds use `testMode = false` and `testForceNoFill = false`, and that your release build is not debuggable. Test traffic earns nothing.
 :::

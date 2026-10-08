@@ -154,6 +154,13 @@ export function toNativeInitOptions(
   if (testForceNoFill !== undefined) {
     result.testForceNoFill = testForceNoFill;
   }
+  const testModeInDebugBuilds = optionalBoolean(
+    options,
+    'testModeInDebugBuilds'
+  );
+  if (testModeInDebugBuilds !== undefined) {
+    result.testModeInDebugBuilds = testModeInDebugBuilds;
+  }
   const admobFallback = optionalBoolean(options, 'admobFallback');
   if (admobFallback !== undefined) {
     result.admobFallback = admobFallback;

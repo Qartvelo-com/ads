@@ -1,6 +1,7 @@
 package com.qartvelo.sdk.internal
 
 import android.content.Context
+import android.content.pm.ApplicationInfo
 import android.os.Build
 import com.qartvelo.sdk.AdFormat
 import com.qartvelo.sdk.QartveloAds
@@ -111,14 +112,20 @@ internal class Engine(
      * Test mode is purely the publisher's local option. The backend only echoes it back, so it is
      * never taken from (cached) remote config: a build that once ran in test mode must not stay in
      * test mode, unbilled and on Google test units, after the option is turned off.
+     * Debuggable (developer) builds are in test mode too unless [QartveloAdsOptions.testModeInDebugBuilds]
+     * is false; Play only accepts non-debuggable builds, so users never see test ads.
      */
-    val testMode: Boolean get() = options.testMode
+    val testMode: Boolean = options.testMode ||
+        (options.testModeInDebugBuilds && (appContext.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0)
 
     // ---- initialization -------------------------------------------------------------------------
 
     /** Main thread. Loads the cached config, discovers the adapter and requests a session. */
     fun start(listener: QartveloAdsInitListener?) {
         addInitListener(listener)
+        if (testMode && !options.testMode) {
+            OurLog.i("Debuggable build: test mode is on, ads are labelled \"Test ad\" and never billed (testModeInDebugBuilds)")
+        }
         io.execute {
             guard("cached config") {
                 val cached = configStore.load()

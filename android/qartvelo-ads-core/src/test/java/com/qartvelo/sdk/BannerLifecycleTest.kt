@@ -8,6 +8,8 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -62,6 +64,7 @@ class BannerLifecycleTest : SdkTest() {
         banner.load()
         awaitMain(message = "banner impression") { listener.has("impression") }
 
+        assertNotNull("live ads keep the plain label", banner.findByText("Ad"))
         banner.findByDescription("Ad. About Qartvelo Ads")!!.performClick()
         val opened: Intent = shadowOf(host.get()).nextStartedActivity
         assertEquals(Intent.ACTION_VIEW, opened.action)
@@ -70,6 +73,18 @@ class BannerLifecycleTest : SdkTest() {
         settle()
         assertEquals(0, backend.count("/api/v1/events/click"))
         assertFalse(listener.has("clicked"))
+    }
+
+    @Test
+    fun testAdsAreLabelledTestAd() {
+        backend.adResponses.add(backend.fill("banner", creativePath = "/creatives/b.png", test = true))
+        assertTrue(init())
+        val banner = newBanner(listener)
+        banner.load()
+        awaitMain(message = "banner impression") { listener.has("impression") }
+
+        assertNotNull(banner.findByText("Test ad"))
+        assertNull(banner.findByText("Ad"))
     }
 
     @Test

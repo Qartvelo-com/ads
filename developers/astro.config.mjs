@@ -129,7 +129,7 @@ export default defineConfig({
 						'Important notes for code generation:',
 						'',
 						'- Android only today. The Kotlin package is `com.qartvelo.sdk`; the entry point is the `QartveloAds` object. The React Native API rejects with `unsupported_platform` on iOS.',
-						'- Current version: 0.3.2. Gradle coordinates `com.qartvelo.ads:core:0.3.2` and optional `com.qartvelo.ads:admob:0.3.2` from JitPack (`https://jitpack.io`).',
+						'- Current version: 0.3.3. Gradle coordinates `com.qartvelo.ads:core:0.3.3` and optional `com.qartvelo.ads:admob:0.3.3` from JitPack (`https://jitpack.io`).',
 						'- Ads are addressed by placement **code** (for example `game_end`) created in the publisher dashboard, never by numeric id.',
 						'- The app key (`app_` + 24 characters) is public and goes in the app. The SDK secret must never be embedded in an app.',
 						'- Use `testMode = true` (Kotlin) / `testMode: __DEV__` (React Native) in debug builds; test ads are never billed.',

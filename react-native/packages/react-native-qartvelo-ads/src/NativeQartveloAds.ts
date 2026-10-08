@@ -12,6 +12,7 @@ export type NativeInitOptions = {
   requestTimeoutMs?: CodegenTypes.Double;
   testMode?: boolean;
   testForceNoFill?: boolean;
+  testModeInDebugBuilds?: boolean;
   admobFallback?: boolean;
   logLevel?: string;
   baseUrl?: string;

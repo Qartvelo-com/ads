@@ -1,5 +1,6 @@
 package com.qartvelo.sdk
 
+import android.content.pm.ApplicationInfo
 import com.qartvelo.sdk.internal.FallbackDiscovery
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -34,6 +35,31 @@ class InitializationTest : SdkTest() {
         QartveloAds.initialize(app, APP_KEY) { success, _ -> late = success }
         awaitMain { late != null }
         assertEquals(true, late)
+    }
+
+    @Test
+    fun debuggableBuildsAreInTestModeUnlessOptedOut() {
+        val info = app.applicationInfo
+        val original = info.flags
+        try {
+            info.flags = original or ApplicationInfo.FLAG_DEBUGGABLE
+            assertTrue(init(options(testModeInDebugBuilds = true)))
+            QartveloAds.loadInterstitial("game_end", listener)
+            awaitMain(message = "ad request") { backend.count("/api/v1/ads/request") == 1 }
+            assertTrue(backend.bodies("/api/v1/sdk/initialize").single().getBoolean("test_mode"))
+            assertTrue(backend.bodies("/api/v1/ads/request").single().getBoolean("test_mode"))
+
+            QartveloAds.resetForTests()
+            assertTrue("opted out", init(options(testModeInDebugBuilds = false)))
+            assertFalse(backend.bodies("/api/v1/sdk/initialize").last().getBoolean("test_mode"))
+
+            QartveloAds.resetForTests()
+            info.flags = original and ApplicationInfo.FLAG_DEBUGGABLE.inv()
+            assertTrue("release build", init(options(testModeInDebugBuilds = true)))
+            assertFalse(backend.bodies("/api/v1/sdk/initialize").last().getBoolean("test_mode"))
+        } finally {
+            info.flags = original
+        }
     }
 
     @Test

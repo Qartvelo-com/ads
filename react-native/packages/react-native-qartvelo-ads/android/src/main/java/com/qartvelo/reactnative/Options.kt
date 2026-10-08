@@ -44,6 +44,7 @@ internal object Options {
                 logLevel = (map["logLevel"] as? String)?.let(::parseLogLevel) ?: defaults.logLevel,
                 baseUrl = baseUrl ?: DEFAULT_BASE_URL,
                 admobAdUnits = units ?: emptyMap(),
+                testModeInDebugBuilds = bool(map, "testModeInDebugBuilds") ?: defaults.testModeInDebugBuilds,
             ),
         )
     }

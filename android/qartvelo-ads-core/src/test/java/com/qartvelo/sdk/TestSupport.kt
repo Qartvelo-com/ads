@@ -164,6 +164,7 @@ class FakeBackend : Dispatcher() {
         expiresInMs: Long = 30 * 60_000L,
         width: Int = if (format == "banner") 320 else 1080,
         height: Int = if (format == "banner") 50 else 1920,
+        test: Boolean = false,
     ): MockResponse {
         val id = synchronized(this) { ++requestCounter }
         val body = JSONObject().put("status", "fill").put("request_id", "req_$id").put("ad", JSONObject()
@@ -171,7 +172,7 @@ class FakeBackend : Dispatcher() {
             .put("creative_type", creativeType).put("creative_url", baseUrl.trimEnd('/') + creativePath)
             .put("click_url", "https://advertiser.example/landing").put("width", width).put("height", height)
             .put("duration_seconds", if (creativeType == "video") 15 else JSONObject.NULL)
-            .put("impression_token", "imp-token-$id").put("expires_at", isoIn(expiresInMs)).put("test", false))
+            .put("impression_token", "imp-token-$id").put("expires_at", isoIn(expiresInMs)).put("test", test))
         return json(body)
     }
 

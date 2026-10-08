@@ -72,6 +72,20 @@ class InterstitialLifecycleTest : SdkTest() {
     }
 
     @Test
+    fun testAdsAreLabelledTestAd() {
+        backend.adResponses.add(backend.fill("interstitial", test = true))
+        assertTrue(init())
+        loadAndWait(AdFormat.INTERSTITIAL, "game_end")
+        val host = hostActivity().get()
+        QartveloAds.showInterstitial(host, "game_end")
+        val decor = launchedAdActivity(host).get().window.decorView
+        awaitMain(message = "impression") { listener.has("impression") }
+
+        assertNotNull(decor.findByText("Test ad"))
+        assertNull(decor.findByText("Ad"))
+    }
+
+    @Test
     fun adBadgeOpensQartveloSiteWithRefAndIsNotAClick() {
         backend.adResponses.add(backend.fill("interstitial"))
         assertTrue(init())

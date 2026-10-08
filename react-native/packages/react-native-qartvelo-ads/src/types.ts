@@ -40,10 +40,19 @@ export interface QartveloAdsInitOptions {
   appKey: string;
   /** QartveloAds request budget before falling back to AdMob. A per-placement server value wins. */
   requestTimeoutMs?: number;
-  /** Serve built-in test ads only; nothing is billed. AdMob uses Google's test units. */
+  /**
+   * Serve test ads: real ads labelled "Test ad" (or the built-in test ad), never billed. AdMob
+   * uses Google's test units. Also on automatically in debug builds, see `testModeInDebugBuilds`.
+   */
   testMode?: boolean;
   /** In test mode, make QartveloAds answer "no fill" so the AdMob fallback can be exercised. */
   testForceNoFill?: boolean;
+  /**
+   * Turn test mode on automatically in debuggable (developer) Android builds, like AdMob test
+   * devices. Release builds are unaffected. Default true; set false to see exactly what a release
+   * build does.
+   */
+  testModeInDebugBuilds?: boolean;
   /** Allow the AdMob fallback (requires the `qartvelo-ads-admob` Android dependency). Default true. */
   admobFallback?: boolean;
   logLevel?: LogLevel;

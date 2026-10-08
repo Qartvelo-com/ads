@@ -40,7 +40,8 @@ class MyApp : Application() {
 |---|---|---|---|
 | `admobFallback` | `Boolean` | `true` | Allow the AdMob adapter to serve your units when Qartvelo Ads cannot |
 | `requestTimeoutMs` | `Long` | `800` | Qartvelo Ads time budget before falling back. A per-placement value from the dashboard wins. Clamped to 100..10000 |
-| `testMode` | `Boolean` | `false` | Non-billable test ads; AdMob uses Google's test units. See [Test mode](/get-started/test-mode/) |
+| `testMode` | `Boolean` | `false` | Non-billable test ads labelled "Test ad"; AdMob uses Google's test units. See [Test mode](/get-started/test-mode/) |
+| `testModeInDebugBuilds` | `Boolean` | `true` | Turn test mode on automatically when the app is debuggable (debug builds) |
 | `testForceNoFill` | `Boolean` | `false` | Force Qartvelo Ads `no_fill` to exercise the fallback |
 | `logLevel` | `QartveloAdsLogLevel` | `ERROR` | `NONE`, `ERROR`, `INFO`, `DEBUG`. Logcat tag `QartveloAds` |
 | `baseUrl` | `String` | `https://ads.qartvelo.com/` | API origin. Change only for a self-hosted or local backend |
