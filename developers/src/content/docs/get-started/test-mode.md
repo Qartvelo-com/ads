@@ -11,11 +11,14 @@ Never click or watch live (billable) ads in your own app: it generates invalid t
 
 Since SDK 0.3.3 test mode also turns itself on in **debug builds** (any build where the app is debuggable, such as `./gradlew installDebug`, `npx react-native run-android` or an Expo development build), like AdMob test devices. Release builds are not debuggable, and Google Play rejects debuggable builds, so your users never get test ads. The SDK logs `Debuggable build: test mode is on` at info level when this happens.
 
+On **iOS** (SDK 0.4.0+) the **Simulator is always in test mode**, and builds run from Xcode or signed for development (the `get-task-allow` entitlement) are in test mode unless `testModeInDebugBuilds = false`. App Store and TestFlight builds never are.
+
 You can also turn it on explicitly, for example for a QA release build:
 
 | Platform | Option |
 |---|---|
 | Android | `QartveloAdsOptions(testMode = true)` |
+| iOS | `options.testMode = true` on `QartveloAdsOptions` |
 | React Native | `QartveloAds.initialize({ appKey, testMode: true })` |
 | REST API | `"test_mode": true` on `/sdk/initialize` and `/ads/request` |
 

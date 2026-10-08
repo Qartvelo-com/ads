@@ -49,3 +49,21 @@ jobs:
       - run: npm run lint
       - run: npm test -- --silent
       - run: npx bob build
+
+  ios:
+    runs-on: macos-15
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - run: xcodebuild -version
+      - name: Build and test the Swift package (iOS Simulator)
+        run: |
+          set -o pipefail
+          udid=$(xcrun simctl list devices available | grep -m1 -E '^\s+iPhone' | grep -oE '[0-9A-F]{8}-([0-9A-F]{4}-){3}[0-9A-F]{12}')
+          echo "Simulator $udid"
+          xcodebuild test -scheme QartveloAds-Package -destination "id=$udid" -skipPackagePluginValidation | tee xcodebuild.log | grep -E '^(Test Case|Test Suite|\*\*|.*error:|.*warning: .*QartveloAds)' || true
+          grep -q '\*\* TEST SUCCEEDED \*\*' xcodebuild.log
+      - name: Lint the podspecs
+        run: |
+          pod lib lint QartveloAds.podspec --allow-warnings
+          pod lib lint QartveloAdsAdMob.podspec --include-podspecs=QartveloAds.podspec --allow-warnings

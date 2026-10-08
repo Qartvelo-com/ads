@@ -45,8 +45,12 @@ jobs:
           sdk=$(sed -nE 's/.*SDK_VERSION: String = "([^"]+)".*/\1/p' android/qartvelo-ads-core/src/main/java/com/qartvelo/sdk/QartveloAds.kt)
           rn=$(node -p "require('./react-native/packages/react-native-qartvelo-ads/package.json').version")
           mcp=$(node -p "require('./developers/mcp/package.json').version")
-          echo "gradle=$gradle sdk=$sdk rn=$rn mcp=$mcp"
-          if [ -z "$gradle" ] || [ "$gradle" != "$sdk" ] || [ "$gradle" != "$rn" ] || [ "$gradle" != "$mcp" ]; then
+          ios=$(sed -nE 's/.*static let sdkVersion = "([^"]+)".*/\1/p' ios/Sources/QartveloAds/QartveloAds.swift)
+          pod=$(sed -nE "s/^\s*s\.version\s*=\s*'([^']+)'.*/\1/p" QartveloAds.podspec)
+          podAdmob=$(sed -nE "s/^\s*s\.version\s*=\s*'([^']+)'.*/\1/p" QartveloAdsAdMob.podspec)
+          echo "gradle=$gradle sdk=$sdk rn=$rn mcp=$mcp ios=$ios pod=$pod podAdmob=$podAdmob"
+          if [ -z "$gradle" ] || [ "$gradle" != "$sdk" ] || [ "$gradle" != "$rn" ] || [ "$gradle" != "$mcp" ] \
+            || [ "$gradle" != "$ios" ] || [ "$gradle" != "$pod" ] || [ "$gradle" != "$podAdmob" ]; then
             echo "::error::Versions differ; not releasing."
             exit 1
           fi

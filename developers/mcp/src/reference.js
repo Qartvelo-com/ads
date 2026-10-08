@@ -14,7 +14,7 @@ export const CODES = {
 	show_failed: { kind: 'SDK error', meaning: 'The ad could not be displayed, for example no foreground Activity.', fix: 'Show from a resumed Activity; continue your flow.' },
 	already_showing: { kind: 'SDK error', meaning: 'Another full-screen ad is on screen.', fix: 'Do not show two full-screen ads at once; wait for onDismissed.' },
 	internal_error: { kind: 'SDK error', meaning: 'Unexpected failure inside the SDK (it never throws into app code).', fix: 'Enable DEBUG logs (adb logcat -s QartveloAds) and report the log.' },
-	unsupported_platform: { kind: 'React Native error', meaning: 'Called on a platform without the SDK (iOS, web).', fix: 'Guard with QartveloAds.isSupported(); only Android is supported today.' },
+	unsupported_platform: { kind: 'React Native error', meaning: 'Called on a platform without the SDK (iOS, web).', fix: 'Guard with QartveloAds.isSupported(); the React Native plugin supports Android only today (native iOS apps use the Swift SDK).' },
 	module_unavailable: { kind: 'React Native error', meaning: 'The native module is not linked into the app binary.', fix: 'Rebuild the Android app: npx react-native run-android. A JS reload is not enough.' },
 	invalid_argument: { kind: 'React Native error', meaning: 'A JavaScript argument was rejected before reaching native code.', fix: 'Pass a non-empty placement code string and valid options.' },
 	// Fallback reasons
@@ -25,6 +25,7 @@ export const CODES = {
 	invalid_session: { kind: 'API error 401', meaning: 'Session token malformed, forged or issued for another app.', fix: 'Call /sdk/initialize again and use the new token with the same app key.' },
 	session_expired: { kind: 'API error 401', meaning: 'Session token past its expiry (1 hour).', fix: 'Call /sdk/initialize again.' },
 	package_mismatch: { kind: 'API error 403', meaning: 'package_name differs from the app registered for this key.', fix: 'The applicationId must equal the registered package exactly. Watch out for applicationIdSuffix such as .debug.' },
+	platform_mismatch: { kind: 'API error 403', meaning: 'The app key belongs to the app registered for the other platform (Android vs iOS).', fix: 'Register the Android and iOS versions as two apps and use each one\'s own app key.' },
 	app_not_approved: { kind: 'API error 403', meaning: 'The app is not approved yet and test_mode is false.', fix: 'Use test mode until an admin approves the app.' },
 	placement_not_found: { kind: 'API error 404', meaning: 'No placement with that code in this app.', fix: 'Create the placement in the dashboard or fix the code (lowercase, [a-z0-9_]{2,64}).' },
 	format_mismatch: { kind: 'API error 422', meaning: 'Requested format differs from the placement format.', fix: 'Use the load method that matches the placement format.' },

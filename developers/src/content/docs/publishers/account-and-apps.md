@@ -1,6 +1,6 @@
 ---
 title: Account and apps
-description: Create a publisher account, register your Android app and manage its app key.
+description: Create a publisher account, register your Android or iOS app and manage its app key.
 ---
 
 ## Create a publisher account
@@ -25,7 +25,8 @@ Under **Apps**, choose **Add app** and fill in:
 | Field | Rules |
 |---|---|
 | Name | Shown in your dashboard and to advertisers who target specific apps |
-| Package name | Your Android `applicationId`, for example `com.example.game`. Must be unique on Qartvelo Ads. **Locked after the app is reviewed**, because the SDK validates it on every start |
+| Platform | **Android** or **iOS**. Locked after creation; an app key only works on its platform. Publish both versions of a game as two apps |
+| Package name / Bundle ID | Your Android `applicationId` (for example `com.example.game`) or iOS bundle ID (for example `ge.example.Game`). Must be unique per platform on Qartvelo Ads. **Locked after the app is reviewed**, because the SDK validates it on every start |
 | Category | One of: games, news, entertainment, education, lifestyle, sports, finance, shopping, social, tools, travel, health, music, other. Advertisers can target categories |
 | Default language | `ka`, `en` or `ru`. Used for language targeting when the device does not report a supported language |
 

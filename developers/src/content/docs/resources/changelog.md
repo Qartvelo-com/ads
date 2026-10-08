@@ -3,7 +3,18 @@ title: Changelog
 description: Release history of the Qartvelo Ads SDKs.
 ---
 
-Releases are tagged in [Qartvelo-com/ads](https://github.com/Qartvelo-com/ads). The Android SDK, the AdMob adapter and the React Native plugin share one version number.
+Releases are tagged in [Qartvelo-com/ads](https://github.com/Qartvelo-com/ads). The Android SDK, the iOS SDK, the AdMob adapters and the React Native plugin share one version number.
+
+## 0.4.0
+
+- **iOS SDK**: `QartveloAds` and the optional `QartveloAdsAdMob` adapter (Google Mobile Ads 12) for
+  iOS 13+, with Swift Package Manager (`https://github.com/Qartvelo-com/ads`) and CocoaPods. Banner
+  view, interstitial and rewarded ads, the same remote configuration, fallback, test mode and event
+  rules as Android. The Simulator is always in test mode, and development builds are too unless
+  `testModeInDebugBuilds = false`. See [iOS installation](/ios/installation/).
+- Backend: apps have a platform (Android or iOS, bundle ID for iOS), an app key only works on its
+  own platform (`platform_mismatch`), and campaigns can target platforms.
+- Android and React Native: no changes besides the version number.
 
 ## 0.3.4
 

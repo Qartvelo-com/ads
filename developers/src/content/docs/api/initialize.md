@@ -13,16 +13,16 @@ Content-Type: application/json
 | Field | Type | Required | Notes |
 |---|---|---|---|
 | `app_key` | string, max 64 | yes | `app_` + 24 alphanumerics, from the publisher dashboard |
-| `package_name` | string, max 255 | yes | Android application id, compared exactly with the registered one |
+| `package_name` | string, max 255 | yes | Android application id or iOS bundle ID, compared exactly with the registered one |
 | `sdk_version` | string, max 32 | no | |
 | `app_version` | string, max 64 | no | |
-| `platform` | string | no | only `android` is accepted |
+| `platform` | `android` \| `ios` | no | Must match the app's platform in the dashboard. Defaults to `android` |
 | `os_version` | string, max 32 | no | |
 | `test_mode` | boolean | no | Skips the app approval check; the session only ever gets test ads |
 | `is_emulator` | boolean | no | The device is an emulator. Emulator sessions are always test sessions |
 
 ```json
-{"app_key":"app_xxxxxxxxxxxxxxxxxxxxxxxx","package_name":"com.example.app","sdk_version":"0.3.4",
+{"app_key":"app_xxxxxxxxxxxxxxxxxxxxxxxx","package_name":"com.example.app","sdk_version":"0.4.0",
  "app_version":"1.0.0","platform":"android","os_version":"14","test_mode":false}
 ```
 
@@ -77,6 +77,7 @@ Content-Type: application/json
 |---|---|---|
 | 401 | `invalid_app_key` | Unknown app key |
 | 403 | `package_mismatch` | `package_name` differs from the registered app (logged as suspicious) |
+| 403 | `platform_mismatch` | The app key belongs to the app registered for the other platform |
 | 403 | `app_not_approved` | App not approved and `test_mode` is false |
 | 422 | `validation_failed` | Missing or invalid fields (`error.fields`) |
 | 429 | `rate_limited` | Too many initializations (see `Retry-After`) |

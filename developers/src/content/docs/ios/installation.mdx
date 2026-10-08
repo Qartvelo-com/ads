@@ -1,0 +1,103 @@
+---
+title: Installation
+description: Add the Qartvelo Ads iOS SDK and the optional AdMob adapter with Swift Package Manager or CocoaPods.
+---
+
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+| Module | Contents | Required |
+|---|---|---|
+| `QartveloAds` | API client, config cache, rendering, event delivery, banner view | Yes |
+| `QartveloAdsAdMob` | Fallback adapter for Google Mobile Ads (`Google-Mobile-Ads-SDK` 12.x) | Optional |
+
+## Requirements
+
+- iOS 13 or later, Xcode 16 or later, Swift 5.9
+- `QartveloAds` has no third-party dependencies. Only `QartveloAdsAdMob` depends on Google Mobile Ads, as a normal dependency, so you control its exact version.
+
+## Add the package
+
+<Tabs>
+<TabItem label="Swift Package Manager">
+
+In Xcode choose **File > Add Package Dependencies**, enter
+
+```
+https://github.com/Qartvelo-com/ads
+```
+
+pick **Up to Next Major Version** from `0.4.0`, and add the `QartveloAds` product to your app target. Add `QartveloAdsAdMob` too if you want the AdMob fallback.
+
+In a `Package.swift`:
+
+```swift title="Package.swift"
+dependencies: [
+    .package(url: "https://github.com/Qartvelo-com/ads", from: "0.4.0"),
+],
+targets: [
+    .target(name: "MyApp", dependencies: [
+        .product(name: "QartveloAds", package: "ads"),
+        .product(name: "QartveloAdsAdMob", package: "ads"), // optional
+    ]),
+]
+```
+
+</TabItem>
+<TabItem label="CocoaPods">
+
+```ruby title="Podfile"
+platform :ios, '13.0'
+use_frameworks! :linkage => :static
+
+target 'MyApp' do
+  pod 'QartveloAds', '~> 0.4'
+  pod 'QartveloAdsAdMob', '~> 0.4' # optional
+end
+```
+
+</TabItem>
+</Tabs>
+
+## Register the AdMob adapter
+
+With `QartveloAdsAdMob`, register the adapter once, before `initialize`:
+
+```swift
+import QartveloAds
+import QartveloAdsAdMob
+
+QartveloAds.registerFallbackAdapter(QartveloAdMobFallbackAdapter())
+```
+
+Without the adapter the SDK works normally and reports `qartveloAdNoAdAvailable` when Qartvelo Ads has no ad.
+
+<Aside>
+The adapter can also be found automatically when the app links with `-ObjC` (CocoaPods adds it), but registering it explicitly always works, also with Swift Package Manager.
+</Aside>
+
+## Info.plist
+
+Qartvelo Ads needs nothing in `Info.plist`, and it never uses the advertising identifier (IDFA), so there is no App Tracking Transparency prompt for Qartvelo Ads.
+
+If you include the AdMob adapter, Google requires **your own** AdMob app ID, or the Google Mobile Ads SDK stops the app at start-up:
+
+```xml title="Info.plist"
+<key>GADApplicationIdentifier</key>
+<string>ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY</string>
+```
+
+For development you can use Google's sample app ID `ca-app-pub-3940256099942544~1458002511`. Google also asks for its `SKAdNetworkItems` list; see Google's iOS quick start.
+
+## Privacy manifest
+
+`QartveloAds` ships a `PrivacyInfo.xcprivacy`: no tracking, no tracking domains, "advertising data" (the ads shown and tapped) not linked to the user, and the required-reason APIs it uses (`UserDefaults` for the cached configuration, system uptime for timeouts, file timestamps for the creative cache). Xcode merges it into your app's privacy report.
+
+## Register the app
+
+In the publisher dashboard, add the app with platform **iOS** and its **bundle ID** (for example `ge.example.Game`). An app key only works for the platform and bundle ID it was created for, so an Android app and its iOS version are two apps in the dashboard.
+
+## Local backend (optional)
+
+If you run your own Qartvelo Ads backend for development, the iOS Simulator reaches your Mac at `http://localhost:8000/`. Set `options.baseURL` and allow plain HTTP for that host in **debug builds only** (`NSAppTransportSecurity` > `NSExceptionDomains` > `localhost` > `NSExceptionAllowsInsecureHTTPLoads`). Production always uses HTTPS (`https://ads.qartvelo.com/`, the default).
+
+Next: [Initialization](/ios/initialization/).
