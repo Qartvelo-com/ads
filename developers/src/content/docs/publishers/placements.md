@@ -3,7 +3,9 @@ title: Placements
 description: Configure ad slots, fallback, timeouts, frequency caps and banner refresh from the dashboard.
 ---
 
-A placement is one ad slot in your app. Your code addresses it only by its **code**; everything else is remote configuration you can change at any time without an app update.
+A placement is one ad slot in your app, like an AdMob ad unit. Your code addresses it only by its **code**; everything else is remote configuration you can change at any time without an app update.
+
+To add one, open the app and choose **Add placement**: pick the format, give it a name (the code is filled in from the name, and you can change it), and add your AdMob ad unit for the fallback. Request timeout, banner refresh, frequency cap and the serving switches are under **Advanced settings** with working defaults.
 
 ## Fields
 

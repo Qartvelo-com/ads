@@ -3,7 +3,7 @@ title: Creative specifications
 description: Allowed formats, sizes, file types and limits for banner, interstitial and rewarded creatives.
 ---
 
-Upload creatives on the campaign page. Each creative is reviewed separately and serves only once **approved**; pending and rejected creatives are never shown. Approved creatives are locked; to change one, upload a new creative.
+Add creatives (ads) when you create the campaign, or later on the campaign page; you can drop several files at once, and the format of each is detected for you. Each creative is reviewed separately and serves only once **approved**; pending and rejected creatives are never shown. Approved creatives are locked; to change one, upload a new creative.
 
 ## Formats
 
