@@ -1,7 +1,9 @@
 package com.qartvelo.sdk
 
 import android.content.pm.ApplicationInfo
+import com.qartvelo.sdk.internal.Emulator
 import com.qartvelo.sdk.internal.FallbackDiscovery
+import com.qartvelo.sdk.internal.TestHooks
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -29,6 +31,7 @@ class InitializationTest : SdkTest() {
         assertEquals(QartveloAds.SDK_VERSION, body.getString("sdk_version"))
         assertEquals(app.packageName, body.getString("package_name"))
         assertFalse(body.getBoolean("test_mode"))
+        assertFalse(body.getBoolean("is_emulator"))
 
         // A listener added after completion still gets the original outcome.
         var late: Boolean? = null
@@ -60,6 +63,29 @@ class InitializationTest : SdkTest() {
         } finally {
             info.flags = original
         }
+    }
+
+    @Test
+    fun emulatorsAreAlwaysInTestModeAndReportedToTheBackend() {
+        TestHooks.emulator = true
+        assertTrue(init(options(testMode = false, testModeInDebugBuilds = false)))
+
+        val body = backend.bodies("/api/v1/sdk/initialize").single()
+        assertTrue(body.getBoolean("test_mode"))
+        assertTrue(body.getBoolean("is_emulator"))
+    }
+
+    @Test
+    fun emulatorDetectionMatchesEmulatorsButNotRealPhones() {
+        // Android Studio emulator (API 34), an older x86 image, Genymotion.
+        assertTrue(Emulator.detect("google/sdk_gphone64_x86_64/emu64xa:14/UE1A.230829.036/10813309:userdebug/dev-keys", "ranchu", "sdk_gphone64_x86_64", "sdk_gphone64_x86_64", "Google", "google", "emu64xa"))
+        assertTrue(Emulator.detect("generic_x86/sdk_x86/generic_x86:9/PSR1.180720.075/5124027:user/release-keys", "goldfish", "sdk_x86", "Android SDK built for x86", "unknown", "generic_x86", "generic_x86"))
+        assertTrue(Emulator.detect("google/vbox86p/vbox86p:11/RQ1A.210105.003/1:userdebug/test-keys", "vbox86", "vbox86p", "Google Pixel 3", "Genymotion", "google", "vbox86p"))
+        // Pixel 8, Galaxy S23, Xiaomi.
+        assertFalse(Emulator.detect("google/shiba/shiba:14/AP1A.240305.019.A1/11445699:user/release-keys", "shiba", "shiba", "Pixel 8", "Google", "google", "shiba"))
+        assertFalse(Emulator.detect("samsung/dm1qxxx/dm1q:14/UP1A.231005.007/S911BXXU3CWK3:user/release-keys", "qcom", "dm1qxxx", "SM-S911B", "samsung", "samsung", "dm1q"))
+        assertFalse(Emulator.detect("Redmi/sunny_global/sunny:13/TKQ1.221114.001/V14.0.4.0.TKGMIXM:user/release-keys", "qcom", "sunny_global", "M2101K7AG", "Xiaomi", "Redmi", "sunny"))
+        assertFalse("Robolectric is not an emulator", Emulator.current())
     }
 
     @Test

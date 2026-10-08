@@ -1,7 +1,7 @@
 // Generates integration code tailored to an app key and its placements. The output mirrors the
 // Quickstart and platform pages of the developer docs.
 
-export const SDK_VERSION = '0.3.3';
+export const SDK_VERSION = '0.3.4';
 const CODE_PATTERN = /^[a-z0-9_]{2,64}$/;
 const FORMATS = ['banner', 'interstitial', 'rewarded'];
 
@@ -58,9 +58,6 @@ function android(input, placements, admob) {
     repositories {
         google()
         mavenCentral()
-        maven("https://jitpack.io") {
-            content { includeGroup("com.qartvelo.ads") }
-        }
     }
 }`,
 		},
@@ -161,18 +158,6 @@ fun showRewarded${pascal(p.code)}(activity: Activity, grant: () -> Unit, done: (
 function reactNative(input, placements, admob) {
 	const files = [
 		{ path: 'Terminal', language: 'sh', code: 'npm install @qartvelo/react-native-ads\nnpx react-native run-android  # rebuild the native app' },
-		{
-			path: 'android/build.gradle',
-			language: 'groovy',
-			code: `allprojects {
-    repositories {
-        maven {
-            url "https://jitpack.io"
-            content { includeGroup("com.qartvelo.ads") }
-        }
-    }
-}`,
-		},
 	];
 	if (admob) {
 		files.push({ path: 'android/gradle.properties', language: 'properties', code: 'QartveloAds_admobEnabled=true' });

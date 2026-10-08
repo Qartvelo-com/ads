@@ -7,8 +7,8 @@ import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
 | Artifact | Contents | Required |
 |---|---|---|
-| `com.qartvelo.ads:core:0.3.3` | API client, config cache, rendering, event delivery, banner view | Yes |
-| `com.qartvelo.ads:admob:0.3.3` | Fallback adapter for Google Mobile Ads (`play-services-ads` 25.4.0) | Optional |
+| `com.qartvelo.ads:core:0.3.4` | API client, config cache, rendering, event delivery, banner view | Yes |
+| `com.qartvelo.ads:admob:0.3.4` | Fallback adapter for Google Mobile Ads (`play-services-ads` 25.4.0) | Optional |
 
 ## Requirements
 
@@ -18,7 +18,7 @@ import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
 ## Add the repository and dependencies
 
-The SDK is published on JitPack (built from the [Qartvelo-com/ads](https://github.com/Qartvelo-com/ads) tags). No account or token is needed.
+The SDK is published on **Maven Central** (from 0.3.4), which every Android project already uses. No extra repository, account or token is needed: just make sure `mavenCentral()` is in your repositories (new projects have it).
 
 <Tabs>
 <TabItem label="Kotlin DSL">
@@ -28,18 +28,15 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven("https://jitpack.io") {
-            content { includeGroup("com.qartvelo.ads") }
-        }
     }
 }
 ```
 
 ```kotlin title="app/build.gradle.kts"
 dependencies {
-    implementation("com.qartvelo.ads:core:0.3.3")
+    implementation("com.qartvelo.ads:core:0.3.4")
     // Optional: fall back to your own AdMob ad units. Leave out to run Qartvelo Ads only.
-    implementation("com.qartvelo.ads:admob:0.3.3")
+    implementation("com.qartvelo.ads:admob:0.3.4")
 }
 ```
 
@@ -51,18 +48,14 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven {
-            url "https://jitpack.io"
-            content { includeGroup("com.qartvelo.ads") }
-        }
     }
 }
 ```
 
 ```groovy title="app/build.gradle"
 dependencies {
-    implementation "com.qartvelo.ads:core:0.3.3"
-    implementation "com.qartvelo.ads:admob:0.3.3" // optional
+    implementation "com.qartvelo.ads:core:0.3.4"
+    implementation "com.qartvelo.ads:admob:0.3.4" // optional
 }
 ```
 
@@ -71,7 +64,7 @@ dependencies {
 
 ```toml title="gradle/libs.versions.toml"
 [versions]
-qartvelo-ads = "0.3.3"
+qartvelo-ads = "0.3.4"
 
 [libraries]
 qartvelo-ads-core = { module = "com.qartvelo.ads:core", version.ref = "qartvelo-ads" }
@@ -88,8 +81,8 @@ dependencies {
 </TabItem>
 </Tabs>
 
-<Aside title="GitHub Packages">
-The same artifacts are on GitHub Packages at `https://maven.pkg.github.com/Qartvelo-com/ads`. GitHub Packages always requires credentials (a GitHub user and a token with `read:packages`), even for public packages, so JitPack is simpler.
+<Aside title="Other repositories">
+The same artifacts are on JitPack (`maven("https://jitpack.io")`, built from the [Qartvelo-com/ads](https://github.com/Qartvelo-com/ads) tags; versions before 0.3.4 are only there) and on GitHub Packages at `https://maven.pkg.github.com/Qartvelo-com/ads`, which always requires credentials (a GitHub user and a token with `read:packages`).
 </Aside>
 
 The adapter is discovered at runtime by class name, so adding or removing `com.qartvelo.ads:admob` needs no code change. Without it, the SDK works normally and reports `onNoAdAvailable` when Qartvelo Ads has no ad.

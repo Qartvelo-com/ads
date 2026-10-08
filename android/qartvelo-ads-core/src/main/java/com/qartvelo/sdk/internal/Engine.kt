@@ -108,14 +108,17 @@ internal class Engine(
     /** Only one full-screen ad (QartveloAds or fallback) may be on screen at a time. */
     var fullscreenShowing: Boolean = false
 
+    private val emulator: Boolean = Emulator.current()
+
     /**
      * Test mode is purely the publisher's local option. The backend only echoes it back, so it is
      * never taken from (cached) remote config: a build that once ran in test mode must not stay in
      * test mode, unbilled and on Google test units, after the option is turned off.
      * Debuggable (developer) builds are in test mode too unless [QartveloAdsOptions.testModeInDebugBuilds]
      * is false; Play only accepts non-debuggable builds, so users never see test ads.
+     * Emulators are always in test mode (the backend enforces it from `is_emulator` as well).
      */
-    val testMode: Boolean = options.testMode ||
+    val testMode: Boolean = options.testMode || emulator ||
         (options.testModeInDebugBuilds && (appContext.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0)
 
     // ---- initialization -------------------------------------------------------------------------
@@ -123,7 +126,9 @@ internal class Engine(
     /** Main thread. Loads the cached config, discovers the adapter and requests a session. */
     fun start(listener: QartveloAdsInitListener?) {
         addInitListener(listener)
-        if (testMode && !options.testMode) {
+        if (emulator) {
+            OurLog.i("Emulator: test mode is on, ads are labelled \"Test ad\" and never billed")
+        } else if (testMode && !options.testMode) {
             OurLog.i("Debuggable build: test mode is on, ads are labelled \"Test ad\" and never billed (testModeInDebugBuilds)")
         }
         io.execute {
@@ -448,6 +453,7 @@ internal class Engine(
             .put("platform", "android")
             .put("os_version", d.osVersion)
             .put("test_mode", testMode)
+            .put("is_emulator", emulator)
     }
 
     private fun adRequestBody(placementId: String, format: AdFormat, token: String): JSONObject {
