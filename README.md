@@ -192,6 +192,8 @@ cd react-native/example && npm install && npx react-native run-android   # uses 
 
 The Android and React Native Android samples default to `http://10.0.2.2:8000/` (a backend on your machine, seen from the Android
 emulator); point them at `https://ads.qartvelo.com/` for the live service.
+React Native example settings are in `react-native/example/src/AppConfig.ts`; its screen starts
+automatically in test mode with ad controls and an optional event log.
 The iOS sample uses the SDK's `https://ads.qartvelo.com/` default; its app key and placements are in
 `ios/sample-app/Sources/AppConfig.swift`. It explicitly enables test mode. The normal launch opens a
 manual dashboard: load all three formats or one at a time, show/hide the adaptive banner, show a

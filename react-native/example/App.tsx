@@ -9,9 +9,7 @@ import {
   ScrollView,
   StatusBar,
   StyleSheet,
-  Switch,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 import {
@@ -27,37 +25,7 @@ import {
   type QartveloAdsEventType,
 } from '@qartvelo/react-native-ads';
 
-/** Seeded demo app (backend `php artisan migrate:fresh --seed`). */
-const APP_KEY =
-  Platform.OS === 'ios'
-    ? 'app_dYWiPE5Pp2vvc0fuHkYi3ggo'
-    : 'app_demo_rn_example_0001';
-/** The host machine as seen from the Android emulator. */
-const DEFAULT_BASE_URL =
-  Platform.OS === 'ios' ? 'https://ads.qartvelo.com/' : 'http://10.0.2.2:8000/';
-
-const PLACEMENTS = {
-  banner: 'home_banner',
-  interstitial: 'game_end',
-  rewarded: 'reward_coins',
-} as const;
-
-/**
- * Google's public test ad units for the seeded placements. They let the AdMob fallback work even
- * before the QartveloAds backend has delivered its placement configuration.
- */
-const ADMOB_TEST_UNITS: Record<string, string> =
-  Platform.OS === 'ios'
-    ? {
-        home_banner: 'ca-app-pub-3940256099942544/2435281174',
-        game_end: 'ca-app-pub-3940256099942544/4411468910',
-        reward_coins: 'ca-app-pub-3940256099942544/1712485313',
-      }
-    : {
-        home_banner: 'ca-app-pub-3940256099942544/9214589741',
-        game_end: 'ca-app-pub-3940256099942544/1033173712',
-        reward_coins: 'ca-app-pub-3940256099942544/5224354917',
-      };
+import { AD_OPTIONS, PLACEMENTS } from './src/AppConfig';
 
 const EVENT_TYPES: QartveloAdsEventType[] = [
   'loaded',
@@ -73,7 +41,7 @@ const EVENT_TYPES: QartveloAdsEventType[] = [
 
 const MAX_LOG_ENTRIES = 150;
 
-type InitState = 'idle' | 'initializing' | 'ready' | 'degraded';
+type InitState = 'initializing' | 'ready' | 'degraded';
 
 interface LogEntry {
   id: number;
@@ -166,58 +134,67 @@ function App() {
 
 function DemoScreen() {
   const log = useEventLog();
+  const { append } = log;
 
-  const [baseUrl, setBaseUrl] = useState(DEFAULT_BASE_URL);
-  const [testMode, setTestMode] = useState(true);
-  const [forceNoFill, setForceNoFill] = useState(false);
-  const [initState, setInitState] = useState<InitState>('idle');
-  const [initMessage, setInitMessage] = useState('Not initialized');
+  const [initState, setInitState] = useState<InitState>('initializing');
+  const [initMessage, setInitMessage] = useState('Preparing test ads…');
+  const [showEvents, setShowEvents] = useState(false);
 
   const [bannerMounted, setBannerMounted] = useState(true);
   const [bannerStatus, setBannerStatus] = useState('Waiting for initialize()');
-  const [renderCount, setRenderCount] = useState(0);
 
   const [interstitialStatus, setInterstitialStatus] = useState('Not loaded');
+  const [interstitialReady, setInterstitialReady] = useState(false);
+  const [interstitialLoading, setInterstitialLoading] = useState(false);
+  const [presenting, setPresenting] = useState(false);
   const [rewardedStatus, setRewardedStatus] = useState('Not loaded');
+  const [rewardedReady, setRewardedReady] = useState(false);
+  const [rewardedLoading, setRewardedLoading] = useState(false);
   const [coins, setCoins] = useState(0);
 
   const initialized = initState === 'ready' || initState === 'degraded';
 
-  const initialize = async () => {
-    setInitState('initializing');
-    setInitMessage('Initializing...');
-    try {
-      await QartveloAds.initialize({
-        appKey: APP_KEY,
-        baseUrl,
-        testMode,
-        testForceNoFill: forceNoFill,
-        requestTimeoutMs: 800,
-        logLevel: 'debug',
-        admobAdUnits: ADMOB_TEST_UNITS,
-      });
-      setInitState('ready');
-      setInitMessage('Initialized');
-      log.append('initialize: ok');
-    } catch (error) {
-      // The SDK stays usable (cached config + AdMob fallback) even when initialization fails.
-      setInitState('degraded');
-      setInitMessage(`Fallback mode - ${describeError(error)}`);
-      log.append(`initialize failed: ${describeError(error)}`, 'error');
-    }
-  };
+  useEffect(() => {
+    let active = true;
+    QartveloAds.initialize(AD_OPTIONS).then(
+      () => {
+        if (!active) return;
+        setInitState('ready');
+        setInitMessage('Ready · Test ads');
+        append('SDK ready');
+      },
+      error => {
+        if (!active) return;
+        // The native SDK can still use cached configuration and the AdMob fallback.
+        setInitState('degraded');
+        setInitMessage('Fallback mode');
+        append(`Initialization: ${describeError(error)}`, 'error');
+      },
+    );
+    return () => {
+      active = false;
+    };
+  }, [append]);
 
   const loadInterstitial = async () => {
-    setInterstitialStatus('Loading...');
+    setInterstitialLoading(true);
+    setInterstitialReady(false);
+    setInterstitialStatus('Loading…');
     try {
       const info = await QartveloAds.loadInterstitial(PLACEMENTS.interstitial);
+      setInterstitialReady(true);
       setInterstitialStatus(`Ready from ${info.source}`);
     } catch (error) {
       setInterstitialStatus(`Load failed - ${describeError(error)}`);
+    } finally {
+      setInterstitialLoading(false);
     }
   };
 
   const showInterstitial = async () => {
+    setPresenting(true);
+    setInterstitialReady(false);
+    setInterstitialStatus('Showing…');
     try {
       const result = await QartveloAds.showInterstitial(
         PLACEMENTS.interstitial,
@@ -229,20 +206,30 @@ function DemoScreen() {
       );
     } catch (error) {
       setInterstitialStatus(`Show failed - ${describeError(error)}`);
+    } finally {
+      setPresenting(false);
     }
   };
 
   const loadRewarded = async () => {
-    setRewardedStatus('Loading...');
+    setRewardedLoading(true);
+    setRewardedReady(false);
+    setRewardedStatus('Loading…');
     try {
       const info = await QartveloAds.loadRewarded(PLACEMENTS.rewarded);
+      setRewardedReady(true);
       setRewardedStatus(`Ready from ${info.source}`);
     } catch (error) {
       setRewardedStatus(`Load failed - ${describeError(error)}`);
+    } finally {
+      setRewardedLoading(false);
     }
   };
 
   const showRewarded = async () => {
+    setPresenting(true);
+    setRewardedReady(false);
+    setRewardedStatus('Showing…');
     try {
       const result = await QartveloAds.showRewarded(PLACEMENTS.rewarded);
       if (!result.shown) {
@@ -259,18 +246,8 @@ function DemoScreen() {
       }
     } catch (error) {
       setRewardedStatus(`Show failed - ${describeError(error)}`);
-    }
-  };
-
-  const checkReady = async () => {
-    try {
-      const [interstitial, rewarded] = await Promise.all([
-        QartveloAds.isInterstitialReady(PLACEMENTS.interstitial),
-        QartveloAds.isRewardedReady(PLACEMENTS.rewarded),
-      ]);
-      log.append(`isReady: interstitial=${interstitial} rewarded=${rewarded}`);
-    } catch (error) {
-      log.append(`isReady failed: ${describeError(error)}`, 'error');
+    } finally {
+      setPresenting(false);
     }
   };
 
@@ -282,60 +259,17 @@ function DemoScreen() {
           styles.content,
           { paddingTop: 12, paddingBottom: 24 },
         ]}
-        keyboardShouldPersistTaps="handled"
       >
         <Text style={styles.title}>QartveloAds React Native example</Text>
-        <Text style={styles.muted}>App key {APP_KEY}</Text>
+        <Text style={styles.muted}>
+          Banner, interstitial and rewarded demos.
+        </Text>
+        <Text style={[styles.status, initState === 'degraded' && styles.error]}>
+          {initMessage}
+        </Text>
 
-        <Section title="1. Initialize">
-          <Text style={styles.label}>Backend base URL</Text>
-          <TextInput
-            value={baseUrl}
-            onChangeText={setBaseUrl}
-            editable={!initialized}
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="url"
-            style={[styles.input, initialized && styles.inputLocked]}
-          />
-          <Toggle
-            label="Test mode (test ads, nothing billed)"
-            value={testMode}
-            onValueChange={setTestMode}
-            disabled={initialized}
-          />
-          <Toggle
-            label="Force QartveloAds no-fill (shows the AdMob fallback)"
-            value={forceNoFill}
-            onValueChange={setForceNoFill}
-            disabled={initialized || !testMode}
-          />
-          {!testMode && forceNoFill ? (
-            <Text style={styles.muted}>
-              Forced no-fill only applies in test mode.
-            </Text>
-          ) : null}
-          <Button
-            title={
-              initState === 'initializing' ? 'Initializing...' : 'Initialize'
-            }
-            onPress={initialize}
-            disabled={initState !== 'idle'}
-          />
-          <Text
-            style={[styles.status, initState === 'degraded' && styles.error]}
-          >
-            {initMessage}
-          </Text>
-          {initialized ? (
-            <Text style={styles.muted}>
-              Options apply once per process. Restart the app to change them.
-            </Text>
-          ) : null}
-        </Section>
-
-        <Section title="2. Banner (home_banner)">
-          {bannerMounted ? (
+        <Section title="Banner">
+          {initialized && bannerMounted ? (
             <QartveloAdsBanner
               placementId={PLACEMENTS.banner}
               style={styles.banner}
@@ -351,63 +285,51 @@ function DemoScreen() {
               onClicked={() => setBannerStatus('Clicked')}
             />
           ) : (
-            <Text style={styles.muted}>Banner unmounted</Text>
+            <Text style={styles.muted}>
+              {initialized ? 'Banner hidden' : 'Preparing banner…'}
+            </Text>
           )}
           <Text style={styles.status}>{bannerStatus}</Text>
           <View style={styles.row}>
             <Button
-              title={bannerMounted ? 'Unmount banner' : 'Mount banner'}
+              title={bannerMounted ? 'Hide banner' : 'Show banner'}
               onPress={() => setBannerMounted(mounted => !mounted)}
-              compact
-            />
-            <Button
-              title={`Re-render screen (${renderCount})`}
-              onPress={() => setRenderCount(count => count + 1)}
+              disabled={!initialized || presenting}
               compact
             />
           </View>
-          <Text style={styles.muted}>
-            Re-renders and remounts reuse the loaded banner: watch the log, no
-            new "loaded" event appears until the placement's refresh interval.
-          </Text>
         </Section>
 
-        <Section title="3. Interstitial (game_end)">
+        <Section title="Interstitial">
           <View style={styles.row}>
             <Button
               title="Load"
               onPress={loadInterstitial}
-              disabled={!initialized}
+              disabled={!initialized || interstitialLoading || presenting}
               compact
             />
             <Button
               title="Show"
               onPress={showInterstitial}
-              disabled={!initialized}
+              disabled={!interstitialReady || presenting}
               compact
             />
           </View>
           <Text style={styles.status}>{interstitialStatus}</Text>
         </Section>
 
-        <Section title="4. Rewarded (reward_coins)">
+        <Section title="Rewarded">
           <View style={styles.row}>
             <Button
               title="Load"
               onPress={loadRewarded}
-              disabled={!initialized}
+              disabled={!initialized || rewardedLoading || presenting}
               compact
             />
             <Button
               title="Show"
               onPress={showRewarded}
-              disabled={!initialized}
-              compact
-            />
-            <Button
-              title="isReady?"
-              onPress={checkReady}
-              disabled={!initialized}
+              disabled={!rewardedReady || presenting}
               compact
             />
           </View>
@@ -415,23 +337,27 @@ function DemoScreen() {
           <Text style={styles.coins}>Coins: {coins}</Text>
         </Section>
 
-        <Section title="5. Event log">
-          <View style={styles.row}>
-            <Button title="Clear log" onPress={log.clear} compact />
-          </View>
-          {log.entries.length === 0 ? (
-            <Text style={styles.muted}>No events yet.</Text>
-          ) : (
-            log.entries.map(entry => (
-              <Text
-                key={entry.id}
-                style={[styles.logLine, toneStyles[entry.tone]]}
-              >
-                {entry.time} {entry.text}
-              </Text>
-            ))
-          )}
-        </Section>
+        <Button
+          title={showEvents ? 'Hide events' : 'Show events'}
+          onPress={() => setShowEvents(value => !value)}
+        />
+        {showEvents ? (
+          <Section title="Events">
+            <Button title="Clear events" onPress={log.clear} compact />
+            {log.entries.length === 0 ? (
+              <Text style={styles.muted}>No events yet.</Text>
+            ) : (
+              log.entries.map(entry => (
+                <Text
+                  key={entry.id}
+                  style={[styles.logLine, toneStyles[entry.tone]]}
+                >
+                  {entry.time} {entry.text}
+                </Text>
+              ))
+            )}
+          </Section>
+        ) : null}
       </ScrollView>
     </SafeAreaView>
   );
@@ -442,26 +368,6 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>{title}</Text>
       {children}
-    </View>
-  );
-}
-
-function Toggle(props: {
-  label: string;
-  value: boolean;
-  onValueChange: (value: boolean) => void;
-  disabled?: boolean;
-}) {
-  return (
-    <View style={styles.toggle}>
-      <Text style={[styles.toggleLabel, props.disabled && styles.disabledText]}>
-        {props.label}
-      </Text>
-      <Switch
-        value={props.value}
-        onValueChange={props.onValueChange}
-        disabled={props.disabled}
-      />
     </View>
   );
 }
@@ -506,29 +412,11 @@ const styles = StyleSheet.create({
     color: '#111827',
     marginBottom: 8,
   },
-  label: { fontSize: 13, color: '#374151' },
-  input: {
-    marginTop: 4,
-    marginBottom: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 6,
-    color: '#111827',
-  },
-  inputLocked: { backgroundColor: '#f9fafb', color: '#6b7280' },
-  toggle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginVertical: 4,
-  },
-  toggleLabel: { flex: 1, fontSize: 13, color: '#374151', marginRight: 8 },
-  disabledText: { color: '#9ca3af' },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 },
   button: {
     marginTop: 8,
+    minHeight: 44,
+    justifyContent: 'center',
     paddingVertical: 10,
     paddingHorizontal: 14,
     borderRadius: 6,
@@ -543,7 +431,11 @@ const styles = StyleSheet.create({
   error: { color: '#b91c1c' },
   banner: { width: '100%', backgroundColor: '#f9fafb' },
   coins: { marginTop: 6, fontSize: 15, fontWeight: '600', color: '#047857' },
-  logLine: { fontSize: 11, fontFamily: 'monospace', marginTop: 3 },
+  logLine: {
+    fontSize: 11,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    marginTop: 3,
+  },
 });
 
 const toneStyles = StyleSheet.create({

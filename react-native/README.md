@@ -30,3 +30,13 @@ npm run ios
 
 The iOS example defaults to the production HTTPS backend and public test ads. The Android example
 keeps the local backend URL. All sample requests default to `testMode: true`.
+
+## Using the example
+
+The app starts the SDK automatically in test mode. The main screen contains the adaptive banner,
+Hide/Show banner control, interstitial and rewarded Load/Show buttons, and earned test rewards.
+Show buttons stay disabled until the matching ad is loaded. Use **Show events** for optional diagnostics.
+
+Set the app key, placement codes, native AdMob unit IDs and optional forced no-fill in
+`example/src/AppConfig.ts`, then restart the app. SDK configuration is kept out of the screen.
+Android retains the seeded local backend setup; iOS uses the SDK's production HTTPS default.
