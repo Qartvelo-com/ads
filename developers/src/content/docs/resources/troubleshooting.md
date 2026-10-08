@@ -39,7 +39,7 @@ Initialization failure is not fatal: the SDK keeps running on its cached configu
 
 | Error | Fix |
 |---|---|
-| `Could not find com.qartvelo.ads:core:0.3.2` | Add `maven("https://jitpack.io")` to the repositories used for dependencies (`dependencyResolutionManagement` or `allprojects`) |
+| `Could not find com.qartvelo.ads:core:0.3.3` | Add `maven("https://jitpack.io")` to the repositories used for dependencies (`dependencyResolutionManagement` or `allprojects`) |
 | `AAPT: error: attribute qartvelo_placementId not found` | Declare `xmlns:app="http://schemas.android.com/apk/res-auto"` and make sure `com.qartvelo.ads:core` is a dependency of that module |
 | `attribute ourads_placementId not found` | Old attribute name from pre-release snippets. Use `app:qartvelo_placementId` |
 | `Unresolved reference: OURADS` | The enum value is `AdSource.QARTVELO` |

@@ -1,6 +1,6 @@
 ---
 title: API reference
-description: Complete TypeScript API of @qartvelo/react-native-ads 0.3.2.
+description: Complete TypeScript API of @qartvelo/react-native-ads 0.3.3.
 ---
 
 ```ts
@@ -58,6 +58,7 @@ interface QartveloAdsInitOptions {
   requestTimeoutMs?: number;
   testMode?: boolean;
   testForceNoFill?: boolean;
+  testModeInDebugBuilds?: boolean; // default true: test mode in debuggable builds
   admobFallback?: boolean;
   logLevel?: LogLevel;
   baseUrl?: string;

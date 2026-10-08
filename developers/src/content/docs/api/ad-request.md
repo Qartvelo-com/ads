@@ -20,13 +20,13 @@ Content-Type: application/json
 | `android_version` | string | no | `14` or `14.0.1`; the major version is used for targeting |
 | `app_version`, `sdk_version` | string | no | Informational |
 | `screen_width`, `screen_height` | integer 0..20000 | no | Pixels. Used to pick a banner that fits and an interstitial matching the orientation |
-| `test_mode` | boolean | no | Serve the built-in test ad (also implied by a test session) |
+| `test_mode` | boolean | no | Serve a never-billed test ad (also implied by a test session) |
 | `test_force_no_fill` | boolean | no | Always answer `no_fill` with reason `test_no_fill` |
 
 ```json
 {"app_key":"app_xxxxxxxxxxxxxxxxxxxxxxxx","placement":"game_end","format":"interstitial",
  "session_token":"<opaque>","language":"ka","android_version":"14","app_version":"1.0.0",
- "sdk_version":"0.3.2","screen_width":1080,"screen_height":2400}
+ "sdk_version":"0.3.3","screen_width":1080,"screen_height":2400}
 ```
 
 ## Response 200: fill
@@ -63,7 +63,7 @@ Content-Type: application/json
 | `ad.duration_seconds` | Video length, `null` for images |
 | `ad.impression_token` | Opaque, signed, single-use |
 | `ad.expires_at` | 30 minutes after the request. Never show the ad after this |
-| `ad.test` | `true` for test ads (`campaign_id` `cmp_test`, `creative_id` `cr_test_{format}`) |
+| `ad.test` | `true` for test ads: never billed, show them labelled "Test ad". An approved app gets the live creative it would win; otherwise the built-in test ad (`campaign_id` `cmp_test`, `creative_id` `cr_test_{format}`) |
 
 ## Response 200: no fill
 
@@ -85,7 +85,7 @@ Content-Type: application/json
 
 1. Session verified, app key matches the session, app approved (unless test).
 2. Placement found and format matches; kill switches; placement frequency cap.
-3. Test mode returns the test ad. Otherwise:
+3. Test mode returns a test ad (the top-ranked live creative for an approved app, without reserving budget, else the built-in one). Otherwise:
 4. Eligible campaigns: active, within schedule, budget left, advertiser approved with balance, country matches (or any), at least one approved creative of the requested format.
 5. Targeting: formats, languages, app ids, app categories, Android versions. Empty means any. A campaign that targets Android versions is skipped when the request has none.
 6. Campaign frequency cap for this session.

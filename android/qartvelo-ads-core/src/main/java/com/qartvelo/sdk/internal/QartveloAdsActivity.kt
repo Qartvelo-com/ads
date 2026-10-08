@@ -151,7 +151,7 @@ internal class QartveloAdsActivity : Activity() {
         }
 
         overlay.addView(
-            pill(getString(R.string.qartvelo_ad_label), 12f).apply {
+            pill(getString(if (s.ad.test) R.string.qartvelo_test_ad_label else R.string.qartvelo_ad_label), 12f).apply {
                 // Opens the Qartvelo Ads website (not the advertiser); not counted as a click.
                 contentDescription = getString(R.string.qartvelo_about_ads)
                 setOnClickListener { AboutLink.open(this@QartveloAdsActivity) }

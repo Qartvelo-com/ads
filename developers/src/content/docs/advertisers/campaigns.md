@@ -45,7 +45,17 @@ active ⇄ paused        active / approved / paused ──> completed
 | `completed` | Ended at its end date, when the total budget is spent, or completed manually. Final |
 
 - Submitting requires at least one creative that is pending review or approved, and an end date that has not passed.
-- Settings and targeting can be edited only in `draft` and `rejected`. To change a running campaign, complete it and create a new one.
+- Settings and targeting are edited directly in `draft` and `rejected`. They are locked while the campaign is `pending_review` and after it is `completed`.
+
+## Editing a live campaign
+
+`approved`, `active` and `paused` campaigns can be edited too, but the changes go to review first:
+
+1. Open the campaign, choose **Edit** and then **Send changes for review**.
+2. The campaign keeps serving with its **current** settings while the changes wait. The campaign page shows the pending changes as a before/after list; you can **Withdraw** them, or edit again to replace them.
+3. When Qartvelo Ads approves, all changes are applied at once. A rejection keeps the current settings and shows the reason.
+
+The total budget can never be set below what the campaign has already spent. If an approved change moves the start date into the future, an active campaign waits as `approved` until then.
 - Resuming requires an end date in the future and remaining budget.
 
 ## How delivery works

@@ -54,6 +54,7 @@ abstract class SdkTest {
         forceNoFill: Boolean = false,
         admobFallback: Boolean = true,
         units: Map<String, String> = emptyMap(),
+        testModeInDebugBuilds: Boolean = false,
     ) = QartveloAdsOptions(
         admobFallback = admobFallback,
         requestTimeoutMs = timeoutMs,
@@ -62,6 +63,7 @@ abstract class SdkTest {
         logLevel = QartveloAdsLogLevel.DEBUG,
         baseUrl = backend.baseUrl,
         admobAdUnits = units,
+        testModeInDebugBuilds = testModeInDebugBuilds,
     )
 
     /** Initializes against the fake backend and waits for the first attempt to finish. */

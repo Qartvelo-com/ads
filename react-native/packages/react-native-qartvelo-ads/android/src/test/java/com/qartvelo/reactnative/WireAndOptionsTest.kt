@@ -111,6 +111,7 @@ class WireAndOptionsTest {
                 "requestTimeoutMs" to 1200.0,
                 "testMode" to true,
                 "testForceNoFill" to true,
+                "testModeInDebugBuilds" to false,
                 "admobFallback" to false,
                 "logLevel" to "debug",
                 "baseUrl" to "http://10.0.2.2:8000/",
@@ -126,6 +127,7 @@ class WireAndOptionsTest {
                 logLevel = QartveloAdsLogLevel.DEBUG,
                 baseUrl = "http://10.0.2.2:8000/",
                 admobAdUnits = mapOf("game_end" to "ca-app-pub-3940256099942544/1033173712"),
+                testModeInDebugBuilds = false,
             ),
             full.options,
         )

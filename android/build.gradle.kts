@@ -10,7 +10,7 @@ plugins {
 val jitpackGroup = System.getenv("GROUP")?.let { group -> "$group.${System.getenv("ARTIFACT")}" }
 allprojects {
     group = jitpackGroup ?: "com.qartvelo.ads"
-    version = "0.3.2"
+    version = "0.3.3"
 }
 
 // GitHub Packages: https://maven.pkg.github.com/Qartvelo-com/ads

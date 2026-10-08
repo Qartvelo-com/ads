@@ -350,7 +350,7 @@ internal class BannerController(private val engine: Engine, val placementId: Str
                 val frame = FrameLayout(view.context)
                 val match = ViewGroup.LayoutParams.MATCH_PARENT
                 frame.addView(image, FrameLayout.LayoutParams(match, match))
-                frame.addView(adBadge(view.context), FrameLayout.LayoutParams(
+                frame.addView(adBadge(view.context, c.ad.test), FrameLayout.LayoutParams(
                     ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.TOP or Gravity.START,
                 ))
                 view.addView(frame, FrameLayout.LayoutParams(w, h, Gravity.CENTER))
@@ -386,8 +386,8 @@ internal class BannerController(private val engine: Engine, val placementId: Str
         }
     }
 
-    private fun adBadge(context: Context): View = TextView(context).apply {
-        text = context.getString(R.string.qartvelo_ad_label)
+    private fun adBadge(context: Context, test: Boolean): View = TextView(context).apply {
+        text = context.getString(if (test) R.string.qartvelo_test_ad_label else R.string.qartvelo_ad_label)
         setTextColor(Color.WHITE)
         setTextSize(TypedValue.COMPLEX_UNIT_SP, 9f)
         val d = context.resources.displayMetrics.density

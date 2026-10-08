@@ -15,9 +15,9 @@ React Native app ──> @qartvelo/react-native-ads ──> Qartvelo Ads Kotlin 
 
 | Package | Where | Install |
 |---|---|---|
-| Android core | JitPack | `com.qartvelo.ads:core:0.3.2` |
-| Android AdMob adapter (optional) | JitPack | `com.qartvelo.ads:admob:0.3.2` |
-| Same, GitHub Packages | `maven.pkg.github.com/Qartvelo-com/ads` | `com.qartvelo.ads:core:0.3.2` |
+| Android core | JitPack | `com.qartvelo.ads:core:0.3.3` |
+| Android AdMob adapter (optional) | JitPack | `com.qartvelo.ads:admob:0.3.3` |
+| Same, GitHub Packages | `maven.pkg.github.com/Qartvelo-com/ads` | `com.qartvelo.ads:core:0.3.3` |
 | React Native (Android) | npm | `npm install @qartvelo/react-native-ads` |
 
 Android only for now; the APIs are shaped so an iOS SDK can be added later.
@@ -36,8 +36,8 @@ dependencyResolutionManagement {
 
 // app/build.gradle.kts
 dependencies {
-    implementation("com.qartvelo.ads:core:0.3.2")
-    implementation("com.qartvelo.ads:admob:0.3.2") // optional
+    implementation("com.qartvelo.ads:core:0.3.3")
+    implementation("com.qartvelo.ads:admob:0.3.3") // optional
 }
 ```
 
@@ -118,7 +118,7 @@ docs/                          pointers to the docs site
 
 ```sh
 cd android && ./gradlew :qartvelo-ads-core:testDebugUnitTest :qartvelo-ads-admob:testDebugUnitTest
-cd android && ./gradlew publishToMavenLocal        # com.qartvelo.ads:*:0.3.2 into ~/.m2
+cd android && ./gradlew publishToMavenLocal        # com.qartvelo.ads:*:0.3.3 into ~/.m2
 
 cd react-native/packages/react-native-qartvelo-ads && npm ci && npm test && npm run typecheck
 cd react-native/example && npm install && npx react-native run-android   # uses the local SDK build

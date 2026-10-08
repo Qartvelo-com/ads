@@ -5,7 +5,7 @@ description: Everything to verify before shipping a build with Qartvelo Ads to p
 
 - [ ] The app and its placements are **approved** in the dashboard and placements are `active`.
 - [ ] The release `applicationId` equals the package name registered for the app.
-- [ ] `testMode = false` and `testForceNoFill = false` in release builds (for example `testMode = BuildConfig.DEBUG`).
+- [ ] `testMode = false` and `testForceNoFill = false` in release builds, and the release build is not debuggable (debuggable builds are in test mode automatically).
 - [ ] `baseUrl` is the default `https://ads.qartvelo.com/` (or your production HTTPS origin); no cleartext network config in the release manifest.
 - [ ] Your **own** AdMob App ID is in the manifest and your own ad unit ids are set per placement (dashboard or `admobAdUnits`); no Google test ids in production. See [AdMob fallback](/guides/admob-fallback/).
 - [ ] Consent is collected by your CMP where required and passed with `QartveloAds.setPrivacy`. See [Privacy](/guides/privacy/).

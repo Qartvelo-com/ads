@@ -5,6 +5,16 @@ description: Release history of the Qartvelo Ads SDKs.
 
 Releases are tagged in [Qartvelo-com/ads](https://github.com/Qartvelo-com/ads). The Android SDK, the AdMob adapter and the React Native plugin share one version number.
 
+## 0.3.3
+
+- Test mode turns itself on in debuggable (developer) builds, like AdMob test devices. Release
+  builds are unaffected. Opt out with `testModeInDebugBuilds = false` (Android) or
+  `testModeInDebugBuilds: false` (React Native).
+- Test ads are labelled **Test ad** instead of **Ad** on banners, interstitials and rewarded videos.
+- Backend: in test mode an approved app now gets the real creative a live request would win,
+  flagged `"test": true` and never billed, instead of the built-in placeholder (which is still
+  used for unapproved apps and when nothing matches).
+
 ## 0.3.2
 
 - The "Ad" badge on Qartvelo Ads banners, interstitials and rewarded videos is now a link: tapping

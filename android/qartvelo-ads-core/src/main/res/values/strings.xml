@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="qartvelo_ad_label">Ad</string>
+    <string name="qartvelo_test_ad_label">Test ad</string>
     <string name="qartvelo_about_ads">Ad. About Qartvelo Ads</string>
     <string name="qartvelo_close">Close ad</string>
     <string name="qartvelo_learn_more">Learn more</string>
