@@ -7,7 +7,9 @@ Never click or watch live (billable) ads in your own app: it generates invalid t
 
 ## Turn it on
 
-Since SDK 0.3.3 test mode turns itself on in **debug builds** (any build where the app is debuggable, such as `./gradlew installDebug`, `npx react-native run-android` or an Expo development build), like AdMob test devices. Release builds are not debuggable, and Google Play rejects debuggable builds, so your users never get test ads. The SDK logs `Debuggable build: test mode is on` at info level when this happens.
+**Emulators are always in test mode** (SDK 0.3.4+), like AdMob: the Android Studio emulator, Genymotion and common PC players get test ads and are never billed, even in a release build. The SDK reports the emulator to the backend, which enforces it. The SDK logs `Emulator: test mode is on` at info level.
+
+Since SDK 0.3.3 test mode also turns itself on in **debug builds** (any build where the app is debuggable, such as `./gradlew installDebug`, `npx react-native run-android` or an Expo development build), like AdMob test devices. Release builds are not debuggable, and Google Play rejects debuggable builds, so your users never get test ads. The SDK logs `Debuggable build: test mode is on` at info level when this happens.
 
 You can also turn it on explicitly, for example for a QA release build:
 

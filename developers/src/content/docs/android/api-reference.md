@@ -1,15 +1,15 @@
 ---
 title: API reference
-description: Complete public API of the Qartvelo Ads Android SDK 0.3.3 (package com.qartvelo.sdk).
+description: Complete public API of the Qartvelo Ads Android SDK 0.3.4 (package com.qartvelo.sdk).
 ---
 
-Package `com.qartvelo.sdk`, version `0.3.3` (`QartveloAds.SDK_VERSION`). Every method is safe to call from any thread, never throws and delivers callbacks on the main thread. `@JvmStatic` and `@JvmOverloads` make the API callable from Java as `QartveloAds.initialize(...)`.
+Package `com.qartvelo.sdk`, version `0.3.4` (`QartveloAds.SDK_VERSION`). Every method is safe to call from any thread, never throws and delivers callbacks on the main thread. `@JvmStatic` and `@JvmOverloads` make the API callable from Java as `QartveloAds.initialize(...)`.
 
 ## QartveloAds
 
 ```kotlin
 object QartveloAds {
-    const val SDK_VERSION: String = "0.3.3"
+    const val SDK_VERSION: String = "0.3.4"
 
     fun initialize(
         context: Context,

@@ -15,9 +15,9 @@ React Native app ──> @qartvelo/react-native-ads ──> Qartvelo Ads Kotlin 
 
 | Package | Where | Install |
 |---|---|---|
-| Android core | JitPack | `com.qartvelo.ads:core:0.3.3` |
-| Android AdMob adapter (optional) | JitPack | `com.qartvelo.ads:admob:0.3.3` |
-| Same, GitHub Packages | `maven.pkg.github.com/Qartvelo-com/ads` | `com.qartvelo.ads:core:0.3.3` |
+| Android core | Maven Central | `com.qartvelo.ads:core:0.3.4` |
+| Android AdMob adapter (optional) | Maven Central | `com.qartvelo.ads:admob:0.3.4` |
+| Same, also on | JitPack, GitHub Packages (`maven.pkg.github.com/Qartvelo-com/ads`) | `com.qartvelo.ads:core:0.3.4` |
 | React Native (Android) | npm | `npm install @qartvelo/react-native-ads` |
 
 Android only for now; the APIs are shaped so an iOS SDK can be added later.
@@ -30,14 +30,13 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven("https://jitpack.io")
     }
 }
 
 // app/build.gradle.kts
 dependencies {
-    implementation("com.qartvelo.ads:core:0.3.3")
-    implementation("com.qartvelo.ads:admob:0.3.3") // optional
+    implementation("com.qartvelo.ads:core:0.3.4")
+    implementation("com.qartvelo.ads:admob:0.3.4") // optional
 }
 ```
 
@@ -75,7 +74,7 @@ if (result.rewarded) {
 <QartveloAdsBanner placementId="home_banner" style={{ width: '100%' }} />;
 ```
 
-Add JitPack to `android/build.gradle` as shown in the
+The native SDK comes from Maven Central, which React Native projects already use; see the
 [React Native guide](https://developers.qartvelo.com/react-native/installation/).
 
 ## Documentation
@@ -118,7 +117,7 @@ docs/                          pointers to the docs site
 
 ```sh
 cd android && ./gradlew :qartvelo-ads-core:testDebugUnitTest :qartvelo-ads-admob:testDebugUnitTest
-cd android && ./gradlew publishToMavenLocal        # com.qartvelo.ads:*:0.3.3 into ~/.m2
+cd android && ./gradlew publishToMavenLocal        # com.qartvelo.ads:*:0.3.4 into ~/.m2
 
 cd react-native/packages/react-native-qartvelo-ads && npm ci && npm test && npm run typecheck
 cd react-native/example && npm install && npx react-native run-android   # uses the local SDK build
@@ -134,8 +133,10 @@ Bump `version` in `android/build.gradle.kts`, `SDK_VERSION` in `QartveloAds.kt`,
 `developers/` (see its README), add a `## x.y.z` section to the changelog, and merge to `main`.
 When CI passes on `main` and that version has no tag yet, the [Release](.github/workflows/release.yml)
 workflow creates the tag and GitHub release (notes from the changelog) and starts
-[Publish](.github/workflows/publish.yml), which publishes to GitHub Packages (and npm when the
-`NPM_TOKEN` secret is set); JitPack builds the tag on first request. Pushing a tag by hand still works.
+[Publish](.github/workflows/publish.yml), which publishes to GitHub Packages, Maven Central
+(when the `MAVEN_CENTRAL_USERNAME` / `MAVEN_CENTRAL_PASSWORD` Central Portal user token and the
+`SIGNING_KEY` / `SIGNING_PASSWORD` GPG secrets are set) and npm (when `NPM_TOKEN` is set); JitPack
+builds the tag on first request. Pushing a tag by hand still works.
 
 ## License
 

@@ -21,6 +21,15 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: Unit tests and builds
         run: ./gradlew :qartvelo-ads-core:testDebugUnitTest :qartvelo-ads-admob:testDebugUnitTest :sample-app:assembleDebug assembleRelease
+      - name: Maven Central bundle (unsigned)
+        run: |
+          ./gradlew :qartvelo-ads-core:publishAllPublicationsToStagingRepository :qartvelo-ads-admob:publishAllPublicationsToStagingRepository
+          find build/staging-deploy -type f -not -name '*.md5' -not -name '*.sha*' | sort
+          for a in core admob; do
+            for f in .aar .pom .module -sources.jar -javadoc.jar; do
+              ls build/staging-deploy/com/qartvelo/ads/$a/*/$a-*$f >/dev/null
+            done
+          done
 
   react-native:
     runs-on: ubuntu-latest

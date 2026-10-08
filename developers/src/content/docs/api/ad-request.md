@@ -26,7 +26,7 @@ Content-Type: application/json
 ```json
 {"app_key":"app_xxxxxxxxxxxxxxxxxxxxxxxx","placement":"game_end","format":"interstitial",
  "session_token":"<opaque>","language":"ka","android_version":"14","app_version":"1.0.0",
- "sdk_version":"0.3.3","screen_width":1080,"screen_height":2400}
+ "sdk_version":"0.3.4","screen_width":1080,"screen_height":2400}
 ```
 
 ## Response 200: fill

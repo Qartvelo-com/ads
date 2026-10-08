@@ -35,15 +35,14 @@ import { Steps, Tabs, TabItem, Aside } from '@astrojs/starlight/components';
        repositories {
            google()
            mavenCentral()
-           maven("https://jitpack.io")
        }
    }
    ```
 
    ```kotlin title="app/build.gradle.kts"
    dependencies {
-       implementation("com.qartvelo.ads:core:0.3.3")
-       implementation("com.qartvelo.ads:admob:0.3.3") // optional AdMob fallback
+       implementation("com.qartvelo.ads:core:0.3.4")
+       implementation("com.qartvelo.ads:admob:0.3.4") // optional AdMob fallback
    }
    ```
 
@@ -52,17 +51,6 @@ import { Steps, Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
    ```sh
    npm install @qartvelo/react-native-ads
-   ```
-
-   ```groovy title="android/build.gradle"
-   allprojects {
-       repositories {
-           maven {
-               url "https://jitpack.io"
-               content { includeGroup("com.qartvelo.ads") }
-           }
-       }
-   }
    ```
 
    ```properties title="android/gradle.properties"

@@ -11,6 +11,7 @@ import com.qartvelo.sdk.DEFAULT_BASE_URL
 import com.qartvelo.sdk.QartveloAds
 import com.qartvelo.sdk.QartveloAdsListener
 import com.qartvelo.sdk.fallback.FallbackAdapter
+import java.util.Locale
 import java.util.concurrent.CopyOnWriteArrayList
 
 /** Global observers plus per-call listeners. Delivery is always posted to the main thread, in order. */
@@ -71,11 +72,51 @@ internal object TestHooks {
     @Volatile
     var creativeGraceMs: Long? = null
 
+    /** Overrides emulator detection (Robolectric is not detected as an emulator). */
+    @Volatile
+    var emulator: Boolean? = null
+
     fun reset() {
         adapterClassName = ADMOB_ADAPTER_CLASS
         eventRetryBaseMs = null
         videoPlayerFactory = null
         creativeGraceMs = null
+        emulator = null
+    }
+}
+
+/**
+ * Emulators are always in test mode, like AdMob test devices: emulator traffic is never billed.
+ * Only strong, well-known build markers of the Android Studio emulator, Genymotion and common PC
+ * players are used, so real phones are never mistaken for emulators.
+ */
+internal object Emulator {
+    private val detected: Boolean by lazy {
+        detect(Build.FINGERPRINT, Build.HARDWARE, Build.PRODUCT, Build.MODEL, Build.MANUFACTURER, Build.BRAND, Build.DEVICE)
+    }
+
+    fun current(): Boolean = TestHooks.emulator ?: detected
+
+    fun detect(
+        fingerprint: String?,
+        hardware: String?,
+        product: String?,
+        model: String?,
+        manufacturer: String?,
+        brand: String?,
+        device: String?,
+    ): Boolean {
+        val f = fingerprint.orEmpty().lowercase(Locale.ROOT)
+        val h = hardware.orEmpty().lowercase(Locale.ROOT)
+        val p = product.orEmpty().lowercase(Locale.ROOT)
+        val m = model.orEmpty().lowercase(Locale.ROOT)
+        return h == "goldfish" || h == "ranchu" || h.startsWith("vbox86") ||
+            f.startsWith("generic") || f.contains("/sdk_gphone") || f.contains("/sdk_google") || f.contains("vbox86p") ||
+            p == "sdk" || p.startsWith("sdk_") || p.contains("google_sdk") || p.contains("vbox86p") ||
+            p.contains("emulator") || p.contains("simulator") ||
+            m.contains("emulator") || m.startsWith("android sdk built for") || m.contains("google_sdk") ||
+            manufacturer.orEmpty().contains("Genymotion", ignoreCase = true) ||
+            (brand.orEmpty().startsWith("generic") && device.orEmpty().startsWith("generic"))
     }
 }
 

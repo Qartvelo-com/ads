@@ -5,6 +5,15 @@ description: Release history of the Qartvelo Ads SDKs.
 
 Releases are tagged in [Qartvelo-com/ads](https://github.com/Qartvelo-com/ads). The Android SDK, the AdMob adapter and the React Native plugin share one version number.
 
+## 0.3.4
+
+- **Maven Central**: `com.qartvelo.ads:core` and `com.qartvelo.ads:admob` are published to Maven
+  Central, so `mavenCentral()` is all you need; the JitPack repository line can be removed.
+  JitPack and GitHub Packages keep working. The artifacts now include javadoc jars and are
+  GPG-signed. React Native and Expo apps need no extra repository.
+- **Emulators are always in test mode**, like AdMob test devices: ads are labelled "Test ad" and
+  never billed, even in release builds. The SDK reports `is_emulator` and the backend enforces it.
+
 ## 0.3.3
 
 - Test mode turns itself on in debuggable (developer) builds, like AdMob test devices. Release

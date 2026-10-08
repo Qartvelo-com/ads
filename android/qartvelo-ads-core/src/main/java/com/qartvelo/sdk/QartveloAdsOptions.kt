@@ -10,7 +10,8 @@ public data class QartveloAdsOptions @JvmOverloads constructor(
     val requestTimeoutMs: Long = 800,
     /**
      * Never serve billable campaigns: ads are labelled "Test ad" and never billed; AdMob uses
-     * Google's public test units. Also on automatically in debug builds, see [testModeInDebugBuilds].
+     * Google's public test units. Always on in emulators, and on automatically in debug builds,
+     * see [testModeInDebugBuilds].
      */
     val testMode: Boolean = false,
     /** In test mode, force QartveloAds to answer `no_fill` so the fallback path can be exercised. */

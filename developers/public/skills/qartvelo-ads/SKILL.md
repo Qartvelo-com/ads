@@ -9,7 +9,7 @@ Qartvelo Ads is a direct-sold ad network for Android apps in Georgia. The SDK se
 
 ## Facts that must be exact
 
-- Version **0.3.3**. Android artifacts on JitPack: `com.qartvelo.ads:core:0.3.3` (required), `com.qartvelo.ads:admob:0.3.3` (optional AdMob fallback). Repository `maven("https://jitpack.io")`.
+- Version **0.3.4**. Android artifacts on Maven Central: `com.qartvelo.ads:core:0.3.4` (required), `com.qartvelo.ads:admob:0.3.4` (optional AdMob fallback). Repository `mavenCentral()`; versions before 0.3.4 are only on JitPack.
 - Kotlin package `com.qartvelo.sdk`, entry point `object QartveloAds`. Options class `QartveloAdsOptions`. Listener `QartveloAdsListener` (all methods have default bodies, main thread).
 - `AdSource` is `QARTVELO` or `ADMOB` (React Native: `'qartvelo'` or `'admob'`). There is no `OURADS` value.
 - Banner view `com.qartvelo.sdk.QartveloAdsBannerView`, XML attribute **`app:qartvelo_placementId`**.
@@ -23,8 +23,8 @@ Qartvelo Ads is a direct-sold ad network for Android apps in Georgia. The SDK se
 
 1. Ask for (or find) the app key and the placement codes and formats. If missing, tell the user to create them at https://ads.qartvelo.com (Apps -> app -> placements).
 2. Add the dependencies:
-   - Android: JitPack in `settings.gradle.kts` `dependencyResolutionManagement.repositories`, then `implementation("com.qartvelo.ads:core:0.3.3")` and, for fallback, `implementation("com.qartvelo.ads:admob:0.3.3")`.
-   - React Native: install the package, add JitPack to `allprojects.repositories` in `android/build.gradle`, set `QartveloAds_admobEnabled=true` for fallback.
+   - Android: `mavenCentral()` in `settings.gradle.kts` `dependencyResolutionManagement.repositories` (usually already there), then `implementation("com.qartvelo.ads:core:0.3.4")` and, for fallback, `implementation("com.qartvelo.ads:admob:0.3.4")`.
+   - React Native: install the package (the native SDK comes from Maven Central, nothing to add), set `QartveloAds_admobEnabled=true` for fallback.
 3. If the AdMob adapter is used, make sure the manifest has the app's own AdMob App ID: `<meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="ca-app-pub-...~..."/>` (missing -> crash at start-up). Keep any existing AdMob setup.
 4. Initialize once at start-up with test mode in debug builds:
 
@@ -46,7 +46,7 @@ Qartvelo Ads is a direct-sold ad network for Android apps in Georgia. The SDK se
    - Interstitial: `QartveloAds.loadInterstitial("code")` early; `showInterstitial(activity, "code", listener)` at a natural break. Continue the flow from `onDismissed`, `onNoAdAvailable` **and** `onLoadFailed`. RN: `await loadInterstitial`, `await showInterstitial` (resolves on dismiss or `{ shown: false }`).
    - Rewarded: `loadRewarded`, then `showRewarded`; grant the reward **only** in `onReward` (RN: `result.rewarded`), exactly once. Never grant from `onDismissed`.
 6. Reload after each full-screen show for the next opportunity.
-7. Verify: debug builds are in test mode automatically (SDK 0.3.3+): ads carry a "Test ad" label (real creatives for approved apps, purple "TEST AD" placeholders otherwise) and are never billed; `testForceNoFill = true` shows the AdMob fallback (Google test ads). Logs: `adb logcat -s QartveloAds` with `logLevel = QartveloAdsLogLevel.DEBUG`.
+7. Verify: debug builds are in test mode automatically (SDK 0.3.3+; emulators always, SDK 0.3.4+): ads carry a "Test ad" label (real creatives for approved apps, purple "TEST AD" placeholders otherwise) and are never billed; `testForceNoFill = true` shows the AdMob fallback (Google test ads). Logs: `adb logcat -s QartveloAds` with `logLevel = QartveloAdsLogLevel.DEBUG`.
 
 ## Rules
 
