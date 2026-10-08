@@ -9,7 +9,11 @@ Advertisers buy impressions in Georgian Android apps with CPM campaigns: you set
 
 1. Register at [ads.qartvelo.com/register](https://ads.qartvelo.com/register) as an **Advertiser** with your company name, and verify your email.
 2. Your account starts as **pending**. You can already build campaigns; they serve once your account is approved and your balance is topped up (see [Billing](/advertisers/billing/)).
-3. Create a campaign, add at least one creative, then **Submit for review**.
+3. Choose **New campaign** and fill in three things:
+   - **Your ads**: where a tap should go, and one or more images or videos. The format of each file is picked for you (banner-size image: banner; full-screen image: interstitial; video: rewarded) and you can change it. Files that don't meet the [specifications](/advertisers/creatives/) are flagged before upload.
+   - **Budget**: a name, the total budget and your CPM bid. Once enough campaigns run, the bid is prefilled with the typical bid in the network.
+   - **Advanced settings** (optional): daily budget, schedule, targeting and frequency cap. The defaults are Georgia, every app and format, no daily limit, and running until the budget is spent.
+4. Choose **Create and submit for review**, or **Save as draft** to finish later. You can add more ads on the campaign page at any time.
 
 ## Campaign settings
 
