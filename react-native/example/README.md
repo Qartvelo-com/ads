@@ -22,11 +22,15 @@ consumes the local package through `file:../packages/react-native-qartvelo-ads` 
 
 Initialization options apply once per process: force-stop the app to change the switches.
 
-Android configuration used here (see the [React Native guide](https://developers.qartvelo.com/react-native/installation/)):
+Configuration used here (see the [React Native guide](https://developers.qartvelo.com/react-native/installation/)):
 
-- `android/build.gradle`: `mavenLocal()` restricted to the `com.ourads` group;
-- `android/gradle.properties`: `QartveloAds_admobEnabled=true`;
-- `AndroidManifest.xml`: Google's sample AdMob App ID;
+- `app.json`: the AdMob config is the `"@qartvelo/react-native-ads"` key, with Google's sample App IDs as
+  `androidAppId` and `iosAppId`. Whenever `admob` is present, `androidAppId` is required for Android builds and
+  `iosAppId` for iOS builds. No Gradle, manifest, Podfile or `Info.plist` edits are needed for AdMob;
+- `android/gradle.properties`: `QartveloAds_useMavenLocal=true` resolves the Qartvelo Ads SDK from Maven Local
+  during development (publish it with `./gradlew publishToMavenLocal` in `../../android`), and
+  `android/build.gradle` lists `mavenLocal()` for the `com.qartvelo.ads` group;
+- iOS: `pod install` links the adapter from `app.json`;
 - `app/src/debug`: cleartext HTTP allowed for `10.0.2.2` and `localhost` in debug builds only.
 
 Checks: `npm test`, `npm run typecheck`, `npm run lint`.

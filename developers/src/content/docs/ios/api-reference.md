@@ -1,15 +1,15 @@
 ---
 title: API reference
-description: Complete public API of the Qartvelo Ads iOS SDK 0.4.1 (modules QartveloAds and QartveloAdsAdMob).
+description: Complete public API of the Qartvelo Ads iOS SDK 0.5.0 (modules QartveloAds and QartveloAdsAdMob).
 ---
 
-Module `QartveloAds`, version `0.4.1` (`QartveloAds.sdkVersion`). Every method is safe to call from any thread, never throws, and delivers callbacks on the main thread. All types are available to Objective-C except `QartveloAdsPrivacy` and the fallback adapter protocols.
+Module `QartveloAds`, version `0.5.0` (`QartveloAds.sdkVersion`). Every method is safe to call from any thread, never throws, and delivers callbacks on the main thread. All types are available to Objective-C except `QartveloAdsPrivacy` and the fallback adapter protocols.
 
 ## QartveloAds
 
 ```swift
 final class QartveloAds: NSObject {
-    static let sdkVersion: String // "0.4.1"
+    static let sdkVersion: String // "0.5.0"
 
     static func initialize(appKey: String, options: QartveloAdsOptions = QartveloAdsOptions(),
                            completion: ((Bool, QartveloAdsError?) -> Void)? = nil)

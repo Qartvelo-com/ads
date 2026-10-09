@@ -1,6 +1,6 @@
 ---
 title: API reference
-description: Complete TypeScript API of @qartvelo/react-native-ads 0.4.1.
+description: Complete TypeScript API of @qartvelo/react-native-ads 0.5.0.
 ---
 
 ```ts
@@ -19,10 +19,10 @@ import {
 | `initialize(options: QartveloAdsInitOptions)` | `Promise<void>` | Starts the SDK once per process |
 | `isInitialized()` | `Promise<boolean>` | First initialization attempt finished |
 | `loadInterstitial(placementId)` | `Promise<AdInfo>` | Resolves when an ad is ready, rejects when none |
-| `showInterstitial(placementId)` | `Promise<ShowResult>` | Resolves on dismiss, or `{ shown: false }` when nothing is ready |
+| `showInterstitial(placementId, options?: ShowOptions)` | `Promise<ShowResult>` | Resolves on dismiss, or `{ shown: false }` when nothing is ready (`loadIfNeeded` waits for a load first) |
 | `isInterstitialReady(placementId)` | `Promise<boolean>` | |
 | `loadRewarded(placementId)` | `Promise<AdInfo>` | |
-| `showRewarded(placementId)` | `Promise<RewardedShowResult>` | `rewarded` is true only after confirmed completion |
+| `showRewarded(placementId, options?: ShowOptions)` | `Promise<RewardedShowResult>` | `rewarded` is true only after confirmed completion (`loadIfNeeded` waits for a load first) |
 | `isRewardedReady(placementId)` | `Promise<boolean>` | |
 | `addListener(type, listener)` | `QartveloAdsSubscription` | Observe events of all placements |
 | `removeAllListeners(type?)` | `void` | |
@@ -52,18 +52,25 @@ type AdFormat = 'banner' | 'interstitial' | 'rewarded';
 type AdSource = 'qartvelo' | 'admob';
 type LogLevel = 'none' | 'error' | 'info' | 'debug';
 type FallbackReason = 'no_fill' | 'timeout' | 'error' | 'creative_failed' | 'disabled';
+type SetupIssueCode = 'package_mismatch' | 'platform_mismatch' | 'unknown_placement' | 'format_mismatch';
+
+interface PerPlatform<T> { android?: T; ios?: T }
 
 interface QartveloAdsInitOptions {
-  appKey: string;
+  appKey: string | PerPlatform<string>;
   requestTimeoutMs?: number;
   testMode?: boolean;
   testForceNoFill?: boolean;
-  testModeInDebugBuilds?: boolean; // default true: test mode in debuggable builds
+  testModeInDebugBuilds?: boolean; // default true: test mode in debuggable Android builds
   admobFallback?: boolean;
+  admobTestUnitsInDebugBuilds?: boolean; // default true: Google's test units in debuggable Android builds
   logLevel?: LogLevel;
   baseUrl?: string;
-  admobAdUnits?: Record<string, string>;
+  admobAdUnits?: Record<string, string | PerPlatform<string>>;
+  preload?: { interstitial?: string[]; rewarded?: string[] };
 }
+
+interface ShowOptions { loadIfNeeded?: boolean }
 
 interface AdInfo {
   placementId: string;
@@ -97,7 +104,7 @@ class QartveloAdsError extends Error {
 interface QartveloAdsSubscription { remove(): void }
 ```
 
-Event payload types are exported as `QartveloAdsEventMap`, `QartveloAdsEvent`, `QartveloAdsEventType` and `QartveloAdsEventListener<T>`.
+Event payload types are exported as `QartveloAdsEventMap`, `QartveloAdsEvent`, `QartveloAdsEventType` and `QartveloAdsEventListener<T>`. Besides the ad events, `addListener('setupIssue', ...)` delivers `{ code: SetupIssueCode; message: string; placementId?: string }`, a setup problem to fix (see [Usage](/react-native/usage/#setup-issues) and [Events and errors](/react-native/events-and-errors/#events)).
 
 ## Testing with Jest
 

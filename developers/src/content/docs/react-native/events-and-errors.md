@@ -28,8 +28,9 @@ useEffect(() => {
 | `rewarded` | Completion confirmed for a rewarded ad | `source`, `reward: { type, amount }` |
 | `fallbackStarted` | Qartvelo Ads could not serve; the fallback is being tried | `reason`: `no_fill`, `timeout`, `error`, `creative_failed`, `disabled` |
 | `noAdAvailable` | No source has an ad | |
+| `setupIssue` | A setup problem to fix: an app key for another package or platform, or a placement code the dashboard does not have (or has with another format). Printed once with `console.warn` in development | `code`: `package_mismatch`, `platform_mismatch`, `unknown_placement`, `format_mismatch`; `message`; `placementId?` |
 
-Every payload has `type`, `placementId` and `format` (`banner`, `interstitial` or `rewarded`). `source` is `qartvelo` or `admob`; `campaignId` and `creativeId` are set only for Qartvelo Ads ads.
+Every payload except `setupIssue` has `type`, `placementId` and `format` (`banner`, `interstitial` or `rewarded`); `setupIssue` has `type`, `code`, `message` and an optional `placementId`. `source` is `qartvelo` or `admob`; `campaignId` and `creativeId` are set only for Qartvelo Ads ads.
 
 Each `addListener` call is an independent subscription; `remove()` is safe to call twice. `QartveloAds.removeAllListeners(type?)` clears listeners in bulk. The native event stream is open only while at least one listener exists. Payloads are fully typed through `QartveloAdsEventMap`.
 

@@ -22,7 +22,7 @@ See the [React Native guide](https://developers.qartvelo.com/react-native/instal
 ```sh
 cd packages/react-native-qartvelo-ads && npm install && npm run build
 cd ../../example && npm install
-cd ios && QARTVELO_ADS_ADMOB_ENABLED=true pod install && cd ..
+cd ios && pod install && cd ..
 npm start
 # In a second terminal:
 npm run ios

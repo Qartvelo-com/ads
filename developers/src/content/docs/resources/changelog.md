@@ -5,8 +5,23 @@ description: Release history of the Qartvelo Ads SDKs.
 
 Releases are tagged in [Qartvelo-com/ads](https://github.com/Qartvelo-com/ads). The Android SDK, the iOS SDK, the AdMob adapters and the React Native plugin share one version number.
 
-## Unreleased
+## 0.5.0
 
+- **One-place AdMob setup for React Native**: an Expo config plugin
+  (`["@qartvelo/react-native-ads", { "admob": { ... } }]`) and, for bare React Native, the same object
+  under `"@qartvelo/react-native-ads"` in `app.json`. Both enable the adapter, write the App IDs and
+  Google's SKAdNetwork list, and validate the App IDs. The 0.4.x flags keep working.
+- **Per-platform options**: `appKey` and `admobAdUnits` values accept `{ android, ios }`.
+- **`preload` and `loadIfNeeded`** in the React Native API.
+- **Setup issues**: a wrong package or platform for the app key, and placement codes the dashboard
+  does not have, are reported once (`onSetupIssue` on Android, `qartveloAdsDidReportSetupIssue` on
+  iOS, the `setupIssue` event and a development warning in React Native). Requires the backend's new
+  `error.details`.
+- **AdMob test units in debug builds**: `admobTestUnitsInDebugBuilds` (default true) on Android.
+- **Packaging**: `com.qartvelo.ads:admob` brings `play-services-ads` at runtime scope, so React Native
+  0.83 (Kotlin 2.1) builds with the adapter; the React Native module no longer adds JitPack and
+  GitHub Packages for 0.3.4 and later. Apps that call Google's AdMob API directly must declare
+  play-services-ads themselves; the adapter no longer exposes it at compile time.
 - **Android AdMob fallback banner size**: the adapter now requests Google's standard anchored
   adaptive banner, like iOS and as documented. It requested the large anchored variant, which is
   about twice as tall on phones (128 dp instead of 64 dp at 411 dp width).

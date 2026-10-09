@@ -15,7 +15,7 @@ export default function App() {
   useEffect(() => {
     QartveloAds.setPrivacy({ consentGiven: undefined }); // see Privacy guide
     QartveloAds.initialize({
-      appKey: 'app_xxxxxxxxxxxxxxxxxxxxxxxx',
+      appKey: { android: 'app_xxxxxxxxxxxxxxxxxxxxxxxx', ios: 'app_yyyyyyyyyyyyyyyyyyyyyyyy' },
       testMode: __DEV__,
       logLevel: __DEV__ ? 'debug' : 'error',
     }).catch((error) => {
@@ -30,15 +30,17 @@ export default function App() {
 
 | Option | Type | Default | Meaning |
 |---|---|---|---|
-| `appKey` | `string` | required | Publisher app key (`app_...`) |
+| `appKey` | `string \| { android, ios }` | required | App key, or one per platform (a key only works on its own platform) |
 | `baseUrl` | `string` | `https://ads.qartvelo.com/` | API origin; change only for a self-hosted or local backend |
 | `requestTimeoutMs` | `number` | `800` | Qartvelo Ads time budget before falling back. The dashboard value per placement wins |
 | `testMode` | `boolean` | `false` | Non-billable test ads labelled "Test ad"; AdMob uses Google's test units |
 | `testModeInDebugBuilds` | `boolean` | `true` | Turn test mode on automatically in debuggable Android builds (debug and Expo development builds); ignored on iOS, where all non-App Store installs always use test mode |
 | `testForceNoFill` | `boolean` | `false` | Force Qartvelo Ads "no fill" to see the AdMob fallback |
-| `admobFallback` | `boolean` | `true` | Allow the AdMob adapter (needs `QartveloAds_admobEnabled=true`) |
+| `admobFallback` | `boolean` | `true` | Allow the AdMob adapter (needs the AdMob setup in [Installation](/react-native/installation/#3-admob-fallback-optional)) |
 | `logLevel` | `'none' \| 'error' \| 'info' \| 'debug'` | `'error'` | Logcat verbosity (tag `QartveloAds`) |
-| `admobAdUnits` | `Record<string, string>` | `{}` | Placement code to AdMob unit id; overrides the dashboard |
+| `admobAdUnits` | `Record<string, string \| { android, ios }>` | `{}` | Placement code to AdMob unit id, or one per platform; overrides the dashboard |
+| `admobTestUnitsInDebugBuilds` | `boolean` | `true` | Google's test units for the AdMob fallback in debuggable Android builds; ignored on iOS |
+| `preload` | `{ interstitial?: string[]; rewarded?: string[] }` | none | Load these placements at start-up and again after each show |
 
 - Initialization is idempotent for the life of the **process**. Later calls resolve or reject with the first result and ignore new options. Restart the app to change them; a JS reload is not enough.
 - A rejection (`network_error`, `timeout`, or `not_initialized` for a rejected key) does not disable ads.
@@ -107,6 +109,33 @@ if (result.rewarded) {
 - `result.rewarded` is `true` exactly once per show and only after the SDK confirmed completion, whichever network served the ad. A skipped ad resolves `{ shown: true, rewarded: false }`.
 - `result.reward` is `{ type, amount }`: `{ type: 'reward', amount: 1 }` for Qartvelo Ads, your AdMob unit's settings for AdMob.
 - Grant the reward from the promise result **or** the `rewarded` event, never from both.
+
+## Preload and loadIfNeeded
+
+```tsx
+await QartveloAds.initialize({
+  appKey: { android: 'app_...', ios: 'app_...' },
+  preload: { interstitial: ['game_end'], rewarded: ['reward_coins'] },
+});
+
+// A break in the game: shows a preloaded ad, or resolves { shown: false } at once.
+await QartveloAds.showInterstitial('game_end');
+
+// The user asked for a reward: waits for a load when nothing is ready.
+const result = await QartveloAds.showRewarded('reward_coins', { loadIfNeeded: true });
+if (result.rewarded) grantCoins(50);
+```
+
+Preloaded placements reload after every show. With `loadIfNeeded`, a failed load resolves
+`{ shown: false }` (and `rewarded: false`) instead of rejecting.
+
+## Setup issues
+
+In development, the SDK prints setup problems once with `console.warn` (they show in LogBox): an app
+key registered for another package or platform, or a placement code that the dashboard does not have
+(or has with another format). Listen for them yourself with
+`QartveloAds.addListener('setupIssue', (issue) => ...)`; `issue.code` is `package_mismatch`,
+`platform_mismatch`, `unknown_placement` or `format_mismatch`.
 
 ## Hooks pattern
 

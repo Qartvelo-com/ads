@@ -41,8 +41,8 @@ import { Steps, Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
    ```kotlin title="app/build.gradle.kts"
    dependencies {
-       implementation("com.qartvelo.ads:core:0.4.1")
-       implementation("com.qartvelo.ads:admob:0.4.1") // optional AdMob fallback
+       implementation("com.qartvelo.ads:core:0.5.0")
+       implementation("com.qartvelo.ads:admob:0.5.0") // optional AdMob fallback
    }
    ```
 
@@ -53,15 +53,24 @@ import { Steps, Tabs, TabItem, Aside } from '@astrojs/starlight/components';
    npm install @qartvelo/react-native-ads
    ```
 
-   ```properties title="android/gradle.properties"
-   # Optional: enable the AdMob fallback adapter
-   QartveloAds_admobEnabled=true
+   For the optional AdMob fallback, put your AdMob App IDs in `app.json` (in an Expo project use the plugin entry instead, see [React Native installation](/react-native/installation/#3-admob-fallback-optional)):
+
+   ```json title="app.json"
+   {
+     "name": "MyApp",
+     "@qartvelo/react-native-ads": {
+       "admob": {
+         "androidAppId": "ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY",
+         "iosAppId": "ca-app-pub-XXXXXXXXXXXXXXXX~ZZZZZZZZZZ"
+       }
+     }
+   }
    ```
 
    </TabItem>
    </Tabs>
 
-   If you enabled the AdMob adapter, add **your** AdMob App ID to `AndroidManifest.xml`, or Google's SDK crashes the app at start-up:
+   In Kotlin, if you enabled the AdMob adapter, add **your** AdMob App ID to `AndroidManifest.xml`, or Google's SDK crashes the app at start-up (React Native writes it from `app.json`):
 
    ```xml title="AndroidManifest.xml"
    <application>

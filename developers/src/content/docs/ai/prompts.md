@@ -24,7 +24,7 @@ Show me the diff and anything I must do in the dashboard.
 Add @qartvelo/react-native-ads to this React Native app following
 https://developers.qartvelo.com/_llms-txt/react-native.txt.
 App key <app_...>, placements <home_banner banner, game_end interstitial, reward_coins rewarded>.
-Enable the AdMob fallback (QartveloAds_admobEnabled=true) and use testMode: __DEV__.
+Enable the AdMob fallback with the admob config from the installation page (the Expo plugin entry, or the app.json key in bare React Native) and use testMode: __DEV__.
 Create a small hook for the rewarded ad that exposes ready and show().
 ```
 

@@ -26,13 +26,13 @@ Your app ──> Qartvelo Ads SDK ──> Qartvelo Ads ad available?
 
 | Package | Install | Notes |
 |---|---|---|
-| Android core | `com.qartvelo.ads:core:0.4.1` | Maven Central. API client, caching, rendering, events, banner view |
-| Android AdMob adapter | `com.qartvelo.ads:admob:0.4.1` | Optional. Depends on Google's `play-services-ads` |
-| iOS core | `QartveloAds` 0.4.1 | Swift Package Manager (`https://github.com/Qartvelo-com/ads`) or CocoaPods from the Git tag |
-| iOS AdMob adapter | `QartveloAdsAdMob` 0.4.1 | Optional. Depends on Google's `Google-Mobile-Ads-SDK` 12 |
-| React Native | `npm install @qartvelo/react-native-ads@^0.4.1` | Android and iOS; TurboModule and Fabric banner, CocoaPods autolinking on iOS |
+| Android core | `com.qartvelo.ads:core:0.5.0` | Maven Central. API client, caching, rendering, events, banner view |
+| Android AdMob adapter | `com.qartvelo.ads:admob:0.5.0` | Optional. Depends on Google's `play-services-ads` |
+| iOS core | `QartveloAds` 0.5.0 | Swift Package Manager (`https://github.com/Qartvelo-com/ads`) or CocoaPods from the Git tag |
+| iOS AdMob adapter | `QartveloAdsAdMob` 0.5.0 | Optional. Depends on Google's `Google-Mobile-Ads-SDK` 12 |
+| React Native | `npm install @qartvelo/react-native-ads@^0.5.0` | Android and iOS; TurboModule and Fabric banner, CocoaPods autolinking on iOS |
 
-Release **0.4.1** is available from the official [npm registry](https://www.npmjs.com/package/@qartvelo/react-native-ads), [Maven Central](https://repo.maven.apache.org/maven2/com/qartvelo/ads/core/) and [GitHub release tags](https://github.com/Qartvelo-com/ads/releases). Third-party indexes such as npm.io may show an older cached version. Check the registry used by installers directly:
+Release **0.5.0** is available from the official [npm registry](https://www.npmjs.com/package/@qartvelo/react-native-ads), [Maven Central](https://repo.maven.apache.org/maven2/com/qartvelo/ads/core/) and [GitHub release tags](https://github.com/Qartvelo-com/ads/releases). Third-party indexes such as npm.io may show an older cached version. Check the registry used by installers directly:
 
 ```sh
 npm view @qartvelo/react-native-ads dist-tags.latest

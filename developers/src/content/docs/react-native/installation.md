@@ -40,48 +40,75 @@ The package includes the native Swift SDK and privacy manifest. CocoaPods automa
 `RNQartveloAds`. No additional SPM package, CocoaPods trunk publication or credentials are required.
 Avoid linking a second copy of QartveloAds into the same application target.
 
-### Optional iOS AdMob fallback
-
-Add this before `use_native_modules!` in your Podfile:
-
-```ruby
-ENV['QARTVELO_ADS_ADMOB_ENABLED'] = 'true'
-```
-
-Run `pod install` again. Set `GADApplicationIdentifier` in your app's Info.plist to your own iOS
-AdMob App ID. Google's sample iOS App ID for development is
-`ca-app-pub-3940256099942544~1458002511`. Pass your **iOS** unit IDs in `admobAdUnits`; Android unit
-IDs cannot be reused on iOS. The fallback adapter automatically registers with the native SDK.
-
-Simulator, debug, TestFlight, and other non-App Store installations always use non-billable test
-traffic. `testMode: false` does not make these installations billable. `testModeInDebugBuilds` is
-ignored on iOS. Real campaigns are billable only in eligible App Store installations with test mode off.
-
 ## 2. Native SDK repository (Android)
 
-The plugin depends on the native SDK `com.qartvelo.ads:core:0.4.1`, published on Maven Central. React Native and Expo projects already list `mavenCentral()`, so there is nothing to add. (Pinning a version before 0.3.4 with `QartveloAds_sdkVersion` needs JitPack: `maven { url "https://jitpack.io" }` in `allprojects.repositories`.)
+The plugin depends on the native SDK `com.qartvelo.ads:core:0.5.0`, published on Maven Central. React Native and Expo projects already list `mavenCentral()`, so there is nothing to add. (Pinning a version before 0.3.4 with `QartveloAds_sdkVersion` needs JitPack: `maven { url "https://jitpack.io" }` in `allprojects.repositories`. To try an SDK build from `./gradlew publishToMavenLocal` in `android/`, set `QartveloAds_useMavenLocal=true` in `android/gradle.properties` and add `mavenLocal()` to `allprojects.repositories`.)
 
-## 3. Enable the AdMob fallback (optional)
+## 3. AdMob fallback (optional)
 
-By default only the core SDK is included and a Qartvelo Ads no-fill simply reports "no ad". To fall back to your own AdMob units:
+When Qartvelo Ads has no ad, the SDK can show an ad from your own AdMob account. Configure it in one
+place; the App IDs (with `~`) come from your AdMob apps.
 
-```properties title="android/gradle.properties"
-QartveloAds_admobEnabled=true
-# Optional: pin a different native SDK version (default 0.4.1)
-# QartveloAds_sdkVersion=0.4.1
+### Expo
+
+Add the plugin to `app.json` and run `npx expo prebuild` (or build with EAS):
+
+```json
+{
+  "expo": {
+    "plugins": [
+      [
+        "@qartvelo/react-native-ads",
+        {
+          "admob": {
+            "androidAppId": "ca-app-pub-xxxxxxxxxxxxxxxx~yyyyyyyyyy",
+            "iosAppId": "ca-app-pub-xxxxxxxxxxxxxxxx~zzzzzzzzzz",
+            "delayAppMeasurementInit": true
+          }
+        }
+      ]
+    ]
+  }
+}
 ```
 
-This adds `com.qartvelo.ads:admob`, which brings Google's `play-services-ads` (25.4.0). Google requires your AdMob App ID in the manifest, or the app crashes at start-up:
+The plugin turns on the native adapter on both platforms, writes the App IDs to `AndroidManifest.xml`
+and `Info.plist`, and adds Google's recommended SKAdNetwork identifiers (`skAdNetworkItems` adds
+more). An invalid App ID stops the prebuild with a message naming the key.
 
-```xml title="android/app/src/main/AndroidManifest.xml"
-<application ...>
-  <meta-data
-    android:name="com.google.android.gms.ads.APPLICATION_ID"
-    android:value="ca-app-pub-xxxxxxxxxxxxxxxx~yyyyyyyyyy" />
-</application>
+### Bare React Native
+
+Put the same object under a top-level key in your app's `app.json`:
+
+```json
+{
+  "name": "MyApp",
+  "@qartvelo/react-native-ads": {
+    "admob": {
+      "androidAppId": "ca-app-pub-xxxxxxxxxxxxxxxx~yyyyyyyyyy",
+      "iosAppId": "ca-app-pub-xxxxxxxxxxxxxxxx~zzzzzzzzzz"
+    }
+  }
+}
 ```
 
-Google's sample App ID `ca-app-pub-3940256099942544~3347511713` works for development.
+Then run `pod install` and rebuild. The Android build adds the adapter and the App ID; on iOS the
+podspec adds the adapter and a build phase writes the App ID and SKAdNetwork list into the built
+`Info.plist` on every build.
+
+### Test units and ad unit ids
+
+In development, debuggable Android builds use Google's test units for the fallback
+(`admobTestUnitsInDebugBuilds`, default true); every iOS install outside the App Store does too.
+
+AdMob ad unit ids differ per platform: pass them to `admobAdUnits` as `{ android, ios }` values
+([Usage](/react-native/usage/#initialize)).
+
+### Legacy setup (0.4.x)
+
+`QartveloAds_admobEnabled=true` in `android/gradle.properties` and
+`ENV['QARTVELO_ADS_ADMOB_ENABLED'] = 'true'` in the Podfile still work, with the App IDs set in your
+own `AndroidManifest.xml` and `Info.plist`.
 
 ## 4. Rebuild
 

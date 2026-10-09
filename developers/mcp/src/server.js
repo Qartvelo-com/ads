@@ -83,7 +83,7 @@ export function createServer() {
 				appKey: z.string().describe('App key from the publisher dashboard (app_...)'),
 				placements: z.array(placementSchema).min(1),
 				admobFallback: z.boolean().optional().describe('Include the AdMob fallback adapter (default true)'),
-				admobAppId: z.string().optional().describe('The app\'s AdMob App ID (contains "~") for the manifest'),
+				admobAppId: z.string().optional().describe('The app\'s Android AdMob App ID (contains "~"): goes in the manifest on Android and in admob.androidAppId in React Native'),
 			},
 			annotations: { readOnlyHint: true, openWorldHint: false },
 		},

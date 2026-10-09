@@ -22,16 +22,18 @@ export function generateIntegration(input) {
 	}
 	const admob = input.admobFallback !== false;
 	const files = input.platform === 'react-native' ? reactNative(input, placements, admob) : android(input, placements, admob);
-	return { problems, files, notes: notes(admob) };
+	return { problems, files, notes: notes(admob, input.platform) };
 }
 
-function notes(admob) {
+function notes(admob, platform) {
+	const fallback =
+		platform === 'react-native'
+			? 'AdMob fallback: put YOUR AdMob App IDs in the admob config (Expo plugin entry, or the "@qartvelo/react-native-ads" key in app.json) and set your ad unit per placement in the dashboard or admobAdUnits.'
+			: 'AdMob fallback: add YOUR AdMob App ID to AndroidManifest.xml and set your ad unit per placement in the dashboard or admobAdUnits.';
 	return [
 		'Use test mode in debug builds (never click your own live ads).',
 		'Continue the app flow from every terminal show callback; grant rewards only on confirmed completion.',
-		admob
-			? 'AdMob fallback: add YOUR AdMob App ID to AndroidManifest.xml and set your ad unit per placement in the dashboard or admobAdUnits.'
-			: 'AdMob fallback disabled: no-fills report "no ad".',
+		admob ? fallback : 'AdMob fallback disabled: no-fills report "no ad".',
 		'Docs: https://developers.qartvelo.com/llms-full.txt',
 	];
 }
@@ -160,8 +162,25 @@ function reactNative(input, placements, admob) {
 		{ path: 'Terminal', language: 'sh', code: 'npm install @qartvelo/react-native-ads\nnpx react-native run-android  # rebuild the native app' },
 	];
 	if (admob) {
-		files.push({ path: 'android/gradle.properties', language: 'properties', code: 'QartveloAds_admobEnabled=true' });
-		files.push(manifest(input.admobAppId));
+		const androidAppId = input.admobAppId || 'ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY';
+		const iosAppId = 'ca-app-pub-XXXXXXXXXXXXXXXX~ZZZZZZZZZZ';
+		files.push({
+			path: 'app.json (bare React Native: add this top-level key)',
+			language: 'json',
+			code: `{
+  "@qartvelo/react-native-ads": {
+    "admob": {
+      "androidAppId": "${androidAppId}",
+      "iosAppId": "${iosAppId}"
+    }
+  }
+}`,
+		});
+		files.push({
+			path: 'app.json (Expo: add this entry to expo.plugins instead)',
+			language: 'json',
+			code: `["@qartvelo/react-native-ads", { "admob": { "androidAppId": "${androidAppId}", "iosAppId": "${iosAppId}" } }]`,
+		});
 	}
 	const mapped = units(placements);
 	const unitLines = mapped.length

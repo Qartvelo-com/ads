@@ -27,8 +27,8 @@ subscription.remove();
 <QartveloAdsBanner placementId="home_banner" style={{ width: '100%' }} />;
 ```
 
-Native setup (iOS CocoaPods autolinking, Android Maven repository for `com.qartvelo.ads:core`, the optional AdMob adapter via
-`QartveloAds_admobEnabled=true`, the AdMob App ID), the full API, events, error codes, testing and
+Native setup (iOS CocoaPods autolinking, Android Maven repository for `com.qartvelo.ads:core`, the optional AdMob adapter and
+its App IDs through an Expo plugin entry or an `app.json` key), the full API, events, error codes, testing and
 troubleshooting are documented at
 [developers.qartvelo.com/react-native](https://developers.qartvelo.com/react-native/installation/).
 AI agents can use [llms.txt](https://developers.qartvelo.com/_llms-txt/react-native.txt) or the
@@ -46,9 +46,8 @@ The npm package includes the canonical Swift SDK sources and privacy manifest. C
 `RNQartveloAds`; you do not need a separate SPM dependency or a Qartvelo CocoaPods spec repository.
 Do not link a second copy of the native SDK into the same target.
 
-For the optional AdMob fallback, set `ENV['QARTVELO_ADS_ADMOB_ENABLED'] = 'true'` at the top of your
-Podfile, then run `pod install` again. Add your iOS AdMob App ID as `GADApplicationIdentifier` in
-Info.plist, and pass iOS ad unit IDs in `admobAdUnits` (Android and iOS unit IDs differ).
+For the optional AdMob fallback, add the Expo plugin entry or the `app.json` key described at [developers.qartvelo.com/react-native/installation](https://developers.qartvelo.com/react-native/installation/); no Podfile or Gradle edits are needed.
+Android and iOS ad unit IDs differ: pass them per platform as `{ android, ios }` in `admobAdUnits`.
 Simulator and every non-App Store installation always use non-billable test traffic, even with
 `testMode: false`. `testModeInDebugBuilds` applies only to Android.
 

@@ -25,7 +25,7 @@ npm run build     # static site in dist/
 
 Pages live in `src/content/docs`. Add new pages to the `sidebar` in `astro.config.mjs`. Keep facts in
 sync with the SDK sources (`android/`, `react-native/`) and the backend API; when the SDK version
-changes, update the version strings (search for `0.4.1`), `resources/changelog.md`, the skill and
+changes, update the version strings (search for `0.5.0`), `resources/changelog.md`, the skill and
 `mcp/src/snippets.js`.
 
 ## AI features
