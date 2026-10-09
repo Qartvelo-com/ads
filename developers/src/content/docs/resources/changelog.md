@@ -5,6 +5,12 @@ description: Release history of the Qartvelo Ads SDKs.
 
 Releases are tagged in [Qartvelo-com/ads](https://github.com/Qartvelo-com/ads). The Android SDK, the iOS SDK, the AdMob adapters and the React Native plugin share one version number.
 
+## Unreleased
+
+- **Android AdMob fallback banner size**: the adapter now requests Google's standard anchored
+  adaptive banner, like iOS and as documented. It requested the large anchored variant, which is
+  about twice as tall on phones (128 dp instead of 64 dp at 411 dp width).
+
 ## 0.4.1
 
 - **React Native iOS support**: the same JavaScript API now bridges the Swift SDK through a

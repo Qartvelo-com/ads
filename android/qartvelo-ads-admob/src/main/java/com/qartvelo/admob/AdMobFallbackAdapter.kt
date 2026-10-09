@@ -7,7 +7,6 @@ import android.view.View
 import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.FullScreenContentCallback
 import com.google.android.gms.ads.LoadAdError
@@ -132,7 +131,7 @@ public class AdMobFallbackAdapter : FallbackAdapter {
             return AdViewBanner(adView)
         }
         adView.adUnitId = unit
-        adView.setAdSize(AdSize.getLargeAnchoredAdaptiveBannerAdSize(context, widthDp))
+        adView.setAdSize(AdMobBannerSize.forWidth(context, widthDp))
         adView.adListener = object : AdListener() {
             override fun onAdLoaded() = callback.onLoaded()
             override fun onAdFailedToLoad(error: LoadAdError) = callback.onFailed("AdMob ${error.code}: ${error.message}")

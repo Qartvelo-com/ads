@@ -4,11 +4,21 @@ import android.content.Context
 import android.os.Bundle
 import com.google.ads.mediation.admob.AdMobAdapter
 import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AgeRestrictedTreatment
 import com.google.android.gms.ads.MobileAds
 import com.google.android.gms.ads.RequestConfiguration
 import com.qartvelo.sdk.QartveloAdsPrivacy
 import java.util.concurrent.atomic.AtomicBoolean
+
+/**
+ * The AdMob banner size for a slot width: Google's standard anchored adaptive banner (50 to 90 dp
+ * tall), the same size iOS uses. The large anchored variant is about twice as tall on phones.
+ */
+internal object AdMobBannerSize {
+    fun forWidth(context: Context, widthDp: Int): AdSize =
+        AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(context, widthDp)
+}
 
 /** Google's public test ad units, substituted for every placement in test mode. */
 internal object AdMobUnits {

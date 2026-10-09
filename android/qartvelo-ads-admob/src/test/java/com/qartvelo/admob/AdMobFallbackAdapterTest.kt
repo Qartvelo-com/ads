@@ -3,6 +3,7 @@ package com.qartvelo.admob
 import android.app.Activity
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AgeRestrictedTreatment
 import com.google.android.gms.ads.RequestConfiguration
 import com.qartvelo.sdk.QartveloAdsPrivacy
@@ -18,6 +19,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
 class AdMobFallbackAdapterTest {
@@ -37,6 +39,15 @@ class AdMobFallbackAdapterTest {
         assertEquals(AdMobUnits.TEST_REWARDED, AdMobUnits.resolve(AdMobUnits.Format.REWARDED, "x", testMode = true))
         assertEquals("ca-app-pub-1/2", AdMobUnits.resolve(AdMobUnits.Format.REWARDED, " ca-app-pub-1/2 ", testMode = false))
         assertNull("no unit, no request", AdMobUnits.resolve(AdMobUnits.Format.BANNER, " ", testMode = false))
+    }
+
+    @Test
+    @Config(qualifiers = "w411dp-h923dp-xxhdpi")
+    fun bannerUsesTheStandardAnchoredAdaptiveSize() {
+        // Same size as iOS and the docs: a compact anchored banner, not Google's large variant.
+        val size = AdMobBannerSize.forWidth(context, 411)
+        assertEquals(AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(context, 411), size)
+        assertTrue("anchored banners stay 50 to 90 dp tall, got ${size.height} dp", size.height in 50..90)
     }
 
     @Test
