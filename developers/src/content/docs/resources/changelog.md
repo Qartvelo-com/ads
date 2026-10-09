@@ -15,9 +15,14 @@ Releases are tagged in [Qartvelo-com/ads](https://github.com/Qartvelo-com/ads). 
 - **`preload` and `loadIfNeeded`** in the React Native API.
 - **Setup issues**: a wrong package or platform for the app key, and placement codes the dashboard
   does not have, are reported once (`onSetupIssue` on Android, `qartveloAdsDidReportSetupIssue` on
-  iOS, the `setupIssue` event and a development warning in React Native). Requires the backend's new
-  `error.details`.
+  iOS, the `setupIssue` event and a development warning in React Native). Setup issues work without
+  the backend's new `error.details`; with it, the messages also name the registered package and platform.
+- **TypeScript**: code that switches exhaustively on `QartveloAdsEvent` types must handle the new
+  `setupIssue` event.
 - **AdMob test units in debug builds**: `admobTestUnitsInDebugBuilds` (default true) on Android.
+  Native Android debug builds now use Google's test units for the AdMob fallback by default, even with
+  test mode off; set `admobTestUnitsInDebugBuilds = false` to restore the old behaviour (your real
+  AdMob units from a debug build). The option is accepted and ignored on iOS.
 - **Packaging**: `com.qartvelo.ads:admob` brings `play-services-ads` at runtime scope, so React Native
   0.83 (Kotlin 2.1) builds with the adapter; the React Native module no longer adds JitPack and
   GitHub Packages for 0.3.4 and later. Apps that call Google's AdMob API directly must declare

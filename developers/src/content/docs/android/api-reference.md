@@ -43,7 +43,7 @@ object QartveloAds {
 | `loadInterstitial` / `loadRewarded` | Loads an ad for a placement code; ends with `onLoaded` or `onLoadFailed` |
 | `showInterstitial` / `showRewarded` | Shows the best ready ad; ends with `onDismissed`, `onNoAdAvailable` or `onLoadFailed` |
 | `isInterstitialReady` / `isRewardedReady` | Whether a show would display an ad now |
-| `addEventListener` / `removeEventListener` | Global observers for every placement, banners included |
+| `addEventListener` / `removeEventListener` | Global observers for every placement, banners included, and for setup issues (`onSetupIssue`) |
 | `setLogLevel` | Overrides `options.logLevel` at runtime |
 | `setPrivacy` | Privacy signals forwarded to the fallback adapter. See [Privacy](/guides/privacy/) |
 | `registerFallbackAdapter` | Use a custom fallback network. See [Custom fallback adapter](/guides/custom-fallback-adapter/) |
@@ -60,6 +60,7 @@ data class QartveloAdsOptions(
     val baseUrl: String = DEFAULT_BASE_URL, // "https://ads.qartvelo.com/"
     val admobAdUnits: Map<String, String> = emptyMap(),
     val testModeInDebugBuilds: Boolean = true, // test mode in debuggable builds
+    val admobTestUnitsInDebugBuilds: Boolean = true, // Google's test units for the AdMob fallback in debuggable builds
 )
 ```
 
@@ -87,6 +88,7 @@ interface QartveloAdsListener {
     fun onReward(info: QartveloAdsAdInfo, reward: QartveloAdsReward) {}
     fun onFallbackStarted(placementId: String, format: AdFormat, reason: String) {}
     fun onNoAdAvailable(placementId: String, format: AdFormat) {}
+    fun onSetupIssue(issue: QartveloAdsSetupIssue) {} // global listeners only
 }
 
 fun interface QartveloAdsInitListener {
@@ -110,6 +112,19 @@ data class QartveloAdsAdInfo(
 )
 
 data class QartveloAdsReward(val type: String = "reward", val amount: Int = 1)
+
+data class QartveloAdsSetupIssue(
+    val code: String,          // PACKAGE_MISMATCH, PLATFORM_MISMATCH, UNKNOWN_PLACEMENT or FORMAT_MISMATCH
+    val message: String,       // what is wrong and how to fix it, in English
+    val placementId: String?,  // the placement concerned, null for app-level issues
+) {
+    companion object {
+        const val PACKAGE_MISMATCH = "package_mismatch"
+        const val PLATFORM_MISMATCH = "platform_mismatch"
+        const val UNKNOWN_PLACEMENT = "unknown_placement"
+        const val FORMAT_MISMATCH = "format_mismatch"
+    }
+}
 
 enum class QartveloAdsErrorCode {
     NOT_INITIALIZED, INVALID_PLACEMENT, NETWORK_ERROR, TIMEOUT, NO_FILL,

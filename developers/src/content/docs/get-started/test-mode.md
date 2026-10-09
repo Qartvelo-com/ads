@@ -22,7 +22,7 @@ You can also turn it on explicitly, for example for a QA release build:
 | React Native | `QartveloAds.initialize({ appKey, testMode: true })` |
 | REST API | `"test_mode": true` on `/sdk/initialize` and `/ads/request` |
 
-On Android, opting out with `testModeInDebugBuilds = false` (`testModeInDebugBuilds: false` in React Native) allows live traffic from a physical debug device. iOS installations outside the App Store cannot opt out; they can still preview eligible real campaign creatives as non-billable test ads.
+On Android, opting out with `testModeInDebugBuilds = false` (`testModeInDebugBuilds: false` in React Native) allows live Qartvelo Ads traffic from a physical debug device. The AdMob fallback still uses Google's test units in debuggable builds, so a debug build never requests live AdMob ads, unless you also set `admobTestUnitsInDebugBuilds = false` (`admobTestUnitsInDebugBuilds: false` in React Native). iOS installations outside the App Store cannot opt out; they can still preview eligible real campaign creatives as non-billable test ads.
 
 Test mode is computed from your code and the current installation; it is never cached. Explicit option changes take effect on the next app start, subject to the automatic test-mode protections above.
 
@@ -41,7 +41,7 @@ Test mode is computed from your code and the current installation; it is never c
 
 - **Backend-served test events** are validated and de-duplicated exactly like live ones, so you can test your event handling, but they are never billed, never earn revenue and never appear in reports. Tapping a backend-served test ad opens the advertiser's page like a live ad would. Public iOS fallback creatives have no click destination and do not send events.
 - The app does not need to be approved yet: test sessions skip the approval check.
-- The AdMob adapter replaces your unit ids with Google's public test units:
+- The AdMob adapter replaces your unit ids with Google's public test units (in test mode, and on Android in every debuggable build unless `admobTestUnitsInDebugBuilds` is `false`):
 
   | Format | Google test unit |
   |---|---|

@@ -16,6 +16,7 @@ interface QartveloAdsListener {
     fun onReward(info: QartveloAdsAdInfo, reward: QartveloAdsReward) {}
     fun onFallbackStarted(placementId: String, format: AdFormat, reason: String) {}
     fun onNoAdAvailable(placementId: String, format: AdFormat) {}
+    fun onSetupIssue(issue: QartveloAdsSetupIssue) {}
 }
 ```
 
@@ -32,6 +33,7 @@ interface QartveloAdsListener {
 | `onClicked(info)` | First tap on the ad, recorded before the browser opens |
 | `onReward(info, reward)` | Rewarded completion, at most once per show |
 | `onDismissed(info)` | The full-screen ad closed |
+| `onSetupIssue(issue)` | A setup problem to fix. Global listeners only, see [Setup issues](#setup-issues) |
 
 ## Ordering guarantees
 
@@ -54,6 +56,33 @@ val analytics = object : QartveloAdsListener {
 QartveloAds.addEventListener(analytics)
 // later
 QartveloAds.removeEventListener(analytics)
+```
+
+## Setup issues
+
+A wrong app key or package, or a placement code the dashboard does not know, is a configuration problem rather than an ad failure. The SDK logs each one as an error and reports it to **global listeners** through `onSetupIssue` (per-call listeners never receive it). A given code and placement is reported once per process.
+
+```kotlin
+data class QartveloAdsSetupIssue(
+    val code: String,         // see the table below
+    val message: String,      // what is wrong and how to fix it, in English
+    val placementId: String?, // the placement concerned, null for app-level issues
+)
+```
+
+| `code` (constant) | Meaning |
+|---|---|
+| `package_mismatch` (`PACKAGE_MISMATCH`) | The app key is registered for another package name |
+| `platform_mismatch` (`PLATFORM_MISMATCH`) | The app key belongs to the app of the other platform |
+| `unknown_placement` (`UNKNOWN_PLACEMENT`) | The placement code does not exist for this app |
+| `format_mismatch` (`FORMAT_MISMATCH`) | The placement exists with another format |
+
+```kotlin
+QartveloAds.addEventListener(object : QartveloAdsListener {
+    override fun onSetupIssue(issue: QartveloAdsSetupIssue) {
+        Log.w("Ads", "${issue.code}: ${issue.message}")
+    }
+})
 ```
 
 ## Ad info

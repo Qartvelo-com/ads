@@ -61,10 +61,13 @@ Every method is optional.
     optional func qartveloAd(_ info: QartveloAdsAdInfo, didEarnReward reward: QartveloAdsReward)
     optional func qartveloAdDidStartFallback(placementId: String, format: QartveloAdFormat, reason: String)
     optional func qartveloAdNoAdAvailable(placementId: String, format: QartveloAdFormat)
+    optional func qartveloAdsDidReportSetupIssue(_ issue: QartveloAdsSetupIssue) // global observers only
 }
 ```
 
 Fallback `reason` values: `no_fill`, `timeout`, `error`, `creative_failed`, `disabled`.
+
+`qartveloAdsDidReportSetupIssue(_:)` reports a configuration problem (see `QartveloAdsSetupIssue` below). Only observers added with `addObserver(_:)` receive it, once per process for each code and placement; the SDK also logs it as an error.
 
 ## Models
 
@@ -78,6 +81,7 @@ final class QartveloAdsOptions: NSObject {
     var logLevel: QartveloAdsLogLevel = .error
     var baseURL = URL(string: "https://ads.qartvelo.com/")!
     var admobAdUnits: [String: String] = [:]
+    var admobTestUnitsInDebugBuilds = true // accepted for parity with Android, ignored on iOS
 }
 
 final class QartveloAdsAdInfo: NSObject {
@@ -89,6 +93,16 @@ final class QartveloAdsAdInfo: NSObject {
 }
 
 final class QartveloAdsReward: NSObject { let type: String; let amount: Int }
+
+final class QartveloAdsSetupIssue: NSObject {
+    static let packageMismatch = "package_mismatch"
+    static let platformMismatch = "platform_mismatch"
+    static let unknownPlacement = "unknown_placement"
+    static let formatMismatch = "format_mismatch"
+    let code: String          // one of the constants above
+    let message: String       // what is wrong and how to fix it, in English
+    let placementId: String?  // the placement concerned, nil for app-level issues
+}
 
 final class QartveloAdsError: NSObject, LocalizedError {
     let code: QartveloAdsErrorCode

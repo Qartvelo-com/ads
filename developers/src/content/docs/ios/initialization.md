@@ -42,6 +42,7 @@ In a SwiftUI app, call the same code from `init()` of your `App` struct or from 
 | `requestTimeoutMs` | `Int` | `800` | Qartvelo Ads time budget before falling back. A per-placement value from the dashboard wins. Clamped to 100..10000 |
 | `testMode` | `Bool` | `false` | Non-billable test ads labelled "Test ad"; AdMob uses Google's test units. See [Test mode](/get-started/test-mode/) |
 | `testModeInDebugBuilds` | `Bool` | `true` | Deprecated; retained for compatibility and ignored. All non-App Store installations always use test mode |
+| `admobTestUnitsInDebugBuilds` | `Bool` | `true` | Accepted for parity with Android and ignored on iOS, where every installation outside the App Store already uses Google's test units |
 | `testForceNoFill` | `Bool` | `false` | Force Qartvelo Ads `no_fill` to exercise the fallback |
 | `logLevel` | `QartveloAdsLogLevel` | `.error` | `.none`, `.error`, `.info`, `.debug`. Unified logging subsystem `com.qartvelo.ads` |
 | `baseURL` | `URL` | `https://ads.qartvelo.com/` | API origin. Change only for a self-hosted or local backend |
