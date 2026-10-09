@@ -21,10 +21,12 @@ import com.qartvelo.sdk.QartveloAdsError
 import com.qartvelo.sdk.QartveloAdsErrorCode
 import com.qartvelo.sdk.QartveloAdsListener
 import com.qartvelo.sdk.R
+import com.qartvelo.sdk.fallback.AdaptiveBannerSizer
 import com.qartvelo.sdk.fallback.FallbackBanner
 import com.qartvelo.sdk.fallback.FallbackBannerCallback
 import java.lang.ref.WeakReference
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.math.ceil
 
 /**
  * One banner per placement, shared by every [QartveloAdsBannerView] instance for that placement: a view that
@@ -156,7 +158,7 @@ internal class BannerController(private val engine: Engine, val placementId: Str
             onQartveloAdsFailed(QartveloAdsFailure(QartveloAdsFailure.DISABLED, QartveloAdsError(QartveloAdsErrorCode.NO_FILL, "QartveloAds serving is disabled for this placement")))
             return
         }
-        engine.fetchOurAd(placementId, AdFormat.BANNER, engine.effectiveTimeoutMs(placement)) { outcome ->
+        engine.fetchOurAd(placementId, AdFormat.BANNER, engine.effectiveTimeoutMs(placement), slotFor(hostView)) { outcome ->
             when (outcome) {
                 is FetchOutcome.Success -> decodeBanner(outcome.ad)
                 is FetchOutcome.Failure -> onQartveloAdsFailed(outcome.failure)
@@ -336,25 +338,30 @@ internal class BannerController(private val engine: Engine, val placementId: Str
             is Content.QartveloAds -> {
                 if (view.getTag(R.id.qartvelo_banner_content) === c) return
                 view.removeAllViews()
-                val metrics = view.resources.displayMetrics
-                val wantW = (c.ad.width.coerceAtLeast(1) * metrics.density).toInt()
-                val available = view.width.takeIf { it > 0 } ?: metrics.widthPixels
-                val w = minOf(wantW, available)
-                val h = (w.toLong() * c.ad.height.coerceAtLeast(1) / c.ad.width.coerceAtLeast(1)).toInt()
+                val slot = slotFor(view)
+                val params = if (slot.heightPx != null) {
+                    // The anchored adaptive slot; the creative is fitted into it, like iOS.
+                    FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, slot.heightPx, Gravity.CENTER)
+                } else {
+                    val wantW = (c.ad.width.coerceAtLeast(1) * view.resources.displayMetrics.density).toInt()
+                    val w = minOf(wantW, slot.widthPx)
+                    val h = (w.toLong() * c.ad.height.coerceAtLeast(1) / c.ad.width.coerceAtLeast(1)).toInt()
+                    FrameLayout.LayoutParams(w, h, Gravity.CENTER)
+                }
                 val image = ImageView(view.context).apply {
                     scaleType = ImageView.ScaleType.FIT_CENTER
                     setImageBitmap(c.bitmap)
                     contentDescription = view.context.getString(R.string.qartvelo_ad_label)
                     setOnClickListener { v -> onQartveloAdsClick(v.context) }
                 }
-                // The creative and its "Ad" badge share a frame sized to the creative.
+                // The creative and its "Ad" badge share a frame sized to the slot.
                 val frame = FrameLayout(view.context)
                 val match = ViewGroup.LayoutParams.MATCH_PARENT
                 frame.addView(image, FrameLayout.LayoutParams(match, match))
                 frame.addView(adBadge(view.context, c.ad.test), FrameLayout.LayoutParams(
                     ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.TOP or Gravity.START,
                 ))
-                view.addView(frame, FrameLayout.LayoutParams(w, h, Gravity.CENTER))
+                view.addView(frame, params)
                 view.setTag(R.id.qartvelo_banner_content, c)
             }
             is Content.Fallback -> {
@@ -369,6 +376,37 @@ internal class BannerController(private val engine: Engine, val placementId: Str
                 view.setTag(R.id.qartvelo_banner_content, c)
             }
         }
+    }
+
+    /** The host's width changed: refit the adaptive slot, without a new request or impression. */
+    fun onHostResized(view: QartveloAdsBannerView) {
+        if (hostView !== view || content !is Content.QartveloAds) return
+        val frame = view.getChildAt(0) ?: return
+        val height = slotFor(view).heightPx ?: return
+        val params = frame.layoutParams ?: return
+        if (params.height != height) {
+            params.height = height
+            frame.layoutParams = params
+        }
+    }
+
+    /** The host's banner slot in px: its width, and the anchored adaptive height unless it opted out. */
+    private fun slotFor(view: QartveloAdsBannerView?): BannerSlot {
+        val context = view?.context ?: engine.appContext
+        val metrics = context.resources.displayMetrics
+        val widthPx = view?.width?.takeIf { it > 0 } ?: metrics.widthPixels
+        if (view?.usesAdaptiveSize == false) return BannerSlot(widthPx, null)
+        val widthDp = (widthPx / metrics.density).toInt().coerceAtLeast(MIN_BANNER_WIDTH_DP)
+        val preferred = (engine.fallbackAdapter as? AdaptiveBannerSizer)?.let { sizer ->
+            try {
+                sizer.adaptiveBannerHeightDp(context, widthDp)
+            } catch (t: Throwable) {
+                OurLog.e("Fallback adapter could not size the banner", t)
+                null
+            }
+        }
+        val heightDp = AdaptiveBannerLayout.heightDp(widthDp, (metrics.heightPixels / metrics.density).toInt(), preferred)
+        return BannerSlot(widthPx, ceil(heightDp * metrics.density).toInt())
     }
 
     private fun unrender(view: QartveloAdsBannerView) {

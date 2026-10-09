@@ -7,8 +7,8 @@ import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
 | Artifact | Contents | Required |
 |---|---|---|
-| `com.qartvelo.ads:core:0.5.0` | API client, config cache, rendering, event delivery, banner view | Yes |
-| `com.qartvelo.ads:admob:0.5.0` | Fallback adapter for Google Mobile Ads (`play-services-ads` 25.4.0) | Optional |
+| `com.qartvelo.ads:core:0.5.1` | API client, config cache, rendering, event delivery, banner view | Yes |
+| `com.qartvelo.ads:admob:0.5.1` | Fallback adapter for Google Mobile Ads (`play-services-ads` 25.4.0) | Optional |
 
 ## Requirements
 
@@ -34,9 +34,9 @@ dependencyResolutionManagement {
 
 ```kotlin title="app/build.gradle.kts"
 dependencies {
-    implementation("com.qartvelo.ads:core:0.5.0")
+    implementation("com.qartvelo.ads:core:0.5.1")
     // Optional: fall back to your own AdMob ad units. Leave out to run Qartvelo Ads only.
-    implementation("com.qartvelo.ads:admob:0.5.0")
+    implementation("com.qartvelo.ads:admob:0.5.1")
 }
 ```
 
@@ -54,8 +54,8 @@ dependencyResolutionManagement {
 
 ```groovy title="app/build.gradle"
 dependencies {
-    implementation "com.qartvelo.ads:core:0.5.0"
-    implementation "com.qartvelo.ads:admob:0.5.0" // optional
+    implementation "com.qartvelo.ads:core:0.5.1"
+    implementation "com.qartvelo.ads:admob:0.5.1" // optional
 }
 ```
 
@@ -64,7 +64,7 @@ dependencies {
 
 ```toml title="gradle/libs.versions.toml"
 [versions]
-qartvelo-ads = "0.5.0"
+qartvelo-ads = "0.5.1"
 
 [libraries]
 qartvelo-ads-core = { module = "com.qartvelo.ads:core", version.ref = "qartvelo-ads" }

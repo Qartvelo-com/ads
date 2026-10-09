@@ -7,6 +7,7 @@ import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AgeRestrictedTreatment
 import com.google.android.gms.ads.RequestConfiguration
 import com.qartvelo.sdk.QartveloAdsPrivacy
+import com.qartvelo.sdk.fallback.AdaptiveBannerSizer
 import com.qartvelo.sdk.fallback.FallbackAdapter
 import com.qartvelo.sdk.fallback.FallbackLoadCallback
 import com.qartvelo.sdk.fallback.FallbackShowCallback
@@ -48,6 +49,14 @@ class AdMobFallbackAdapterTest {
         val size = AdMobBannerSize.forWidth(context, 411)
         assertEquals(AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(context, 411), size)
         assertTrue("anchored banners stay 50 to 90 dp tall, got ${size.height} dp", size.height in 50..90)
+    }
+
+    @Test
+    @Config(qualifiers = "w411dp-h923dp-xxhdpi")
+    fun qartveloBannersGetTheSameSlotHeightAsTheAdMobBanner() {
+        val adapter: Any = AdMobFallbackAdapter()
+        assertTrue("core finds the size through the optional interface", adapter is AdaptiveBannerSizer)
+        assertEquals(AdMobBannerSize.forWidth(context, 411).height, (adapter as AdaptiveBannerSizer).adaptiveBannerHeightDp(context, 411))
     }
 
     @Test

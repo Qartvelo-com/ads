@@ -22,7 +22,7 @@ Content-Type: application/json
 | `is_emulator` | boolean | no | The device is an emulator. Emulator sessions are always test sessions |
 
 ```json
-{"app_key":"app_xxxxxxxxxxxxxxxxxxxxxxxx","package_name":"com.example.app","sdk_version":"0.5.0",
+{"app_key":"app_xxxxxxxxxxxxxxxxxxxxxxxx","package_name":"com.example.app","sdk_version":"0.5.1",
  "app_version":"1.0.0","platform":"android","os_version":"14","test_mode":false}
 ```
 

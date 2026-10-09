@@ -16,6 +16,7 @@ import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import com.google.android.gms.ads.rewarded.RewardedAd
 import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
 import com.qartvelo.sdk.QartveloAdsPrivacy
+import com.qartvelo.sdk.fallback.AdaptiveBannerSizer
 import com.qartvelo.sdk.fallback.FallbackAdapter
 import com.qartvelo.sdk.fallback.FallbackBanner
 import com.qartvelo.sdk.fallback.FallbackBannerCallback
@@ -35,7 +36,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  *   QartveloAds privacy signals are forwarded (child / teen age-restricted treatment, and non-personalized
  *   ads when the app reports that consent was refused). Nothing here grants consent.
  */
-public class AdMobFallbackAdapter : FallbackAdapter {
+public class AdMobFallbackAdapter : FallbackAdapter, AdaptiveBannerSizer {
     override val networkName: String = "admob"
 
     @Volatile
@@ -141,6 +142,10 @@ public class AdMobFallbackAdapter : FallbackAdapter {
         adView.loadAd(buildRequest())
         return AdViewBanner(adView)
     }
+
+    /** QartveloAds banners reserve the same slot as the AdMob banner this adapter would show. */
+    override fun adaptiveBannerHeightDp(context: Context, widthDp: Int): Int =
+        AdMobBannerSize.forWidth(context, widthDp).height
 
     private class AdViewBanner(private val adView: AdView) : FallbackBanner {
         override val view: View get() = adView

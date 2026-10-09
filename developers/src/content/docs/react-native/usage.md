@@ -61,7 +61,7 @@ import { QartveloAdsBanner } from '@qartvelo/react-native-ads';
 />
 ```
 
-- Collapsed (height 0) until an ad is rendered, then takes the creative's height. Set an explicit `height` to reserve space instead.
+- Collapsed (height 0) until an ad is rendered, then takes the height of a compact anchored adaptive banner at the component's width: 50 to 90 dp on Android, 50 to 90 points on iOS. That is the same height as the AdMob fallback banner, so the layout does not jump when one replaces the other. Set an explicit `height` to reserve space instead.
 - Props: `placementId` (required), `style`, `onLoaded`, `onLoadFailed`, `onShown`, `onImpression`, `onClicked`, `onFallbackStarted`, `onNoAdAvailable`, `onSizeChange`.
 - Re-renders never reach the SDK. Changing `placementId` loads the new placement.
 - Remounting (navigation, list recycling) does not request a new ad: the SDK keeps one banner per placement and the new view re-attaches. The component's `onLoaded` fires again for the new view; global listeners do not get a second `loaded`.
@@ -128,6 +128,50 @@ if (result.rewarded) grantCoins(50);
 
 Preloaded placements reload after every show. With `loadIfNeeded`, a failed load resolves
 `{ shown: false }` (and `rewarded: false`) instead of rejecting.
+
+## AdMob fallback
+
+When Qartvelo Ads has no ad for a placement (no fill, a timeout, a network error, a creative that
+fails to load, or Qartvelo Ads switched off for the placement), the SDK shows an ad from **your own**
+AdMob account instead. Banners, interstitials and rewarded ads all fall back, and your code stays the
+same: `showInterstitial` and `showRewarded` resolve the same way, and `source` is `'admob'` for an
+AdMob ad. How it works and who gets paid: [AdMob fallback](/guides/admob-fallback/).
+
+1. **Native setup, once.** Add your AdMob App IDs with the config plugin (Expo) or in `app.json` (bare
+   React Native), as in [Installation](/react-native/installation/#3-admob-fallback-optional), then
+   rebuild the app.
+2. **An AdMob ad unit per placement**, of the same format (banner, interstitial or rewarded). AdMob
+   unit ids differ per platform, so pass `{ android, ios }`:
+
+   ```tsx
+   QartveloAds.initialize({
+     appKey: { android: 'app_...', ios: 'app_...' },
+     admobAdUnits: {
+       home_banner: { android: 'ca-app-pub-XXX/111', ios: 'ca-app-pub-XXX/222' },
+       game_end: { android: 'ca-app-pub-XXX/333', ios: 'ca-app-pub-XXX/444' },
+       reward_coins: { android: 'ca-app-pub-XXX/555', ios: 'ca-app-pub-XXX/666' },
+     },
+     preload: { interstitial: ['game_end'], rewarded: ['reward_coins'] },
+   });
+   ```
+
+   A unit given here wins over the AdMob unit set on the placement in the dashboard. A placement with
+   no unit in either place has no fallback.
+3. **Check it** in a development build: add `testForceNoFill: true` to `initialize`, restart the
+   app, and every placement shows Google's test ads ("Test Ad"). Remove it before you release.
+
+- **Test units.** Debuggable Android builds use Google's test units for the fallback
+  (`admobTestUnitsInDebugBuilds`, default true), and so does every iOS install outside the App Store,
+  TestFlight included. Store builds use your real units. Never tap your own live AdMob ads.
+- **Events.** The banner's `onFallbackStarted` and the global `fallbackStarted` event report the
+  reason: `no_fill`, `timeout`, `error`, `creative_failed` or `disabled`. `loaded` and the show
+  results carry `source: 'admob'`. See [Events and errors](/react-native/events-and-errors/).
+- **Banner size.** A Qartvelo Ads banner reserves the same anchored adaptive slot as the AdMob
+  banner, so both are the same height.
+- **Consent.** The fallback uses your own Google Mobile Ads setup: run Google's consent flow (UMP)
+  yourself where it is required. The SDK only forwards the signals you pass to `setPrivacy`; see
+  [Privacy](/guides/privacy/#admob-fallback-and-consent).
+- **Turn it off** with `admobFallback: false`.
 
 ## Setup issues
 

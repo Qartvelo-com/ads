@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'QartveloAdsAdMob'
-  s.version          = '0.5.0'
+  s.version          = '0.5.1'
   s.summary          = 'AdMob fallback for the Qartvelo Ads iOS SDK, using your own AdMob app and ad units.'
   s.homepage         = 'https://developers.qartvelo.com/guides/admob-fallback/'
   s.license          = { :type => 'MIT', :file => 'LICENSE' }

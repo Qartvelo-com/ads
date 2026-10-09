@@ -70,6 +70,28 @@ fun QartveloBanner(placementId: String, modifier: Modifier = Modifier) {
 }
 ```
 
+## Size
+
+By default the view reserves a **compact anchored adaptive slot**: the full width of the view and
+**50 to 90 dp** tall. Give it `match_parent` width and `wrap_content` height. It stays at height 0
+until an ad loads.
+
+With the AdMob adapter, a Qartvelo Ads banner takes exactly the height of Google's anchored adaptive
+banner for the same width, so switching to the fallback never moves your layout. Without the adapter
+the height is `width × 50 / 320`, kept between 50 and 90 dp and at most 15% of the screen height (64 dp
+on a 411 dp wide phone). This approximates a compact banner; it is not Google's algorithm.
+
+The ad request reports the slot in **pixels** (`screen_width` and `banner_height`), and the backend
+picks the approved horizontal creative closest to the slot's proportions; inline rectangles such as
+300x250 are not chosen for an adaptive slot. The image is drawn aspect-fit, never stretched or
+cropped, so an older creative may leave space around it. Advertisers upload **960x150, 1320x204 and
+2184x270** adaptive artwork, plus the **320x50, 320x100, 300x250, 468x60 and 728x90** standard sizes.
+
+When the view's width changes, the slot height follows at once, without a new request or impression.
+
+For an inline rectangle, or the earlier sizing that took the creative's own size, set
+`banner.usesAdaptiveSize = false` before `load()`. Those requests leave out `banner_height`.
+
 ## Behaviour
 
 - **One controller per placement code.** A re-created view (rotation, list recycling, Compose recomposition, React Native re-render) that calls `load()` again re-attaches to the loaded banner; no new request is made.
@@ -78,7 +100,6 @@ fun QartveloBanner(placementId: String, modifier: Modifier = Modifier) {
 - **One visible banner per placement code.** Use distinct placement codes for banners that are on screen at the same time.
 - **No leaks.** The view never holds an Activity after it is detached; AdMob views are re-parented through a context wrapper.
 - The **Ad** badge in the corner of a Qartvelo Ads banner opens the Qartvelo Ads website (`https://ads.qartvelo.com/?ref=<your package name>`). Tapping it is not an ad click: no click event, no `onClicked`, no advertiser page.
-- Qartvelo Ads banner creatives keep their aspect ratio within the view width. Supported creative sizes are 320x50, 320x100, 300x250, 468x60 and 728x90.
 
 ## Banner events
 

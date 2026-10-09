@@ -8,7 +8,7 @@
 //
 // Host gradle.properties switches:
 //   QartveloAds_admobEnabled=true    adds com.qartvelo.ads:admob (AdMob fallback, play-services-ads)
-//   QartveloAds_sdkVersion=0.5.0     version of the QartveloAds Android SDK artifacts
+//   QartveloAds_sdkVersion=0.5.1     version of the QartveloAds Android SDK artifacts
 //   QartveloAds_useMavenLocal=true   also resolve com.qartvelo.ads from ~/.m2 (SDK development)
 
 import groovy.json.JsonSlurper
@@ -54,7 +54,7 @@ def qartveloVersionBefore(String version, String other) {
   return false
 }
 
-def qartveloSdkVersion = qartveloProperty("QartveloAds_sdkVersion", "0.5.0")
+def qartveloSdkVersion = qartveloProperty("QartveloAds_sdkVersion", "0.5.1")
 def qartveloAdmob = qartveloAppJson()?.get("admob")
 def qartveloAdmobAppId = null
 if (qartveloAdmob != null) {

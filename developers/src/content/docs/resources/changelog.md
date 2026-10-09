@@ -5,6 +5,22 @@ description: Release history of the Qartvelo Ads SDKs.
 
 Releases are tagged in [Qartvelo-com/ads](https://github.com/Qartvelo-com/ads). The Android SDK, the iOS SDK, the AdMob adapters and the React Native plugin share one version number.
 
+## 0.5.1
+
+- **Android adaptive banners**: `QartveloAdsBannerView` now reserves the same compact anchored
+  adaptive slot as iOS: the full view width and 50 to 90 dp tall. With the AdMob adapter, the height is
+  exactly Google's anchored adaptive banner height, so a Qartvelo Ads banner and the AdMob fallback
+  banner are the same size. Before, the banner took the creative's aspect ratio, about 51 dp on a
+  1080 px wide phone against AdMob's 64 dp. Requests now send the slot (`screen_width` and
+  `banner_height` in pixels) so the backend picks a creative that fits, and the image is drawn
+  aspect-fit. When the view's width changes, the height follows without a new request.
+- **`usesAdaptiveSize`** on the Android banner view (default true), like iOS: set it to `false` for an
+  inline rectangle or the previous creative-sized layout.
+- **`AdaptiveBannerSizer`**: an optional interface for custom fallback adapters to report their
+  anchored banner height. The AdMob adapter implements it.
+- React Native: banners follow the native height on both platforms; the usage guide has a new
+  AdMob fallback section.
+
 ## 0.5.0
 
 - **One-place AdMob setup for React Native**: an Expo config plugin

@@ -17,7 +17,7 @@ Qartvelo Ads is the primary ad source. When it has no eligible campaign, fails, 
 
 1. In AdMob, create an app for your package and ad units that match your placements: banner units for banner placements, interstitial units for interstitial placements, rewarded units for rewarded placements.
 2. Add the AdMob **App ID** (contains `~`) to `AndroidManifest.xml` as `com.google.android.gms.ads.APPLICATION_ID` meta-data, or on iOS to `Info.plist` as `GADApplicationIdentifier`. In React Native the config in step 3 writes both for you.
-3. Add the adapter: `implementation("com.qartvelo.ads:admob:0.5.0")`. In React Native, add the `admob` config instead (the Expo plugin entry, or the `"@qartvelo/react-native-ads"` key in `app.json`; see [React Native installation](/react-native/installation/#3-admob-fallback-optional)). On iOS add the `QartveloAdsAdMob` product (or pod) and call `QartveloAds.registerFallbackAdapter(QartveloAdMobFallbackAdapter())` before `initialize` ([iOS installation](/ios/installation/#register-the-admob-adapter)).
+3. Add the adapter: `implementation("com.qartvelo.ads:admob:0.5.1")`. In React Native, add the `admob` config instead (the Expo plugin entry, or the `"@qartvelo/react-native-ads"` key in `app.json`; see [React Native installation](/react-native/installation/#3-admob-fallback-optional)). On iOS add the `QartveloAdsAdMob` product (or pod) and call `QartveloAds.registerFallbackAdapter(QartveloAdMobFallbackAdapter())` before `initialize` ([iOS installation](/ios/installation/#register-the-admob-adapter)).
 4. Map each placement to its ad unit **ID** (contains `/`), either on the placement in the dashboard (fallback provider **AdMob**) or in code:
 
    ```kotlin

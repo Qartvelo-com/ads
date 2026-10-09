@@ -5,7 +5,7 @@ description: Fixes for common React Native build and runtime problems.
 
 | Symptom | Fix |
 |---|---|
-| `Could not find com.qartvelo.ads:core:0.5.0` | Make sure `mavenCentral()` is in `allprojects.repositories` in `android/build.gradle`; versions before 0.3.4 also need JitPack ([Installation](/react-native/installation/#2-native-sdk-repository-android)) |
+| `Could not find com.qartvelo.ads:core:0.5.1` | Make sure `mavenCentral()` is in `allprojects.repositories` in `android/build.gradle`; versions before 0.3.4 also need JitPack ([Installation](/react-native/installation/#2-native-sdk-repository-android)) |
 | App crashes at start: "The Google Mobile Ads SDK was initialized incorrectly" | The adapter is on but the AdMob `APPLICATION_ID` meta-data is missing (legacy `QartveloAds_admobEnabled=true` setup). Add it, or set `admob.androidAppId` in the Expo plugin entry or the `app.json` key, which writes it for you ([Installation](/react-native/installation/#3-admob-fallback-optional)) |
 | Promises reject with `module_unavailable` | The app binary predates the package. Rebuild with `npx react-native run-android` |
 | Promises reject with `unsupported_platform` | Running on web or another unsupported platform. Guard with `QartveloAds.isSupported()` |

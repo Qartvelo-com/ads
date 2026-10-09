@@ -1,15 +1,15 @@
 ---
 title: API reference
-description: Complete public API of the Qartvelo Ads Android SDK 0.5.0 (package com.qartvelo.sdk).
+description: Complete public API of the Qartvelo Ads Android SDK 0.5.1 (package com.qartvelo.sdk).
 ---
 
-Package `com.qartvelo.sdk`, version `0.5.0` (`QartveloAds.SDK_VERSION`). Every method is safe to call from any thread, never throws and delivers callbacks on the main thread. `@JvmStatic` and `@JvmOverloads` make the API callable from Java as `QartveloAds.initialize(...)`.
+Package `com.qartvelo.sdk`, version `0.5.1` (`QartveloAds.SDK_VERSION`). Every method is safe to call from any thread, never throws and delivers callbacks on the main thread. `@JvmStatic` and `@JvmOverloads` make the API callable from Java as `QartveloAds.initialize(...)`.
 
 ## QartveloAds
 
 ```kotlin
 object QartveloAds {
-    const val SDK_VERSION: String = "0.5.0"
+    const val SDK_VERSION: String = "0.5.1"
 
     fun initialize(
         context: Context,
@@ -70,6 +70,7 @@ data class QartveloAdsOptions(
 class QartveloAdsBannerView(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) : FrameLayout {
     var placementId: String?            // XML: app:qartvelo_placementId
     var listener: QartveloAdsListener?
+    var usesAdaptiveSize: Boolean       // default true: anchored adaptive slot; false: the creative's size
     fun load()                          // idempotent
     fun destroy()                       // detaches; the loaded banner stays cached
 }
@@ -141,7 +142,7 @@ data class QartveloAdsPrivacy(
 
 ## Fallback seam
 
-Package `com.qartvelo.sdk.fallback`: `FallbackAdapter`, `FallbackSettings`, `FallbackLoadCallback`, `FallbackShowCallback`, `FallbackBannerCallback`, `FallbackBanner`. Documented in [Custom fallback adapter](/guides/custom-fallback-adapter/).
+Package `com.qartvelo.sdk.fallback`: `FallbackAdapter`, `FallbackSettings`, `FallbackLoadCallback`, `FallbackShowCallback`, `FallbackBannerCallback`, `FallbackBanner`, and the optional `AdaptiveBannerSizer`. Documented in [Custom fallback adapter](/guides/custom-fallback-adapter/).
 
 ## Java
 

@@ -404,7 +404,13 @@ internal class Engine(
      * and validates the creative so that a creative failure becomes a fallback rather than a broken
      * show. [onResult] is called exactly once, on the main thread.
      */
-    fun fetchOurAd(placementId: String, format: AdFormat, timeoutMs: Long, onResult: (FetchOutcome) -> Unit) {
+    fun fetchOurAd(
+        placementId: String,
+        format: AdFormat,
+        timeoutMs: Long,
+        slot: BannerSlot? = null,
+        onResult: (FetchOutcome) -> Unit,
+    ) {
         val tracker = CallTracker()
         var finished = false
         var responded = false
@@ -423,7 +429,7 @@ internal class Engine(
         val deadline = Clock.elapsed() + timeoutMs
         io.execute {
             val result: Any = try {
-                requestWithSessionRetry(placementId, format, deadline, tracker)
+                requestWithSessionRetry(placementId, format, slot, deadline, tracker)
             } catch (t: Throwable) {
                 t
             }
@@ -491,16 +497,16 @@ internal class Engine(
     }
 
     /** Blocking. One transparent retry when the backend reports the session expired or invalid. */
-    private fun requestWithSessionRetry(placementId: String, format: AdFormat, deadline: Long, tracker: CallTracker): AdResponse {
+    private fun requestWithSessionRetry(placementId: String, format: AdFormat, slot: BannerSlot?, deadline: Long, tracker: CallTracker): AdResponse {
         var token = sessions.acquire(deadline)
         return try {
-            api.requestAd(adRequestBody(placementId, format, token), remaining(deadline), tracker)
+            api.requestAd(adRequestBody(placementId, format, token, slot), remaining(deadline), tracker)
         } catch (e: ApiException) {
             if (!e.isSessionError) throw e
             OurLog.i("Session rejected (${e.code}); refreshing once")
             sessions.invalidate(token)
             token = sessions.acquire(deadline)
-            api.requestAd(adRequestBody(placementId, format, token), remaining(deadline), tracker)
+            api.requestAd(adRequestBody(placementId, format, token, slot), remaining(deadline), tracker)
         }
     }
 
@@ -546,8 +552,9 @@ internal class Engine(
             .put("is_emulator", emulator)
     }
 
-    private fun adRequestBody(placementId: String, format: AdFormat, token: String): JSONObject {
+    private fun adRequestBody(placementId: String, format: AdFormat, token: String, slot: BannerSlot? = null): JSONObject {
         val d = device
+        val banner = slot.takeIf { format == AdFormat.BANNER }
         return JSONObject()
             .put("app_key", appKey)
             .put("placement", placementId)
@@ -557,10 +564,12 @@ internal class Engine(
             .put("android_version", d.androidMajor)
             .put("app_version", d.appVersion)
             .put("sdk_version", QartveloAds.SDK_VERSION)
-            .put("screen_width", d.screenWidth)
+            // A banner reports its slot (px, like iOS) so the backend picks a creative that fits it.
+            .put("screen_width", banner?.widthPx ?: d.screenWidth)
             .put("screen_height", d.screenHeight)
             .put("test_mode", testMode)
             .put("test_force_no_fill", options.testForceNoFill)
+            .apply { banner?.heightPx?.let { put("banner_height", it) } }
     }
 
     /** Tests only: stop background threads. */

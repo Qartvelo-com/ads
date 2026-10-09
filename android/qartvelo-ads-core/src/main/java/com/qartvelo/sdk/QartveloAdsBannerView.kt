@@ -29,6 +29,14 @@ public class QartveloAdsBannerView @JvmOverloads public constructor(
     public var placementId: String? = null
     public var listener: QartveloAdsListener? = null
 
+    /**
+     * True (default): the view reserves Google's anchored adaptive banner slot, the full width and
+     * 50 to 90 dp tall (the same height as the AdMob fallback banner), and QartveloAds creatives are
+     * fitted into it. False: the view takes the creative's own size, for example for an inline
+     * rectangle. Set it before [load].
+     */
+    public var usesAdaptiveSize: Boolean = true
+
     private var controller: BannerController? = null
 
     /** Last window visibility reported by the framework (GONE while the Activity is stopped). */
@@ -91,6 +99,12 @@ public class QartveloAdsBannerView @JvmOverloads public constructor(
         windowShown = false
         guard("banner detach") { controller?.onHostDetachedFromWindow(this) }
         super.onDetachedFromWindow()
+    }
+
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        // Called during layout: refit the adaptive slot on the next frame, not inside this pass.
+        if (w != oldw && w > 0) post { guard("banner resize") { controller?.onHostResized(this) } }
     }
 
     override fun onWindowVisibilityChanged(visibility: Int) {
