@@ -161,7 +161,8 @@ const events = new EventRegistry(availableNative, {
 export const QartveloAds = {
   /**
    * Starts the SDK once per process; later calls resolve with the first result and ignore new
-   * options. A rejection (backend unreachable, app key rejected) does not disable ads: the SDK keeps
+   * options, except that `preload` placements of a later call are still loaded (and then reloaded
+   * after each show). A rejection (backend unreachable, app key rejected) does not disable ads: the SDK keeps
    * running on its cached configuration and can still fall back to AdMob.
    */
   initialize(options: QartveloAdsInitOptions): Promise<void> {

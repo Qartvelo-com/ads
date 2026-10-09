@@ -299,8 +299,10 @@ internal class Engine(
 
     /**
      * The fallback ad unit for a placement, or null when fallback is impossible: adapter missing,
-     * disabled locally or remotely, or no unit configured. In test mode the adapter substitutes
-     * Google's test units, so an unmapped placement still falls back (with an empty id).
+     * disabled locally or remotely, or no unit configured. In Qartvelo test mode the adapter
+     * substitutes the network's public test units, so an unmapped placement still falls back (with an
+     * empty id). In a debuggable build with test mode off the adapter also uses test units
+     * ([fallbackTestUnits]) for the ids it is given, but an unmapped placement has no fallback.
      */
     fun fallbackUnit(placementId: String, placement: PlacementConfig?, serverFallback: String? = null): String? {
         if (!options.admobFallback || fallbackAdapter == null) return null

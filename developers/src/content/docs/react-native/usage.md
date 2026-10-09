@@ -42,7 +42,7 @@ export default function App() {
 | `admobTestUnitsInDebugBuilds` | `boolean` | `true` | Google's test units for the AdMob fallback in debuggable Android builds; ignored on iOS |
 | `preload` | `{ interstitial?: string[]; rewarded?: string[] }` | none | Load these placements at start-up and again after each show |
 
-- Initialization is idempotent for the life of the **process**. Later calls resolve or reject with the first result and ignore new options. Restart the app to change them; a JS reload is not enough.
+- Initialization is idempotent for the life of the **process**. Later calls resolve or reject with the first result and ignore new options, except `preload`: the placements listed in a later call are still loaded and reloaded after each show. Restart the app to change the other options; a JS reload is not enough.
 - A rejection (`network_error`, `timeout`, or `not_initialized` for a rejected key) does not disable ads.
 - Loads issued while initialization is still running wait for it.
 - `await QartveloAds.isInitialized()` is `true` once the first attempt finished.

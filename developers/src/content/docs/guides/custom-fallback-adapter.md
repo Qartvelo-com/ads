@@ -61,7 +61,7 @@ interface FallbackBanner {
 
 - **Threading**: core calls every method on the main thread. Callbacks may be invoked from any thread; core marshals them to the main thread and de-duplicates terminal events.
 - **Keys**: ads are keyed by Qartvelo Ads placement id, so two placements may share one network unit.
-- **Test mode**: when `settings.testMode` is true, substitute the network's public test units. An empty `adUnitId` is only ever passed in test mode.
+- **Test mode**: when `settings.testMode` is true, substitute the network's public test units. The flag is true in Qartvelo test mode and also in debuggable Android builds (unless the app sets `admobTestUnitsInDebugBuilds = false`), so it can be true while Qartvelo test mode is off. An empty `adUnitId` is only ever passed in Qartvelo test mode.
 - **Rewards**: call `onReward` only after the network confirmed the reward; core guarantees the app sees it at most once.
 - **Banners**: `createBanner` receives a `MutableContextWrapper` owned by core, which swaps its base context between Activities so the banner never leaks one. Start loading immediately and report through the callback; core calls `pause`, `resume` and `destroy`.
 - **Never throw**: the SDK guards calls, but a throwing adapter turns every fallback into a failure.

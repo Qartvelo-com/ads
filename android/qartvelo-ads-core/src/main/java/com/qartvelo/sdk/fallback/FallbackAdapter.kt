@@ -13,7 +13,10 @@ import com.qartvelo.sdk.QartveloAdsPrivacy
  *
  * Ads are keyed by QartveloAds placement id, so two placements may share one network ad unit id.
  * When [FallbackSettings.testMode] is true the adapter must substitute the network's public test ad
- * units for the supplied ids (an empty [adUnitId] is only ever passed in test mode).
+ * units for the supplied ids. That flag means "use the network's public test units": it is true in
+ * Qartvelo test mode and in a debuggable build unless the app opted out with
+ * `QartveloAdsOptions.admobTestUnitsInDebugBuilds`. An empty [adUnitId] is only ever passed in
+ * Qartvelo test mode, where the flag is always true.
  */
 public interface FallbackAdapter {
     /** Short network name used in logs, for example `admob`. */
@@ -51,6 +54,11 @@ public interface FallbackAdapter {
 }
 
 public data class FallbackSettings(
+    /**
+     * Use the network's public test ad units instead of the supplied ids. True in Qartvelo test mode,
+     * and in a debuggable build unless `QartveloAdsOptions.admobTestUnitsInDebugBuilds` is false, so it
+     * can be true while Qartvelo test mode is off.
+     */
     val testMode: Boolean,
     val privacy: QartveloAdsPrivacy,
 )

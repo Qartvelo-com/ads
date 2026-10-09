@@ -32,7 +32,7 @@ useEffect(() => {
 
 Every payload except `setupIssue` has `type`, `placementId` and `format` (`banner`, `interstitial` or `rewarded`); `setupIssue` has `type`, `code`, `message` and an optional `placementId`. `source` is `qartvelo` or `admob`; `campaignId` and `creativeId` are set only for Qartvelo Ads ads.
 
-Each `addListener` call is an independent subscription; `remove()` is safe to call twice. `QartveloAds.removeAllListeners(type?)` clears listeners in bulk. The native event stream is open only while at least one listener exists. Payloads are fully typed through `QartveloAdsEventMap`.
+Each `addListener` call is an independent subscription; `remove()` is safe to call twice. `QartveloAds.removeAllListeners(type?)` clears listeners in bulk. The native event stream is open only while at least one listener exists; in development builds it also stays open after `initialize`, so setup warnings are printed even when no listener is registered. Payloads are fully typed through `QartveloAdsEventMap`.
 
 ## Errors
 
