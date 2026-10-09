@@ -30,7 +30,9 @@
     "!**/.*",
     "ios",
     "RNQartveloAds.podspec",
-    "scripts/sync-ios-sdk.cjs"
+    "scripts/sync-ios-sdk.cjs",
+    "scripts/ios-config.rb",
+    "!scripts/test"
   ],
   "scripts": {
     "prepare": "node scripts/sync-ios-sdk.cjs && bob build && npm run build:plugin",
