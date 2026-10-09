@@ -1,9 +1,17 @@
 // Android side of @qartvelo/react-native-ads. Built as part of the host app (autolinking); the Android
 // Gradle, Kotlin and React Native Gradle plugins come from the host's build classpath.
 //
+// AdMob fallback, one of:
+//   - Expo: the plugin entry ["@qartvelo/react-native-ads", { "admob": { ... } }] (sets the property below)
+//   - bare React Native: "@qartvelo/react-native-ads": { "admob": { "androidAppId": ... } } in app.json
+//   - legacy (0.4.x): QartveloAds_admobEnabled=true here and the App ID in the app's manifest
+//
 // Host gradle.properties switches:
-//   QartveloAds_admobEnabled=true   adds com.qartvelo.ads:admob (AdMob fallback, play-services-ads)
-//   QartveloAds_sdkVersion=0.5.0    version of the QartveloAds Android SDK artifacts
+//   QartveloAds_admobEnabled=true    adds com.qartvelo.ads:admob (AdMob fallback, play-services-ads)
+//   QartveloAds_sdkVersion=0.5.0     version of the QartveloAds Android SDK artifacts
+//   QartveloAds_useMavenLocal=true   also resolve com.qartvelo.ads from ~/.m2 (SDK development)
+
+import groovy.json.JsonSlurper
 
 apply plugin: "com.android.library"
 if (project.extensions.findByName("kotlin") == null) {
@@ -20,33 +28,69 @@ def qartveloProperty(name, fallback) {
   return value != null ? value.toString().trim() : fallback
 }
 
+// The "@qartvelo/react-native-ads" object of the host's app.json, or null.
+def qartveloAppJson() {
+  def file = new File(rootProject.projectDir.parentFile, "app.json")
+  if (!file.isFile()) return null
+  def root = new JsonSlurper().parse(file)
+  if (!(root instanceof Map)) return null
+  def config = root["@qartvelo/react-native-ads"]
+  if (config == null) return null
+  if (root.containsKey("expo")) {
+    throw new GradleException("@qartvelo/react-native-ads: in an Expo project, configure the AdMob fallback with the plugin entry [\"@qartvelo/react-native-ads\", { \"admob\": { ... } }] in expo.plugins, not with a top-level \"@qartvelo/react-native-ads\" key in app.json.")
+  }
+  return config
+}
+
+def qartveloVersionBefore(String version, String other) {
+  def parse = { String value -> value.tokenize(".-").take(3).collect { it.isInteger() ? it.toInteger() : 0 } }
+  def a = parse(version)
+  def b = parse(other)
+  for (int i = 0; i < 3; i++) {
+    def x = i < a.size() ? a[i] : 0
+    def y = i < b.size() ? b[i] : 0
+    if (x != y) return x < y
+  }
+  return false
+}
+
 def qartveloSdkVersion = qartveloProperty("QartveloAds_sdkVersion", "0.5.0")
-def qartveloAdmobEnabled = qartveloProperty("QartveloAds_admobEnabled", "false").toBoolean()
+def qartveloAdmob = qartveloAppJson()?.get("admob")
+def qartveloAdmobAppId = null
+if (qartveloAdmob != null) {
+  qartveloAdmobAppId = (qartveloAdmob["androidAppId"] ?: "").toString().trim()
+  if (!(qartveloAdmobAppId ==~ /ca-app-pub-\d{16}~\d{10}/)) {
+    throw new GradleException("@qartvelo/react-native-ads: admob.androidAppId in app.json must be an AdMob App ID like ca-app-pub-0000000000000000~0000000000 (found \"${qartveloAdmobAppId}\").")
+  }
+}
+def qartveloAdmobEnabled = qartveloProperty("QartveloAds_admobEnabled", "false").toBoolean() || qartveloAdmob != null
+def qartveloDelayMeasurement = qartveloAdmob?.get("delayAppMeasurementInit") == true
 
 repositories {
-  // The QartveloAds SDK is installed into ~/.m2 with `./gradlew publishToMavenLocal` (android/ project).
-  // The host app must list mavenLocal() too: its runtime classpath resolves these artifacts.
-  mavenLocal {
-    content { includeGroup("com.qartvelo.ads") }
+  if (qartveloProperty("QartveloAds_useMavenLocal", "false").toBoolean()) {
+    // SDK development: artifacts from `./gradlew publishToMavenLocal` (android/ project). The host app
+    // must list mavenLocal() too, because its runtime classpath resolves these artifacts.
+    mavenLocal {
+      content { includeGroup("com.qartvelo.ads") }
+    }
   }
-  // Published SDK: Maven Central from 0.3.4 (every React Native app already lists it).
-  // Older versions: JitPack, or GitHub Packages, which needs a GitHub token with
-  // read:packages from gpr.user/gpr.key (gradle.properties) or GITHUB_ACTOR/GITHUB_TOKEN;
-  // the host app must list such a repository too, because its runtime classpath resolves
-  // these artifacts.
   google()
   mavenCentral()
-  maven {
-    url "https://jitpack.io"
-    content { includeGroup("com.qartvelo.ads") }
-  }
-  maven {
-    url "https://maven.pkg.github.com/Qartvelo-com/ads"
-    credentials {
-      username = (project.findProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")) ?: ""
-      password = (project.findProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")) ?: ""
+  if (qartveloVersionBefore(qartveloSdkVersion, "0.3.4")) {
+    // Versions before 0.3.4 are only on JitPack and GitHub Packages (a token with read:packages from
+    // gpr.user/gpr.key or GITHUB_ACTOR/GITHUB_TOKEN); the host app must list them too.
+    maven {
+      url "https://jitpack.io"
+      content { includeGroup("com.qartvelo.ads") }
     }
-    content { includeGroup("com.qartvelo.ads") }
+    maven {
+      url "https://maven.pkg.github.com/Qartvelo-com/ads"
+      credentials {
+        username = (project.findProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")) ?: ""
+        password = (project.findProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")) ?: ""
+      }
+      content { includeGroup("com.qartvelo.ads") }
+    }
   }
 }
 
@@ -57,6 +101,19 @@ android {
   defaultConfig {
     minSdkVersion safeExtGet("minSdkVersion", 24)
     consumerProguardFiles "proguard-rules.pro"
+    manifestPlaceholders.putAll([
+      qartveloAdmobAppId: qartveloAdmobAppId ?: "",
+      qartveloDelayMeasurement: qartveloDelayMeasurement ? "true" : "false",
+    ])
+  }
+
+  if (qartveloAdmobAppId != null) {
+    sourceSets {
+      main {
+        // app.json sets the AdMob App ID: this manifest adds it and the measurement delay flag.
+        manifest.srcFile "src/admob/AndroidManifest.xml"
+      }
+    }
   }
 
   buildFeatures {
