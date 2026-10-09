@@ -30,6 +30,7 @@ jobs:
               ls build/staging-deploy/com/qartvelo/ads/$a/*/$a-*$f >/dev/null
             done
           done
+          python3 scripts/check-admob-pom.py build/staging-deploy/com/qartvelo/ads/admob/*/admob-*.pom
 
   react-native:
     runs-on: ubuntu-latest

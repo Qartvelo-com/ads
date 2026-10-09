@@ -49,7 +49,9 @@ kotlin {
 dependencies {
     api(project(":qartvelo-ads-core"))
     // Google's official artifact, resolved normally (never shaded) so host apps can align versions.
-    api(libs.play.services.ads)
+    // Runtime scope for consumers: nothing outside this module compiles against Google's API, and
+    // its Kotlin 2.3 metadata breaks hosts on older Kotlin compilers (React Native 0.83 uses 2.1).
+    implementation(libs.play.services.ads)
 
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)
