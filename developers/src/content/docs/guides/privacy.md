@@ -9,6 +9,8 @@ Qartvelo Ads targets ads by **context**, not by person. The SDK and backend are 
 
 Campaigns can target country (derived on the server from the request's network address), app, app category, ad format, content language and Android major version. There is no behavioural, interest or audience targeting, and no retargeting.
 
+When the country cannot be determined, traffic is recorded as `ZZ` (`unknown`) and only matches campaigns without a country restriction. It is never assigned to Georgia by default.
+
 ## Data the SDK sends
 
 | Request | Fields |

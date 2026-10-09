@@ -54,19 +54,20 @@ targets: [
 </TabItem>
 <TabItem label="CocoaPods">
 
-Swift Package Manager is available directly from the Git release tag. CocoaPods installation
-requires these pod specifications to be published to CocoaPods trunk separately. If CocoaPods
-cannot find `0.4.1`, use the Swift Package Manager tab.
+Install directly from the published Git tag. The native pods are not currently published to
+CocoaPods trunk, so use the Git source below rather than a trunk-only version declaration.
 
 ```ruby title="Podfile"
 platform :ios, '13.0'
 use_frameworks! :linkage => :static
 
 target 'MyApp' do
-  pod 'QartveloAds', '~> 0.4'
-  pod 'QartveloAdsAdMob', '~> 0.4' # optional
+  pod 'QartveloAds', :git => 'https://github.com/Qartvelo-com/ads.git', :tag => '0.4.1'
+  pod 'QartveloAdsAdMob', :git => 'https://github.com/Qartvelo-com/ads.git', :tag => '0.4.1' # optional
 end
 ```
+
+Run `pod install`, then open the generated `.xcworkspace` in Xcode.
 
 </TabItem>
 </Tabs>
