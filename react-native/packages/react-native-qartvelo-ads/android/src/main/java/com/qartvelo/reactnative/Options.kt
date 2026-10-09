@@ -45,6 +45,7 @@ internal object Options {
                 baseUrl = baseUrl ?: DEFAULT_BASE_URL,
                 admobAdUnits = units ?: emptyMap(),
                 testModeInDebugBuilds = bool(map, "testModeInDebugBuilds") ?: defaults.testModeInDebugBuilds,
+                admobTestUnitsInDebugBuilds = bool(map, "admobTestUnitsInDebugBuilds") ?: defaults.admobTestUnitsInDebugBuilds,
             ),
         )
     }

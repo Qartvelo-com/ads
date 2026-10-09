@@ -65,6 +65,43 @@ describe.each(['android', 'ios'] as const)(
       });
     });
 
+    it('uses the value for the running platform', async () => {
+      await QartveloAds.initialize({
+        appKey: { android: 'app_android', ios: 'app_ios' },
+        admobAdUnits: {
+          home_banner: { android: 'ca-app-pub-1/111', ios: 'ca-app-pub-1/222' },
+          game_end: 'ca-app-pub-1/333',
+          other_only:
+            os === 'android'
+              ? { ios: 'ca-app-pub-1/444' }
+              : { android: 'ca-app-pub-1/444' },
+        },
+        admobTestUnitsInDebugBuilds: false,
+      });
+
+      expect(fake.native.initializeSdk).toHaveBeenCalledWith({
+        appKey: os === 'android' ? 'app_android' : 'app_ios',
+        admobAdUnits: {
+          home_banner:
+            os === 'android' ? 'ca-app-pub-1/111' : 'ca-app-pub-1/222',
+          game_end: 'ca-app-pub-1/333',
+        },
+        admobTestUnitsInDebugBuilds: false,
+      });
+    });
+
+    it('rejects a per-platform appKey without a value for this platform', async () => {
+      const promise = QartveloAds.initialize({
+        appKey:
+          os === 'android' ? { ios: 'app_ios' } : { android: 'app_android' },
+      });
+      await expect(promise).rejects.toMatchObject({
+        code: 'invalid_argument',
+        message: `appKey has no value for ${os}`,
+      });
+      expect(fake.native.initializeSdk).not.toHaveBeenCalled();
+    });
+
     it.each([
       [{ appKey: '' }, /appKey/],
       [{ appKey: 'app_x', requestTimeoutMs: 0 }, /requestTimeoutMs/],
@@ -73,6 +110,17 @@ describe.each(['android', 'ios'] as const)(
       [{ appKey: 'app_x', baseUrl: 'ftp://example.com' }, /baseUrl/],
       [{ appKey: 'app_x', testMode: 'yes' }, /testMode/],
       [{ appKey: 'app_x', admobAdUnits: { game_end: 42 } }, /admobAdUnits/],
+      [{ appKey: 42 }, /appKey/],
+      [{ appKey: { android: 7 } }, /appKey/],
+      [{ appKey: { [os]: 7 } }, /appKey/],
+      [
+        { appKey: 'app_x', admobAdUnits: { game_end: { [os]: 7 } } },
+        /admobAdUnits/,
+      ],
+      [
+        { appKey: 'app_x', admobTestUnitsInDebugBuilds: 'no' },
+        /admobTestUnitsInDebugBuilds/,
+      ],
     ])(
       'rejects invalid options %p without calling native',
       async (options, message) => {

@@ -13,6 +13,7 @@ export type NativeInitOptions = {
   testMode?: boolean;
   testForceNoFill?: boolean;
   testModeInDebugBuilds?: boolean;
+  admobTestUnitsInDebugBuilds?: boolean;
   admobFallback?: boolean;
   logLevel?: string;
   baseUrl?: string;

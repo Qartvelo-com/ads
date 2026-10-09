@@ -12,7 +12,9 @@ import com.qartvelo.sdk.QartveloAdsPrivacy
 import com.qartvelo.sdk.QartveloAdsReward
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertThrows
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class WireAndOptionsTest {
@@ -132,6 +134,15 @@ class WireAndOptionsTest {
             full.options,
         )
         assertEquals(DEFAULT_BASE_URL, minimal.options.baseUrl)
+    }
+
+    @Test
+    fun parsesAdmobTestUnitsInDebugBuilds() {
+        assertTrue(Options.parseInit(mapOf("appKey" to "app_x")).options.admobTestUnitsInDebugBuilds)
+        assertFalse(
+            Options.parseInit(mapOf("appKey" to "app_x", "admobTestUnitsInDebugBuilds" to false))
+                .options.admobTestUnitsInDebugBuilds,
+        )
     }
 
     @Test

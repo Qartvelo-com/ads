@@ -2,6 +2,7 @@
  * Conversions between the public types and the native wire format. Pure functions: no native
  * calls, no state.
  */
+import { Platform } from 'react-native';
 import { QartveloAdsError, toErrorCode } from './errors';
 import type {
   NativeAdEvent,
@@ -118,6 +119,26 @@ function optionalBoolean(
   return value;
 }
 
+/** The value for the running platform, from a string or a `{ android, ios }` object. */
+function platformValue(value: unknown, name: string): string | undefined {
+  if (typeof value === 'string') {
+    return value.trim() || undefined;
+  }
+  if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+    const own = (value as Record<string, unknown>)[Platform.OS];
+    if (own === undefined || own === null) {
+      return undefined;
+    }
+    if (typeof own !== 'string') {
+      throw invalid(`${name}.${Platform.OS} must be a string`);
+    }
+    return own.trim() || undefined;
+  }
+  throw invalid(
+    `${name} must be a string or an object with android and ios values`
+  );
+}
+
 /** Validates the public options and drops unset keys so native defaults apply. */
 export function toNativeInitOptions(
   options: QartveloAdsInitOptions
@@ -125,10 +146,13 @@ export function toNativeInitOptions(
   if (typeof options !== 'object' || options === null) {
     throw invalid('initialize() expects an options object');
   }
-  const appKey =
-    typeof options.appKey === 'string' ? options.appKey.trim() : '';
+  const appKey = platformValue(options.appKey, 'appKey');
   if (!appKey) {
-    throw invalid('appKey must be a non-empty string');
+    throw invalid(
+      typeof options.appKey === 'object' && options.appKey !== null
+        ? `appKey has no value for ${Platform.OS}`
+        : 'appKey must be a non-empty string'
+    );
   }
   const result: NativeInitOptions = { appKey };
 
@@ -165,6 +189,13 @@ export function toNativeInitOptions(
   if (admobFallback !== undefined) {
     result.admobFallback = admobFallback;
   }
+  const admobTestUnits = optionalBoolean(
+    options,
+    'admobTestUnitsInDebugBuilds'
+  );
+  if (admobTestUnits !== undefined) {
+    result.admobTestUnitsInDebugBuilds = admobTestUnits;
+  }
 
   if (options.logLevel !== undefined && options.logLevel !== null) {
     result.logLevel = toLogLevel(options.logLevel);
@@ -186,10 +217,13 @@ export function toNativeInitOptions(
     }
     const copy: Record<string, string> = {};
     for (const [code, unit] of Object.entries(units)) {
-      if (typeof unit !== 'string' || !unit.trim() || !code.trim()) {
+      const id = platformValue(unit, `admobAdUnits["${code}"]`);
+      if (!code.trim() || (typeof unit === 'string' && !id)) {
         throw invalid(`admobAdUnits["${code}"] must be a non-empty ad unit id`);
       }
-      copy[code.trim()] = unit.trim();
+      if (id) {
+        copy[code.trim()] = id;
+      }
     }
     result.admobAdUnits = copy;
   }

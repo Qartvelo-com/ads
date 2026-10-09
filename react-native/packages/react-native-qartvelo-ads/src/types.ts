@@ -34,9 +34,15 @@ export type QartveloAdsErrorCode =
   /** A JavaScript argument was rejected before reaching native code. */
   | 'invalid_argument';
 
+/** One value per platform. The running platform's value is used; a missing one counts as unset. */
+export interface PerPlatform<T> {
+  android?: T;
+  ios?: T;
+}
+
 export interface QartveloAdsInitOptions {
-  /** Publisher app key from the QartveloAds dashboard (`app_...`). Never the server-side secret. */
-  appKey: string;
+  /** Publisher app key (`app_...`), or one key per platform. Never the server-side secret. */
+  appKey: string | PerPlatform<string>;
   /** QartveloAds request budget before falling back to AdMob. A per-placement server value wins. */
   requestTimeoutMs?: number;
   /**
@@ -58,8 +64,13 @@ export interface QartveloAdsInitOptions {
   logLevel?: LogLevel;
   /** QartveloAds API base URL, e.g. `https://api.example.com/`. */
   baseUrl?: string;
-  /** Placement code -> your AdMob ad unit id. Overrides the unit configured in the dashboard. */
-  admobAdUnits?: Record<string, string>;
+  /** Placement code -> your AdMob ad unit id, or one id per platform. Overrides the dashboard unit. */
+  admobAdUnits?: Record<string, string | PerPlatform<string>>;
+  /**
+   * Use Google's test units for the AdMob fallback in debuggable Android builds, even when test mode
+   * is off. Default true. Ignored on iOS, where every non-App Store install already uses test units.
+   */
+  admobTestUnitsInDebugBuilds?: boolean;
 }
 
 export interface AdInfo {
