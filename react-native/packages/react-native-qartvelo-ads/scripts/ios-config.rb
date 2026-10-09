@@ -42,9 +42,17 @@ unless app_id =~ APP_ID
 end
 
 plist = File.join(ENV.fetch('BUILT_PRODUCTS_DIR'), ENV.fetch('INFOPLIST_PATH'))
-existing, found = plist_buddy(plist, 'Print :GADApplicationIdentifier')
-if found && !existing.empty? && existing != app_id
-  fail_build("Info.plist already sets GADApplicationIdentifier to #{existing}, but admob.iosAppId in app.json is #{app_id}. Keep one AdMob App ID.")
+
+# The conflict rule is about the app's own Info.plist (the source file). The built plist is not checked: it
+# already holds this script's earlier injection, so a changed admob.iosAppId would look like a conflict on
+# an incremental build. The built value is always replaced below.
+source_name = ENV['INFOPLIST_FILE'].to_s
+source_plist = source_name.empty? ? nil : File.expand_path(source_name, ENV['SRCROOT'] || ENV.fetch('PROJECT_DIR'))
+if source_plist && File.file?(source_plist)
+  existing, found = plist_buddy(source_plist, 'Print :GADApplicationIdentifier')
+  if found && !existing.empty? && existing != app_id
+    fail_build("Info.plist already sets GADApplicationIdentifier to #{existing}, but admob.iosAppId in app.json is #{app_id}. Keep one AdMob App ID.")
+  end
 end
 plist_buddy(plist, 'Delete :GADApplicationIdentifier')
 plist_buddy(plist, "Add :GADApplicationIdentifier string #{app_id}")
