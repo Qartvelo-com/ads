@@ -253,6 +253,63 @@ export function toNativePrivacy(privacy: QartveloAdsPrivacy): NativePrivacy {
   return result;
 }
 
+export interface PreloadPlan {
+  interstitial: string[];
+  rewarded: string[];
+}
+
+/** Validates `preload`, trimming and de-duplicating the placement codes. */
+export function toPreload(preload: unknown): PreloadPlan {
+  const plan: PreloadPlan = { interstitial: [], rewarded: [] };
+  if (preload === undefined || preload === null) {
+    return plan;
+  }
+  if (typeof preload !== 'object' || Array.isArray(preload)) {
+    throw invalid(
+      'preload must be an object with interstitial and rewarded arrays'
+    );
+  }
+  for (const format of ['interstitial', 'rewarded'] as const) {
+    const codes = (preload as Record<string, unknown>)[format];
+    if (codes === undefined || codes === null) {
+      continue;
+    }
+    if (!Array.isArray(codes)) {
+      throw invalid(`preload.${format} must be an array of placement codes`);
+    }
+    for (const code of codes) {
+      const id = typeof code === 'string' ? code.trim() : '';
+      if (!id) {
+        throw invalid(
+          `preload.${format} must only contain non-empty placement codes`
+        );
+      }
+      if (!plan[format].includes(id)) {
+        plan[format].push(id);
+      }
+    }
+  }
+  return plan;
+}
+
+/** Validates the options of `showInterstitial()` and `showRewarded()`. */
+export function toShowOptions(options: unknown): { loadIfNeeded: boolean } {
+  if (options === undefined || options === null) {
+    return { loadIfNeeded: false };
+  }
+  if (typeof options !== 'object' || Array.isArray(options)) {
+    throw invalid('show options must be an object');
+  }
+  const value = (options as Record<string, unknown>).loadIfNeeded;
+  if (value === undefined || value === null) {
+    return { loadIfNeeded: false };
+  }
+  if (typeof value !== 'boolean') {
+    throw invalid('loadIfNeeded must be a boolean');
+  }
+  return { loadIfNeeded: value };
+}
+
 // ---- results -----------------------------------------------------------------------------------
 
 export function toAdInfo(

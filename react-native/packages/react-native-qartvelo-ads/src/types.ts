@@ -71,6 +71,11 @@ export interface QartveloAdsInitOptions {
    * is off. Default true. Ignored on iOS, where every non-App Store install already uses test units.
    */
   admobTestUnitsInDebugBuilds?: boolean;
+  /**
+   * Placements to load right after initialization (loads wait for it) and again after each show,
+   * so the next one is usually ready at once.
+   */
+  preload?: { interstitial?: string[]; rewarded?: string[] };
 }
 
 export interface AdInfo {
@@ -99,6 +104,12 @@ export interface ShowResult {
 export interface RewardedShowResult extends ShowResult {
   rewarded: boolean;
   reward?: Reward;
+}
+
+/** Options of `showInterstitial()` and `showRewarded()`. */
+export interface ShowOptions {
+  /** When no ad is ready, wait for a load first instead of resolving `{ shown: false }`. Default false. */
+  loadIfNeeded?: boolean;
 }
 
 /**

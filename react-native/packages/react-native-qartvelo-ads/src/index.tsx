@@ -24,6 +24,7 @@ export type {
   Reward,
   RewardedShowResult,
   SetupIssueCode,
+  ShowOptions,
   ShowResult,
 } from './types';
 
