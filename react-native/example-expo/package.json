@@ -1,0 +1,21 @@
+{
+  "name": "qartvelo-ads-expo-example",
+  "version": "1.0.0",
+  "private": true,
+  "main": "index.ts",
+  "scripts": {
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "prebuild": "expo prebuild --no-install"
+  },
+  "dependencies": {
+    "@qartvelo/react-native-ads": "file:../packages/react-native-qartvelo-ads/qartvelo-react-native-ads-0.5.0.tgz",
+    "expo": "~55.0.19",
+    "react": "19.2.0",
+    "react-native": "0.83.6"
+  },
+  "devDependencies": {
+    "@types/react": "~19.2.10",
+    "typescript": "~5.9.2"
+  }
+}

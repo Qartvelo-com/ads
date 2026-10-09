@@ -1,0 +1,9 @@
+// CI only, until the SDK version under test is on Maven Central: resolve com.qartvelo.ads from ~/.m2,
+// where the job published it. Pass with ./gradlew -I <this file>.
+allprojects {
+  repositories {
+    mavenLocal {
+      content { includeGroup("com.qartvelo.ads") }
+    }
+  }
+}

@@ -50,6 +50,7 @@ jobs:
       - run: npm run lint
       - run: npm test -- --silent
       - run: npx bob build
+      - run: npm run build:plugin
 
   react-native-ios:
     runs-on: macos-15
@@ -57,8 +58,6 @@ jobs:
     strategy:
       matrix:
         admob: ['false', 'true']
-    env:
-      QARTVELO_ADS_ADMOB_ENABLED: ${{ matrix.admob }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -70,6 +69,9 @@ jobs:
           npm ci --no-audit --no-fund
           cd ../../example
           npm ci --no-audit --no-fund
+      - name: Core-only variant drops the AdMob config from app.json
+        if: matrix.admob == 'false'
+        run: node -e "const fs=require('fs');const f='react-native/example/app.json';const j=JSON.parse(fs.readFileSync(f,'utf8'));delete j['@qartvelo/react-native-ads'];fs.writeFileSync(f,JSON.stringify(j,null,2))"
       - name: Install iOS dependencies
         run: cd react-native/example/ios && pod install
       - name: Build React Native iOS example
@@ -77,12 +79,97 @@ jobs:
           set -euo pipefail
           cd react-native/example
           xcodebuild -workspace ios/QartveloAdsExample.xcworkspace -scheme QartveloAdsExample -configuration Debug -destination 'generic/platform=iOS Simulator' -derivedDataPath qa-out-ci/build CODE_SIGNING_ALLOWED=NO build | tee rn-ios-build.log
+      - name: The App ID from app.json reaches the built Info.plist
+        if: matrix.admob == 'true'
+        run: |
+          plist=$(find react-native/example/qa-out-ci/build/Build/Products -path '*QartveloAdsExample.app/Info.plist' | head -1)
+          test "$(/usr/libexec/PlistBuddy -c 'Print :GADApplicationIdentifier' "$plist")" = "ca-app-pub-3940256099942544~1458002511"
+      - name: ios-config.rb tests
+        run: ruby react-native/packages/react-native-qartvelo-ads/scripts/test/ios_config_test.rb
       - name: Save native build diagnostics
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: react-native-ios-admob-${{ matrix.admob }}
           path: react-native/example/rn-ios-build.log
+
+  react-native-android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Publish the Android SDK under test to Maven Local
+        working-directory: android
+        run: ./gradlew :qartvelo-ads-core:publishToMavenLocal :qartvelo-ads-admob:publishToMavenLocal
+      - name: Install the package and the bare example
+        run: |
+          cd react-native/packages/react-native-qartvelo-ads && npm ci --no-audit --no-fund
+          cd ../../example && npm ci --no-audit --no-fund
+      - name: Bridge unit tests and bare example build (app.json AdMob config)
+        working-directory: react-native/example/android
+        run: ./gradlew -I ../../ci/maven-local.gradle :qartvelo_react-native-ads:testDebugUnitTest :app:assembleDebug
+      - name: The App ID from app.json is in the merged manifest
+        working-directory: react-native/example/android
+        run: grep -rl --include=AndroidManifest.xml 'ca-app-pub-3940256099942544~3347511713' app/build/intermediates/merged_manifest* | grep -q .
+
+  expo-example:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: android
+          - os: macos-15
+            platform: ios
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - if: matrix.platform == 'android'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - if: matrix.platform == 'android'
+        uses: gradle/actions/setup-gradle@v4
+      - name: Publish the Android SDK under test to Maven Local
+        if: matrix.platform == 'android'
+        working-directory: android
+        run: ./gradlew :qartvelo-ads-core:publishToMavenLocal :qartvelo-ads-admob:publishToMavenLocal
+      - name: Pack the package and install it in the Expo example
+        run: |
+          cd react-native/packages/react-native-qartvelo-ads && npm ci --no-audit --no-fund && npm pack
+          cd ../../example-expo && npm install --no-audit --no-fund
+      - name: Prebuild with the config plugin
+        working-directory: react-native/example-expo
+        run: npx expo prebuild --platform ${{ matrix.platform }} --no-install
+      - name: Android build (Expo SDK 55, Kotlin 2.1, AdMob adapter)
+        if: matrix.platform == 'android'
+        working-directory: react-native/example-expo
+        run: |
+          grep -q 'ca-app-pub-3940256099942544~3347511713' android/app/src/main/AndroidManifest.xml
+          grep -q 'QartveloAds_admobEnabled=true' android/gradle.properties
+          cd android && ./gradlew -I ../../ci/maven-local.gradle :app:assembleDebug -PreactNativeArchitectures=x86_64
+      - name: iOS build
+        if: matrix.platform == 'ios'
+        working-directory: react-native/example-expo
+        run: |
+          set -euo pipefail
+          grep -q "QARTVELO_ADS_ADMOB_ENABLED" ios/Podfile
+          test "$(/usr/libexec/PlistBuddy -c 'Print :GADApplicationIdentifier' ios/QartveloAdsExpoExample/Info.plist)" = "ca-app-pub-3940256099942544~1458002511"
+          cd ios && pod install && cd ..
+          xcodebuild -workspace ios/QartveloAdsExpoExample.xcworkspace -scheme QartveloAdsExpoExample -configuration Debug -destination 'generic/platform=iOS Simulator' -derivedDataPath build CODE_SIGNING_ALLOWED=NO build | tee expo-ios-build.log
+          grep -q 'BUILD SUCCEEDED' expo-ios-build.log
 
   ios:
     runs-on: macos-15
