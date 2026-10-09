@@ -32,12 +32,16 @@ final class SetupIssueTests: XCTestCase {
         super.tearDown()
     }
 
-    private func initialize() {
+    private func testOptions() -> QartveloAdsOptions {
         let options = QartveloAdsOptions()
         options.baseURL = base
         options.requestTimeoutMs = 2_000
+        return options
+    }
+
+    private func initialize() {
         let done = expectation(description: "initialize finished")
-        QartveloAds.initialize(appKey: "app_\(UUID().uuidString)", options: options) { _, _ in done.fulfill() }
+        QartveloAds.initialize(appKey: "app_\(UUID().uuidString)", options: testOptions()) { _, _ in done.fulfill() }
         wait(for: [done], timeout: 10)
     }
 
@@ -48,7 +52,11 @@ final class SetupIssueTests: XCTestCase {
         observer.onEvent = { if $0.hasPrefix("setupIssue") { found.fulfill() } }
         trigger()
         wait(for: [found], timeout: 10)
-        return observer.setupIssues[0]
+        guard let issue = observer.setupIssues.first else {
+            XCTFail("no setup issue was reported")
+            return QartveloAdsSetupIssue(code: "none", message: "", placementId: nil)
+        }
+        return issue
     }
 
     private func drainMain() {
@@ -143,5 +151,23 @@ final class SetupIssueTests: XCTestCase {
         load("level_up")
         drainMain()
         XCTAssertEqual(observer.setupIssues.map(\.code), [QartveloAdsSetupIssue.packageMismatch])
+    }
+
+    func testPlacementUsedBeforeFreshConfigIsCheckedWhenItArrives() {
+        // The placement list is held back, so the show call below deterministically happens before it
+        // arrives: nothing can be judged yet and the show call finds no ad.
+        StubURLProtocol.hold("/api/v1/sdk/initialize")
+        let delegate = RecordingDelegate()
+        let viewController = UIViewController()
+        let issue = expectIssue {
+            QartveloAds.initialize(appKey: "app_\(UUID().uuidString)", options: testOptions())
+            QartveloAds.showRewarded("early_code", from: viewController, delegate: delegate)
+            XCTAssertEqual(delegate.events, ["noAd"])
+            XCTAssertTrue(observer.setupIssues.isEmpty, "\(observer.setupIssues.map(\.code))")
+            StubURLProtocol.release("/api/v1/sdk/initialize")
+        }
+        XCTAssertEqual(issue.code, QartveloAdsSetupIssue.unknownPlacement)
+        XCTAssertEqual(issue.placementId, "early_code")
+        XCTAssertTrue(issue.message.contains("format rewarded"), issue.message)
     }
 }

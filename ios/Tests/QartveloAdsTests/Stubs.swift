@@ -12,12 +12,31 @@ final class StubURLProtocol: URLProtocol {
     private static let lock = NSLock()
     private static var routes: [String: Response] = [:]
     private static var recorded: [(path: String, body: JSON)] = []
+    private static var gates: [String: DispatchSemaphore] = [:]
 
     static func reset() {
         lock.lock()
         routes = [:]
         recorded = []
+        let held = gates.values
+        gates = [:]
         lock.unlock()
+        held.forEach { $0.signal() }
+    }
+
+    /// Holds the answer to every request for `path` until `release(_:)`, so a test can act while the
+    /// request is in flight.
+    static func hold(_ path: String) {
+        lock.lock()
+        gates[path] = DispatchSemaphore(value: 0)
+        lock.unlock()
+    }
+
+    static func release(_ path: String) {
+        lock.lock()
+        let gate = gates.removeValue(forKey: path)
+        lock.unlock()
+        gate?.signal()
     }
 
     static func route(_ path: String, status: Int = 200, json: JSON) {
@@ -45,7 +64,13 @@ final class StubURLProtocol: URLProtocol {
         Self.lock.lock()
         Self.recorded.append((path, body))
         let response = Self.routes[path] ?? Response(status: 404, body: Data("{}".utf8), contentType: "application/json")
+        let gate = Self.gates[path]
         Self.lock.unlock()
+        if let gate = gate {
+            // Never hang a test process on a gate nobody released.
+            _ = gate.wait(timeout: .now() + 10)
+            gate.signal()
+        }
         let http = HTTPURLResponse(
             url: request.url!,
             statusCode: response.status,
