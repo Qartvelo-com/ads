@@ -5,8 +5,5 @@
     <meta-data
       android:name="com.google.android.gms.ads.APPLICATION_ID"
       android:value="${qartveloAdmobAppId}" />
-    <meta-data
-      android:name="com.google.android.gms.ads.DELAY_APP_MEASUREMENT_INIT"
-      android:value="${qartveloDelayMeasurement}" />
   </application>
 </manifest>

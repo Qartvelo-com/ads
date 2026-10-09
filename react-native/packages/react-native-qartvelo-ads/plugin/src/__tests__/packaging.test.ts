@@ -97,3 +97,30 @@ describe('iOS script phase for bare React Native apps', () => {
     expect(pkg.files).toContain('react-native.config.js');
   });
 });
+
+describe('Android manifests for the AdMob App ID from app.json', () => {
+  // A bare app that already declares DELAY_APP_MEASUREMENT_INIT in its own manifest and adds the app.json
+  // key without delayAppMeasurementInit must not hit a manifest merger conflict: the library declares the
+  // flag only when the option is true (like the Expo plugin, which writes it only when true).
+  const DELAY = 'com.google.android.gms.ads.DELAY_APP_MEASUREMENT_INIT';
+  const APP_ID = 'com.google.android.gms.ads.APPLICATION_ID';
+  const read = (name: string) =>
+    readFileSync(
+      join(packageRoot, 'android', 'src', name, 'AndroidManifest.xml'),
+      'utf8'
+    );
+
+  it('declares the App ID and no measurement delay flag by default', () => {
+    const manifest = read('admob');
+    expect(manifest).toContain(APP_ID);
+    expect(manifest).toContain('${qartveloAdmobAppId}');
+    expect(manifest).not.toContain(DELAY);
+    expect(manifest).not.toContain('qartveloDelayMeasurement');
+  });
+
+  it('declares the flag as true only in the delay variant', () => {
+    const manifest = read('admobDelay');
+    expect(manifest).toContain(APP_ID);
+    expect(manifest).toMatch(new RegExp(`${DELAY}"\\s+android:value="true"`));
+  });
+});

@@ -1,0 +1,14 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <uses-permission android:name="android.permission.INTERNET" />
+  <application>
+    <!-- From "@qartvelo/react-native-ads" -> admob in the host app's app.json, with delayAppMeasurementInit
+         true. The flag is declared only then, so a host manifest that declares it itself does not conflict
+         with the default variant (src/admob). -->
+    <meta-data
+      android:name="com.google.android.gms.ads.APPLICATION_ID"
+      android:value="${qartveloAdmobAppId}" />
+    <meta-data
+      android:name="com.google.android.gms.ads.DELAY_APP_MEASUREMENT_INIT"
+      android:value="true" />
+  </application>
+</manifest>

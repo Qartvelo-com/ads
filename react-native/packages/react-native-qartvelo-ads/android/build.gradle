@@ -103,15 +103,15 @@ android {
     consumerProguardFiles "proguard-rules.pro"
     manifestPlaceholders.putAll([
       qartveloAdmobAppId: qartveloAdmobAppId ?: "",
-      qartveloDelayMeasurement: qartveloDelayMeasurement ? "true" : "false",
     ])
   }
 
   if (qartveloAdmobAppId != null) {
     sourceSets {
       main {
-        // app.json sets the AdMob App ID: this manifest adds it and the measurement delay flag.
-        manifest.srcFile "src/admob/AndroidManifest.xml"
+        // app.json sets the AdMob App ID: this manifest adds it. The measurement delay flag is declared
+        // only when delayAppMeasurementInit is true (a host manifest may declare it itself otherwise).
+        manifest.srcFile qartveloDelayMeasurement ? "src/admobDelay/AndroidManifest.xml" : "src/admob/AndroidManifest.xml"
       }
     }
   }
