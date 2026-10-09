@@ -5,3 +5,5 @@ android/.gradle/
 android/.cxx/
 *.log
 .DS_Store
+plugin/build/
+*.tgz

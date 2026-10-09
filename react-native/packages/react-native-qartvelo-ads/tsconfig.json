@@ -25,5 +25,5 @@
     "target": "ESNext",
     "verbatimModuleSyntax": true
   },
-  "exclude": ["node_modules", "lib", "android"]
+  "exclude": ["node_modules", "lib", "android", "plugin"]
 }
