@@ -33,6 +33,7 @@
     "RNQartveloAds.podspec",
     "scripts/sync-ios-sdk.cjs",
     "scripts/ios-config.rb",
+    "scripts/ios-config.sh",
     "!scripts/test"
   ],
   "scripts": {

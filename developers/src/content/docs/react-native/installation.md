@@ -94,7 +94,9 @@ Put the same object under a top-level key in your app's `app.json`:
 
 Then run `pod install` and rebuild. The Android build adds the adapter and the App ID; on iOS the
 podspec adds the adapter and a build phase writes the App ID and SKAdNetwork list into the built
-`Info.plist` on every build.
+`Info.plist` on every build. The phase is a short script that finds the installed package at build
+time (through `NODE_BINARY` from `ios/.xcode.env`), so the Xcode project you commit holds no path of
+your machine.
 
 ### Test units and ad unit ids
 

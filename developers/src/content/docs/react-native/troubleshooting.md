@@ -28,5 +28,6 @@ description: Fixes for common React Native build and runtime problems.
 | Build error naming `admob.androidAppId` or `admob.iosAppId` | The AdMob App ID is missing or not an App ID (it must contain `~`) | Copy the App ID from AdMob, not an ad unit id (`/`) |
 | Build error "in an Expo project" | A top-level `"@qartvelo/react-native-ads"` key in an Expo `app.json` | Move it into the plugin entry in `expo.plugins` |
 | Build error "already sets ... AdMob App ID" | The app already declares a different AdMob App ID | Keep one App ID, in the Qartvelo config |
+| iOS build error "cannot run node" or "cannot find the package" from `@qartvelo/react-native-ads` | The Xcode build phase finds the package with the `NODE_BINARY` of `ios/.xcode.env` (and `ios/.xcode.env.local`) and does not store any machine path in your project | Set `NODE_BINARY` there to your node, run `npm install`, then `pod install` |
 
 More in the general [Troubleshooting](/resources/troubleshooting/) page.

@@ -112,6 +112,7 @@
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				00EEFC60759A1932668264C0 /* [CP] Embed Pods Frameworks */,
 				E235C05ADACE081382539298 /* [CP] Copy Pods Resources */,
+				A9784C87C1EB22C03AFC191F /* [CP-User] [QartveloAds] AdMob configuration */,
 			);
 			buildRules = (
 			);
@@ -199,6 +200,19 @@
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-QartveloAdsExample/Pods-QartveloAdsExample-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
+		};
+		A9784C87C1EB22C03AFC191F /* [CP-User] [QartveloAds] AdMob configuration */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(BUILT_PRODUCTS_DIR)/$(INFOPLIST_PATH)",
+			);
+			name = "[CP-User] [QartveloAds] AdMob configuration";
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "#!/bin/sh\n# Build phase of @qartvelo/react-native-ads for bare React Native apps (declared in react-native.config.js).\n# CocoaPods copies this file's text into the app's project.pbxproj, which teams commit, so it must not\n# name a path on the machine that ran pod install: the package is located here, at build time.\nset -e\n\n# React Native keeps NODE_BINARY in ios/.xcode.env (and optionally ios/.xcode.env.local) next to Pods.\nif [ -f \"$PODS_ROOT/../.xcode.env\" ]; then\n  . \"$PODS_ROOT/../.xcode.env\"\nfi\nif [ -f \"$PODS_ROOT/../.xcode.env.local\" ]; then\n  . \"$PODS_ROOT/../.xcode.env.local\"\nfi\n\nNODE=\"${NODE_BINARY:-node}\"\nif ! command -v \"$NODE\" > /dev/null 2>&1; then\n  echo \"error: @qartvelo/react-native-ads: cannot run node (\\\"$NODE\\\"). Set NODE_BINARY in ios/.xcode.env or ios/.xcode.env.local.\" >&2\n  exit 1\nfi\n\nPKG=$(\"$NODE\" -p \"require('path').dirname(require.resolve('@qartvelo/react-native-ads/package.json',{paths:[process.argv[1]]}))\" \"$PROJECT_DIR\" 2> /dev/null) || PKG=\"\"\nif [ -z \"$PKG\" ] || [ ! -f \"$PKG/scripts/ios-config.rb\" ]; then\n  echo \"error: @qartvelo/react-native-ads: cannot find the package from \\\"$PROJECT_DIR\\\". Run npm install (or yarn) in the app and pod install again.\" >&2\n  exit 1\nfi\n\nruby \"$PKG/scripts/ios-config.rb\"\n";
 		};
 		C38B50BA6285516D6DCD4F65 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
