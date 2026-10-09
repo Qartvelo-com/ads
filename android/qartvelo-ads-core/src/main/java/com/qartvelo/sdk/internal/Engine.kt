@@ -355,12 +355,12 @@ internal class Engine(
         when {
             placement == null -> reportSetupIssue(
                 QartveloAdsSetupIssue.UNKNOWN_PLACEMENT,
-                "Placement '$placementId' does not exist for this Android app. Create it in the Qartvelo Ads dashboard as a ${format.wireName} placement.",
+                "Placement '$placementId' does not exist for this Android app. Create it in the Qartvelo Ads dashboard with the format ${format.wireName}.",
                 placementId,
             )
             placement.format != null && placement.format != format -> reportSetupIssue(
                 QartveloAdsSetupIssue.FORMAT_MISMATCH,
-                "Placement '$placementId' is a ${placement.format.wireName} placement but is used as ${format.wireName}. Use a ${format.wireName} placement code.",
+                "Placement '$placementId' has the format ${placement.format.wireName} in the Qartvelo Ads dashboard for this Android app, but is used as ${format.wireName}. Use a placement code with the format ${format.wireName}.",
                 placementId,
             )
         }

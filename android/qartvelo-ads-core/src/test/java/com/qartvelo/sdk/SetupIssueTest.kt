@@ -77,7 +77,7 @@ class SetupIssueTest : SdkTest() {
         val issue = issues.single()
         assertEquals(QartveloAdsSetupIssue.UNKNOWN_PLACEMENT, issue.code)
         assertEquals("level_up", issue.placementId)
-        assertTrue(issue.message, issue.message.contains("interstitial placement"))
+        assertTrue(issue.message, issue.message.contains("format interstitial"))
     }
 
     @Test
@@ -86,7 +86,7 @@ class SetupIssueTest : SdkTest() {
         loadAndWait(AdFormat.INTERSTITIAL, "home_banner")
         awaitMain(message = "setup issue") { issues.isNotEmpty() }
         assertEquals(QartveloAdsSetupIssue.FORMAT_MISMATCH, issues.single().code)
-        assertTrue(issues.single().message, issues.single().message.contains("banner placement"))
+        assertTrue(issues.single().message, issues.single().message.contains("format banner"))
     }
 
     @Test
@@ -113,6 +113,24 @@ class SetupIssueTest : SdkTest() {
         QartveloAds.loadInterstitial("early_code", listener)
         awaitMain(message = "setup issue for early_code") { issues.any { it.placementId == "early_code" } }
         assertEquals(QartveloAdsSetupIssue.UNKNOWN_PLACEMENT, issues.single().code)
+    }
+
+    @Test
+    fun placementsParkedBeforeFreshConfigAreJudgedWhenItArrives() {
+        // No cached config: loads wait for the grace period, then run while the backend is still silent.
+        backend.initDelayMs = 1_000
+        QartveloAds.initialize(app, APP_KEY, options(timeoutMs = 300)) { _, _ -> }
+        awaitMain(message = "initialize request") { backend.count("/api/v1/sdk/initialize") == 1 }
+        settle(50)
+        QartveloAds.loadInterstitial("early_code", listener)
+        advance(300)
+        settle(50)
+        assertTrue("config has not arrived, so nothing is judged yet: $issues", issues.isEmpty())
+
+        awaitMain(message = "setup issue for early_code") { issues.any { it.placementId == "early_code" } }
+        val issue = issues.single()
+        assertEquals(QartveloAdsSetupIssue.UNKNOWN_PLACEMENT, issue.code)
+        assertTrue(issue.message, issue.message.contains("format interstitial"))
     }
 
     @Test
