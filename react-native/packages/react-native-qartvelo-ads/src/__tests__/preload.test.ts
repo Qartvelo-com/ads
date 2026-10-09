@@ -88,6 +88,29 @@ describe('preload', () => {
     expect(fake.native.loadRewarded.mock.calls).toEqual([['reward_coins']]);
   });
 
+  it('reloads a preloaded placement when loadIfNeeded gives up after a failed load', async () => {
+    await QartveloAds.initialize({
+      appKey: 'app_x',
+      preload: { rewarded: ['reward_coins'] },
+    });
+    await flush();
+    fake.native.loadRewarded.mockClear();
+    fake.native.isRewardedReady.mockResolvedValue(false);
+    fake.native.loadRewarded.mockRejectedValueOnce(
+      nativeError('no_fill', 'No ad')
+    );
+    await expect(
+      QartveloAds.showRewarded('reward_coins', { loadIfNeeded: true })
+    ).resolves.toEqual({ shown: false, rewarded: false });
+    expect(fake.native.showRewarded).not.toHaveBeenCalled();
+    await flush();
+    // The on-demand load that failed, then the reload that keeps the placement preloaded.
+    expect(fake.native.loadRewarded.mock.calls).toEqual([
+      ['reward_coins'],
+      ['reward_coins'],
+    ]);
+  });
+
   it('rejects invalid preload lists without initializing', async () => {
     await expect(
       QartveloAds.initialize({

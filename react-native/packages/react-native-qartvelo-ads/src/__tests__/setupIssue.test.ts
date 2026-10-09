@@ -53,6 +53,26 @@ describe('setupIssue', () => {
     );
   });
 
+  it('warns for an issue the SDK reports while initialize is still running', async () => {
+    // The native subscription must be open before the native call starts: initializeSdk can emit
+    // (for example a package mismatch from the first backend answer) before its promise settles.
+    fake.native.initializeSdk.mockImplementationOnce(async () => {
+      fake.emit(
+        issue('package_mismatch', "This app key is registered for 'com.other'")
+      );
+    });
+    await QartveloAds.initialize({ appKey: 'app_x' });
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn).toHaveBeenCalledWith(
+      "[QartveloAds] This app key is registered for 'com.other'"
+    );
+  });
+
+  it('keeps one native subscription after initialize in development, with no app listener', async () => {
+    await QartveloAds.initialize({ appKey: 'app_x' });
+    expect(fake.subscriberCount()).toBe(1);
+  });
+
   it('warns once per code and placement', async () => {
     await QartveloAds.initialize({ appKey: 'app_x' });
     fake.emit(issue('unknown_placement', 'Create level_up', 'level_up'));
@@ -91,6 +111,18 @@ describe('setupIssue', () => {
       fake.emit(issue('package_mismatch', 'Wrong key'));
       expect(received).toHaveLength(1);
       expect(warn).not.toHaveBeenCalled();
+    } finally {
+      globals.__DEV__ = dev;
+    }
+  });
+
+  it('holds no native subscription after initialize in release builds, with no app listener', async () => {
+    const globals = global as unknown as { __DEV__: boolean };
+    const dev = globals.__DEV__;
+    globals.__DEV__ = false;
+    try {
+      await QartveloAds.initialize({ appKey: 'app_x' });
+      expect(fake.subscriberCount()).toBe(0);
     } finally {
       globals.__DEV__ = dev;
     }
