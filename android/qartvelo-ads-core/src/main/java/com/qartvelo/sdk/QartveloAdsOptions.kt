@@ -26,4 +26,11 @@ public data class QartveloAdsOptions @JvmOverloads constructor(
      * not debuggable, so they are unaffected. Set to false to see exactly what a release build does.
      */
     val testModeInDebugBuilds: Boolean = true,
+    /**
+     * Use the fallback network's public test units (Google's for AdMob) in debuggable builds, even
+     * when test mode is off, so development never requests live AdMob ads. Release builds are not
+     * debuggable, so they are unaffected. Set to false to request your real AdMob units from a debug
+     * build.
+     */
+    val admobTestUnitsInDebugBuilds: Boolean = true,
 )

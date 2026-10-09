@@ -1,5 +1,6 @@
 package com.qartvelo.sdk
 
+import android.content.pm.ApplicationInfo
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.SocketPolicy
 import org.junit.Assert.assertEquals
@@ -206,5 +207,31 @@ class FallbackTest : SdkTest() {
         assertTrue(listener.has("loaded:game_end:ADMOB"))
         assertEquals("adapter substitutes its test unit for the empty id", "", adapter.loads.single().second)
         assertEquals(true, adapter.settings?.testMode)
+    }
+
+    @Test
+    fun debuggableBuildsGiveTheAdapterTestUnitsUnlessOptedOut() {
+        val info = app.applicationInfo
+        val original = info.flags
+        try {
+            info.flags = original or ApplicationInfo.FLAG_DEBUGGABLE
+            val debug = FakeAdapter()
+            assertTrue(init(options(admobTestUnitsInDebugBuilds = true), debug))
+            assertFalse("Qartvelo test mode stays off", backend.bodies("/api/v1/sdk/initialize").last().getBoolean("test_mode"))
+            assertEquals(true, debug.settings?.testMode)
+
+            QartveloAds.resetForTests()
+            val optedOut = FakeAdapter()
+            assertTrue(init(options(admobTestUnitsInDebugBuilds = false), optedOut))
+            assertEquals(false, optedOut.settings?.testMode)
+
+            QartveloAds.resetForTests()
+            info.flags = original and ApplicationInfo.FLAG_DEBUGGABLE.inv()
+            val release = FakeAdapter()
+            assertTrue(init(options(admobTestUnitsInDebugBuilds = true), release))
+            assertEquals(false, release.settings?.testMode)
+        } finally {
+            info.flags = original
+        }
     }
 }

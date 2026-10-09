@@ -109,6 +109,7 @@ internal class Engine(
     var fullscreenShowing: Boolean = false
 
     private val emulator: Boolean = Emulator.current()
+    private val debuggable: Boolean = (appContext.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
 
     /**
      * Test mode is purely the publisher's local option. The backend only echoes it back, so it is
@@ -118,8 +119,14 @@ internal class Engine(
      * is false; Play only accepts non-debuggable builds, so users never see test ads.
      * Emulators are always in test mode (the backend enforces it from `is_emulator` as well).
      */
-    val testMode: Boolean = options.testMode || emulator ||
-        (options.testModeInDebugBuilds && (appContext.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0)
+    val testMode: Boolean = options.testMode || emulator || (options.testModeInDebugBuilds && debuggable)
+
+    /**
+     * The fallback network uses its public test units in test mode and, unless
+     * [QartveloAdsOptions.admobTestUnitsInDebugBuilds] is false, in every debuggable build: a
+     * developer never requests live AdMob ads, even while watching live Qartvelo Ads campaigns.
+     */
+    private val fallbackTestUnits: Boolean = testMode || (options.admobTestUnitsInDebugBuilds && debuggable)
 
     // ---- initialization -------------------------------------------------------------------------
 
@@ -130,6 +137,9 @@ internal class Engine(
             OurLog.i("Emulator: test mode is on, ads are labelled \"Test ad\" and never billed")
         } else if (testMode && !options.testMode) {
             OurLog.i("Debuggable build: test mode is on, ads are labelled \"Test ad\" and never billed (testModeInDebugBuilds)")
+        }
+        if (fallbackTestUnits && !testMode) {
+            OurLog.i("Debuggable build: the AdMob fallback uses Google's test units (admobTestUnitsInDebugBuilds)")
         }
         io.execute {
             guard("cached config") {
@@ -245,7 +255,7 @@ internal class Engine(
         guard("adapter settings") { adapter.updateSettings(fallbackSettings()) }
     }
 
-    private fun fallbackSettings() = FallbackSettings(testMode = testMode, privacy = QartveloAds.currentPrivacy())
+    private fun fallbackSettings() = FallbackSettings(testMode = fallbackTestUnits, privacy = QartveloAds.currentPrivacy())
 
     /**
      * The fallback ad unit for a placement, or null when fallback is impossible: adapter missing,
