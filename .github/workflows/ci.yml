@@ -124,11 +124,13 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
             platform: android
-          - os: macos-15
+          # Expo SDK 55 needs Xcode 26.2+; macos-15 defaults to Xcode 16.4.
+          - os: macos-26
             platform: ios
     steps:
       - uses: actions/checkout@v4
