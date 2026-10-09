@@ -105,7 +105,13 @@ internal sealed class AdResponse {
 }
 
 /** Non-2xx API answer with the contract's error envelope. */
-internal class ApiException(val httpStatus: Int, val code: String, message: String) : IOException("$code ($httpStatus): $message") {
+internal class ApiException(
+    val httpStatus: Int,
+    val code: String,
+    message: String,
+    /** The envelope's optional `error.details` object. */
+    val details: JSONObject? = null,
+) : IOException("$code ($httpStatus): $message") {
     val isSessionError: Boolean get() = code == "session_expired" || code == "invalid_session"
 }
 

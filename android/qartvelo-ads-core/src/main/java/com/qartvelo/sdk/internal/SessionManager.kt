@@ -22,6 +22,8 @@ internal class SessionManager(
     private val initBody: () -> JSONObject,
     private val initTimeoutMs: Long,
     private val onInitialized: (InitResult) -> Unit,
+    /** Called on the session executor with every failed initialize attempt. */
+    private val onFailed: (Throwable) -> Unit = {},
 ) {
     private val lock = Any()
     private var inFlight: Attempt? = null
@@ -93,6 +95,7 @@ internal class SessionManager(
                     lastFailureAt = Clock.elapsed()
                 }
                 OurLog.e("QartveloAds session request failed: ${t.message}")
+                onFailed(t)
             } finally {
                 synchronized(lock) { inFlight = null }
                 attempt.complete(error)

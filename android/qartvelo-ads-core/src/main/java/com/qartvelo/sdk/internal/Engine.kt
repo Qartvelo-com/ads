@@ -8,7 +8,9 @@ import com.qartvelo.sdk.QartveloAds
 import com.qartvelo.sdk.QartveloAdsError
 import com.qartvelo.sdk.QartveloAdsErrorCode
 import com.qartvelo.sdk.QartveloAdsInitListener
+import com.qartvelo.sdk.QartveloAdsListener
 import com.qartvelo.sdk.QartveloAdsOptions
+import com.qartvelo.sdk.QartveloAdsSetupIssue
 import com.qartvelo.sdk.fallback.FallbackAdapter
 import com.qartvelo.sdk.fallback.FallbackSettings
 import org.json.JSONObject
@@ -64,6 +66,7 @@ internal class Engine(
         initBody = ::initBody,
         initTimeoutMs = maxOf(options.requestTimeoutMs, MIN_INIT_TIMEOUT_MS),
         onInitialized = ::onSessionInitialized,
+        onFailed = ::onSessionFailed,
     )
 
     @Volatile
@@ -227,6 +230,40 @@ internal class Engine(
         configCheckedAt = configFetchedAt
         guard("config persist") { configStore.save(result.cacheableJson) }
         Main.post { updateAdapterSettings() }
+    }
+
+    private val reportedSetupIssues: MutableSet<String> = ConcurrentHashMap.newKeySet()
+
+    /** Logs a setup issue once per process and tells the global listeners. Any thread. */
+    fun reportSetupIssue(code: String, message: String, placementId: String? = null) {
+        if (!reportedSetupIssues.add("$code|${placementId.orEmpty()}")) return
+        OurLog.e("Setup issue ($code): $message")
+        val issue = QartveloAdsSetupIssue(code, message, placementId)
+        Listeners.emit(emptyList<QartveloAdsListener?>(), "onSetupIssue") { it.onSetupIssue(issue) }
+    }
+
+    /** Session executor. Turns rejected app keys into setup issues. */
+    private fun onSessionFailed(t: Throwable) {
+        val api = t as? ApiException ?: return
+        val running = appContext.packageName
+        when (api.code) {
+            QartveloAdsSetupIssue.PACKAGE_MISMATCH -> {
+                val registered = api.details?.optString("registered_package").orEmpty()
+                val message = if (registered.isNotEmpty()) {
+                    "This app key is registered for '$registered', but this app is '$running'. Use the key of the app registered for '$running', or correct the package name in the Qartvelo Ads dashboard."
+                } else {
+                    "This app key is not registered for '$running'. Use the key of the app registered for '$running', or correct the package name in the Qartvelo Ads dashboard."
+                }
+                reportSetupIssue(QartveloAdsSetupIssue.PACKAGE_MISMATCH, message)
+            }
+            QartveloAdsSetupIssue.PLATFORM_MISMATCH -> {
+                val owner = if (api.details?.optString("platform") == "ios") "the iOS app" else "an app of another platform"
+                reportSetupIssue(
+                    QartveloAdsSetupIssue.PLATFORM_MISMATCH,
+                    "This app key belongs to $owner. Register this Android app in the Qartvelo Ads dashboard and use its own key.",
+                )
+            }
+        }
     }
 
     private fun toInitError(t: Throwable): QartveloAdsError = when {

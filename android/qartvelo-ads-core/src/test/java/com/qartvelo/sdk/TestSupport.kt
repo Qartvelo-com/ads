@@ -127,6 +127,8 @@ class FakeBackend : Dispatcher() {
         Placement("home_banner", "banner"),
     )
     var initStatus = 200
+    var initErrorCode = "invalid_app_key"
+    var initErrorDetails: JSONObject? = null
     var initDelayMs = 0L
     var servingEnabled = true
     var sessionTtlMs = 3_600_000L
@@ -180,8 +182,11 @@ class FakeBackend : Dispatcher() {
         JSONObject().put("status", "no_fill").put("request_id", "req_nf").put("fallback", fallback).put("reason", "no_eligible_campaign"),
     )
 
-    fun error(status: Int, code: String): MockResponse =
-        json(JSONObject().put("error", JSONObject().put("code", code).put("message", code)), status)
+    fun error(status: Int, code: String, details: JSONObject? = null): MockResponse {
+        val error = JSONObject().put("code", code).put("message", code)
+        if (details != null) error.put("details", details)
+        return json(JSONObject().put("error", error), status)
+    }
 
     fun defaultCreatives() {
         creatives["/creatives/i.png"] = MockResponse().setBody(Buffer().write(pngBytes(108, 192))).setHeader("Content-Type", "image/png")
@@ -195,7 +200,7 @@ class FakeBackend : Dispatcher() {
         requests.add(path to body)
         return when {
             path == "/api/v1/sdk/initialize" ->
-                (if (initStatus == 200) json(initJson(body.optBoolean("test_mode"))) else error(initStatus, "invalid_app_key"))
+                (if (initStatus == 200) json(initJson(body.optBoolean("test_mode"))) else error(initStatus, initErrorCode, initErrorDetails))
                     .also { if (initDelayMs > 0) it.setBodyDelay(initDelayMs, TimeUnit.MILLISECONDS) }
             path == "/api/v1/ads/request" -> {
                 val response = synchronized(adResponses) { if (adResponses.isEmpty()) null else adResponses.removeAt(0) }

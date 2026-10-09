@@ -22,6 +22,9 @@ public interface QartveloAdsListener {
     public fun onReward(info: QartveloAdsAdInfo, reward: QartveloAdsReward) {}
     public fun onFallbackStarted(placementId: String, format: AdFormat, reason: String) {}
     public fun onNoAdAvailable(placementId: String, format: AdFormat) {}
+
+    /** A setup problem to fix (wrong key or package, missing placement). Delivered to global listeners. */
+    public fun onSetupIssue(issue: QartveloAdsSetupIssue) {}
 }
 
 /**

@@ -146,6 +146,7 @@ internal class ApiClient(
                     httpStatus = response.code,
                     code = err?.optStringOrNull("code") ?: "http_${response.code}",
                     message = err?.optStringOrNull("message") ?: "HTTP ${response.code}",
+                    details = err?.optJSONObject("details"),
                 )
             }
             return json to serverNow(response)
