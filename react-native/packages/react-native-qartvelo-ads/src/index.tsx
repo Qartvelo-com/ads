@@ -23,6 +23,7 @@ export type {
   QartveloAdsSubscription,
   Reward,
   RewardedShowResult,
+  SetupIssueCode,
   ShowResult,
 } from './types';
 

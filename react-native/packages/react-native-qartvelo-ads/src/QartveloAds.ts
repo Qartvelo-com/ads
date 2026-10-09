@@ -12,6 +12,7 @@ import type {
   AdInfo,
   LogLevel,
   QartveloAdsEventListener,
+  QartveloAdsEventMap,
   QartveloAdsEventType,
   QartveloAdsInitOptions,
   QartveloAdsPrivacy,
@@ -75,7 +76,24 @@ function load(placementId: string, format: AdFormat): Promise<AdInfo> {
   });
 }
 
-const events = new EventRegistry(availableNative);
+const warnedSetupIssues = new Set<string>();
+
+/** Development builds print each setup issue once, so it shows in LogBox without app code. */
+function warnSetupIssue(issue: QartveloAdsEventMap['setupIssue']): void {
+  if (!__DEV__) {
+    return;
+  }
+  const key = `${issue.code}|${issue.placementId ?? ''}`;
+  if (warnedSetupIssues.has(key)) {
+    return;
+  }
+  warnedSetupIssues.add(key);
+  console.warn(`[QartveloAds] ${issue.message}`);
+}
+
+const events = new EventRegistry(availableNative, {
+  onSetupIssue: warnSetupIssue,
+});
 
 export const QartveloAds = {
   /**
@@ -84,9 +102,13 @@ export const QartveloAds = {
    * running on its cached configuration and can still fall back to AdMob.
    */
   initialize(options: QartveloAdsInitOptions): Promise<void> {
-    return run(undefined, (native) =>
-      native.initializeSdk(toNativeInitOptions(options))
-    );
+    return run(undefined, async (native) => {
+      const nativeOptions = toNativeInitOptions(options);
+      if (__DEV__) {
+        events.keepNativeSubscription();
+      }
+      await native.initializeSdk(nativeOptions);
+    });
   },
 
   /** True once the first initialization attempt has finished (successfully or in fallback mode). */

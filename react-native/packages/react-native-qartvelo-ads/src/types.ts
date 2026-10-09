@@ -111,6 +111,13 @@ export interface QartveloAdsPrivacy {
   underAgeOfConsent?: boolean;
 }
 
+/** Setup problems reported through the `setupIssue` event. */
+export type SetupIssueCode =
+  | 'package_mismatch'
+  | 'platform_mismatch'
+  | 'unknown_placement'
+  | 'format_mismatch';
+
 export interface QartveloAdsErrorInfo {
   code: QartveloAdsErrorCode;
   message: string;
@@ -146,6 +153,16 @@ export interface QartveloAdsEventMap {
     reason: FallbackReason;
   };
   noAdAvailable: EventBase & { type: 'noAdAvailable' };
+  /**
+   * A setup problem to fix: an app key for another package or platform, or a placement code the
+   * dashboard does not have (or has with another format). Printed with `console.warn` in development.
+   */
+  setupIssue: {
+    type: 'setupIssue';
+    code: SetupIssueCode;
+    message: string;
+    placementId?: string;
+  };
 }
 
 export type QartveloAdsEventType = keyof QartveloAdsEventMap;

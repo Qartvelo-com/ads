@@ -7,6 +7,7 @@ import com.qartvelo.sdk.QartveloAdsError
 import com.qartvelo.sdk.QartveloAdsErrorCode
 import com.qartvelo.sdk.QartveloAdsListener
 import com.qartvelo.sdk.QartveloAdsReward
+import com.qartvelo.sdk.QartveloAdsSetupIssue
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
 
@@ -129,6 +130,12 @@ internal class AdEventForwarder(
 
     override fun onNoAdAvailable(placementId: String, format: AdFormat) =
         emit(placementId, format, Wire.event("noAdAvailable", placementId, format))
+
+    override fun onSetupIssue(issue: QartveloAdsSetupIssue) {
+        val event = Wire.event("setupIssue", issue.placementId.orEmpty(), null)
+        event["error"] = mapOf("code" to issue.code, "message" to issue.message)
+        sink(event)
+    }
 
     private fun emit(placementId: String, format: AdFormat, event: Map<String, Any?>) {
         PlacementFormats.record(placementId, format)

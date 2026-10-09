@@ -10,6 +10,7 @@ import com.qartvelo.sdk.QartveloAdsLogLevel
 import com.qartvelo.sdk.QartveloAdsOptions
 import com.qartvelo.sdk.QartveloAdsPrivacy
 import com.qartvelo.sdk.QartveloAdsReward
+import com.qartvelo.sdk.QartveloAdsSetupIssue
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -77,6 +78,18 @@ class WireAndOptionsTest {
         )
         assertEquals(null, events[1]["format"])
         assertEquals(mapOf("code" to "not_initialized", "message" to "init first"), events[1]["error"])
+    }
+
+    @Test
+    fun forwardsSetupIssuesWithCodeAndMessage() {
+        val events = mutableListOf<Map<String, Any?>>()
+        val forwarder = AdEventForwarder({ null }) { events += it }
+        forwarder.onSetupIssue(QartveloAdsSetupIssue("unknown_placement", "Create it", "level_up"))
+        forwarder.onSetupIssue(QartveloAdsSetupIssue("package_mismatch", "Wrong key", null))
+        assertEquals("setupIssue", events[0]["type"])
+        assertEquals("level_up", events[0]["placementId"])
+        assertEquals(mapOf("code" to "unknown_placement", "message" to "Create it"), events[0]["error"])
+        assertEquals("", events[1]["placementId"])
     }
 
     @Test

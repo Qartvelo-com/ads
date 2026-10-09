@@ -44,6 +44,10 @@ private final class AdRelay: NSObject, QartveloAdsDelegate {
     func qartveloAdNoAdAvailable(placementId: String, format: QartveloAdFormat) {
         event?(["type": "noAdAvailable", "placementId": placementId, "format": format.description])
     }
+    func qartveloAdsDidReportSetupIssue(_ issue: QartveloAdsSetupIssue) {
+        event?(["type": "setupIssue", "placementId": issue.placementId ?? "",
+                "error": ["code": issue.code, "message": issue.message]])
+    }
 }
 
 @objc(QartveloAdsBridge)

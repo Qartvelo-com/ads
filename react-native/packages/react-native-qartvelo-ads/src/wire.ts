@@ -19,11 +19,13 @@ import type {
   FallbackReason,
   LogLevel,
   QartveloAdsEvent,
+  QartveloAdsEventMap,
   QartveloAdsEventType,
   QartveloAdsInitOptions,
   QartveloAdsPrivacy,
   Reward,
   RewardedShowResult,
+  SetupIssueCode,
 } from './types';
 
 const FORMATS: ReadonlySet<string> = new Set<AdFormat>([
@@ -56,6 +58,7 @@ export const EVENT_TYPES: readonly QartveloAdsEventType[] = [
   'rewarded',
   'fallbackStarted',
   'noAdAvailable',
+  'setupIssue',
 ];
 const EVENT_TYPE_SET: ReadonlySet<string> = new Set(EVENT_TYPES);
 
@@ -292,6 +295,30 @@ export function toRewardedShowResult(
 
 // ---- events ------------------------------------------------------------------------------------
 
+const SETUP_ISSUE_CODES: ReadonlySet<string> = new Set<SetupIssueCode>([
+  'package_mismatch',
+  'platform_mismatch',
+  'unknown_placement',
+  'format_mismatch',
+]);
+
+function toSetupIssue(
+  raw: NativeAdEvent
+): QartveloAdsEventMap['setupIssue'] | null {
+  const code = nonEmpty(raw.error?.code);
+  const message = nonEmpty(raw.error?.message);
+  if (!code || !SETUP_ISSUE_CODES.has(code) || !message) {
+    return null;
+  }
+  const placementId = nonEmpty(raw.placementId);
+  const event: QartveloAdsEventMap['setupIssue'] = {
+    type: 'setupIssue',
+    code: code as SetupIssueCode,
+    message,
+  };
+  return placementId ? { ...event, placementId } : event;
+}
+
 /**
  * Builds a typed public event from a native payload. Returns null for payloads that do not match
  * the contract (unknown type, missing placement, missing format/source where required), so
@@ -302,6 +329,9 @@ export function toEvent(
 ): QartveloAdsEvent | null {
   if (!raw || !isEventType(raw.type)) {
     return null;
+  }
+  if (raw.type === 'setupIssue') {
+    return toSetupIssue(raw);
   }
   const placementId = nonEmpty(raw.placementId);
   if (!placementId) {

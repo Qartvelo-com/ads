@@ -11,6 +11,7 @@ import type { NativeAdEvent, Spec } from './NativeQartveloAds';
 import type {
   QartveloAdsEvent,
   QartveloAdsEventListener,
+  QartveloAdsEventMap,
   QartveloAdsEventType,
   QartveloAdsSubscription,
 } from './types';
@@ -18,12 +19,27 @@ import { EVENT_TYPES, isEventType, toEvent } from './wire';
 
 type Entry = { readonly listener: (event: QartveloAdsEvent) => void };
 
+export interface EventRegistryHooks {
+  /** Called with every setup issue from native, whether or not the app listens for them. */
+  onSetupIssue?: (issue: QartveloAdsEventMap['setupIssue']) => void;
+}
+
 export class EventRegistry {
   private readonly entries = new Map<QartveloAdsEventType, Set<Entry>>();
   private nativeSubscription: EventSubscription | null = null;
+  private keepAlive = false;
 
   /** `getNative` returns null on platforms without the native module; listeners are then inert. */
-  constructor(private readonly getNative: () => Spec | null) {}
+  constructor(
+    private readonly getNative: () => Spec | null,
+    private readonly hooks: EventRegistryHooks = {}
+  ) {}
+
+  /** Keeps the native subscription open without app listeners, so hooks see every event. */
+  keepNativeSubscription(): void {
+    this.keepAlive = true;
+    this.syncNativeSubscription();
+  }
 
   add<T extends QartveloAdsEventType>(
     type: T,
@@ -94,7 +110,7 @@ export class EventRegistry {
   }
 
   private syncNativeSubscription(): void {
-    const wanted = this.entries.size > 0;
+    const wanted = this.keepAlive || this.entries.size > 0;
     if (wanted && !this.nativeSubscription) {
       const native = this.getNative();
       if (native) {
@@ -111,6 +127,9 @@ export class EventRegistry {
     const event = toEvent(raw);
     if (!event) {
       return;
+    }
+    if (event.type === 'setupIssue') {
+      this.hooks.onSetupIssue?.(event);
     }
     const set = this.entries.get(event.type);
     if (!set) {
