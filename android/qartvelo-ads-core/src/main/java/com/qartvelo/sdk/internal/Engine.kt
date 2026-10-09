@@ -229,7 +229,10 @@ internal class Engine(
         configFetchedAt = Clock.elapsed()
         configCheckedAt = configFetchedAt
         guard("config persist") { configStore.save(result.cacheableJson) }
-        Main.post { updateAdapterSettings() }
+        Main.post {
+            updateAdapterSettings()
+            recheckPlacements()
+        }
     }
 
     private val reportedSetupIssues: MutableSet<String> = ConcurrentHashMap.newKeySet()
@@ -331,6 +334,44 @@ internal class Engine(
     // ---- placements -----------------------------------------------------------------------------
 
     fun placement(placementId: String): PlacementConfig? = remoteConfig?.placements?.get(placementId)
+
+    /** Placements used before fresh config arrived; checked again once it does. Main thread. */
+    private val uncheckedPlacements = LinkedHashMap<String, AdFormat>()
+
+    /**
+     * Reports a placement code the dashboard does not have, or has with another format. Only config
+     * fetched from the backend in this process is trusted: a cached copy can predate placements
+     * created since. Main thread.
+     */
+    fun checkPlacement(placementId: String, format: AdFormat) {
+        // Read the fetch marker first: the fresh config is stored before it is set.
+        val fetched = configFetchedAt != 0L
+        val config = remoteConfig
+        if (!fetched || config == null) {
+            uncheckedPlacements[placementId] = format
+            return
+        }
+        val placement = config.placements[placementId]
+        when {
+            placement == null -> reportSetupIssue(
+                QartveloAdsSetupIssue.UNKNOWN_PLACEMENT,
+                "Placement '$placementId' does not exist for this Android app. Create it in the Qartvelo Ads dashboard as a ${format.wireName} placement.",
+                placementId,
+            )
+            placement.format != null && placement.format != format -> reportSetupIssue(
+                QartveloAdsSetupIssue.FORMAT_MISMATCH,
+                "Placement '$placementId' is a ${placement.format.wireName} placement but is used as ${format.wireName}. Use a ${format.wireName} placement code.",
+                placementId,
+            )
+        }
+    }
+
+    /** Main thread. */
+    private fun recheckPlacements() {
+        val pending = LinkedHashMap(uncheckedPlacements)
+        uncheckedPlacements.clear()
+        pending.forEach { (id, format) -> checkPlacement(id, format) }
+    }
 
     fun ourAdsEnabled(placement: PlacementConfig?): Boolean =
         remoteConfig?.servingEnabled != false && placement?.qartveloEnabled != false

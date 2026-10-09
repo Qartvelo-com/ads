@@ -166,6 +166,7 @@ public object QartveloAds {
                 e == null -> fail(listener, id, QartveloAdsErrorCode.NOT_INITIALIZED, "Call QartveloAds.initialize() first")
                 id.isEmpty() -> fail(listener, id, QartveloAdsErrorCode.INVALID_PLACEMENT, "placementId is empty")
                 else -> Main.run {
+                    e.checkPlacement(id, format)
                     if (e.loadsReady) {
                         controller(e, id, format).show(activity, listener)
                     } else {

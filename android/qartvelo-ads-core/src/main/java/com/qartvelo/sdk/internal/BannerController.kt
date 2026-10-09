@@ -142,6 +142,7 @@ internal class BannerController(private val engine: Engine, val placementId: Str
 
     private fun loadNow() {
         val placement = engine.placement(placementId)
+        engine.checkPlacement(placementId, AdFormat.BANNER)
         if (placement?.format != null && placement.format != AdFormat.BANNER) {
             loading = false
             val error = QartveloAdsError(QartveloAdsErrorCode.INVALID_PLACEMENT, "Placement '$placementId' is not a banner placement")

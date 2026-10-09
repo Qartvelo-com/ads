@@ -63,6 +63,7 @@ internal class FullscreenController(
             return
         }
         val placement = engine.placement(placementId)
+        engine.checkPlacement(placementId, format)
         if (placement?.format != null && placement.format != format) {
             val error = QartveloAdsError(
                 QartveloAdsErrorCode.INVALID_PLACEMENT,
