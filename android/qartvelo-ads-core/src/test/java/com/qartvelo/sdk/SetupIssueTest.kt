@@ -51,6 +51,16 @@ class SetupIssueTest : SdkTest() {
     }
 
     @Test
+    fun aJsonNullRegisteredPackageGetsTheFallbackMessage() {
+        rejectInit("package_mismatch", JSONObject().put("registered_package", JSONObject.NULL).put("platform", "android"))
+        init()
+        awaitMain(message = "setup issue") { issues.isNotEmpty() }
+        val message = issues.single().message
+        assertTrue(message, message.contains("is not registered for '${app.packageName}'"))
+        assertTrue(message, !message.contains("'null'"))
+    }
+
+    @Test
     fun platformMismatchNamesThePlatformOfTheKey() {
         rejectInit("platform_mismatch", JSONObject().put("platform", "ios"))
         init()

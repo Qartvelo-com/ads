@@ -251,8 +251,8 @@ internal class Engine(
         val running = appContext.packageName
         when (api.code) {
             QartveloAdsSetupIssue.PACKAGE_MISMATCH -> {
-                val registered = api.details?.optString("registered_package").orEmpty()
-                val message = if (registered.isNotEmpty()) {
+                val registered = api.details?.optStringOrNull("registered_package")
+                val message = if (registered != null) {
                     "This app key is registered for '$registered', but this app is '$running'. Use the key of the app registered for '$running', or correct the package name in the Qartvelo Ads dashboard."
                 } else {
                     "This app key is not registered for '$running'. Use the key of the app registered for '$running', or correct the package name in the Qartvelo Ads dashboard."
@@ -260,7 +260,7 @@ internal class Engine(
                 reportSetupIssue(QartveloAdsSetupIssue.PACKAGE_MISMATCH, message)
             }
             QartveloAdsSetupIssue.PLATFORM_MISMATCH -> {
-                val owner = if (api.details?.optString("platform") == "ios") "the iOS app" else "an app of another platform"
+                val owner = if (api.details?.optStringOrNull("platform") == "ios") "the iOS app" else "an app of another platform"
                 reportSetupIssue(
                     QartveloAdsSetupIssue.PLATFORM_MISMATCH,
                     "This app key belongs to $owner. Register this Android app in the Qartvelo Ads dashboard and use its own key.",
