@@ -21,7 +21,7 @@ description: Fixes for common React Native build and runtime problems.
 
 | Warning code | Meaning | Fix |
 |---|---|---|
-| `package_mismatch` | The app key is registered for another package name or bundle ID | Use the key of the app registered for this package, or correct the package in the dashboard |
+| `package_mismatch` | The app key is registered for another package name or bundle ID (live mode only: test mode works with any package, e.g. a `.dev` debug build) | Use the key of the app registered for this package, or correct the package in the dashboard |
 | `platform_mismatch` | The app key belongs to the app of the other platform | Register an app per platform and pass `appKey: { android, ios }` |
 | `unknown_placement` | The placement code does not exist for this app | Create it in the dashboard with the format named in the warning |
 | `format_mismatch` | The placement exists with another format | Use a placement of the right format, or change its format |
