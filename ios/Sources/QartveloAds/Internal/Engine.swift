@@ -234,7 +234,10 @@ final class Engine {
         configCheckedAt = configFetchedAt
         stateLock.unlock()
         configStore.save(result.cacheableJSON)
-        Main.post { [self] in updateAdapterSettings() }
+        Main.post { [self] in
+            updateAdapterSettings()
+            recheckPlacements()
+        }
     }
 
     private let issuesLock = NSLock()
@@ -330,6 +333,45 @@ final class Engine {
 
     func placement(_ placementId: String) -> PlacementConfig? {
         remoteConfig?.placements[placementId]
+    }
+
+    /// Placements used before fresh config arrived; checked again once it does. Main thread.
+    private var uncheckedPlacements: [String: QartveloAdFormat] = [:]
+
+    /// Reports a placement code the dashboard does not have, or has with another format. Only config
+    /// fetched from the backend in this process is trusted: a cached copy can predate placements
+    /// created since. Main thread.
+    func checkPlacement(_ placementId: String, _ format: QartveloAdFormat) {
+        stateLock.lock()
+        let fresh = configFetchedAt != 0
+        let config = storedRemoteConfig
+        stateLock.unlock()
+        guard fresh, let config = config else {
+            uncheckedPlacements[placementId] = format
+            return
+        }
+        guard let placement = config.placements[placementId] else {
+            reportSetupIssue(
+                QartveloAdsSetupIssue.unknownPlacement,
+                "Placement '\(placementId)' does not exist for this iOS app. Create it in the Qartvelo Ads dashboard with the format \(format.wireName).",
+                placementId: placementId
+            )
+            return
+        }
+        if let configured = placement.format, configured != format {
+            reportSetupIssue(
+                QartveloAdsSetupIssue.formatMismatch,
+                "Placement '\(placementId)' has the format \(configured.wireName) in the Qartvelo Ads dashboard for this iOS app, but is used as \(format.wireName). Use a placement code with the format \(format.wireName).",
+                placementId: placementId
+            )
+        }
+    }
+
+    /// Main thread.
+    private func recheckPlacements() {
+        let pending = uncheckedPlacements
+        uncheckedPlacements.removeAll()
+        for (placementId, format) in pending { checkPlacement(placementId, format) }
     }
 
     func qartveloEnabled(_ placement: PlacementConfig?) -> Bool {

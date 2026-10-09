@@ -52,6 +52,7 @@ final class FullscreenController {
             return
         }
         let placement = engine.placement(placementId)
+        engine.checkPlacement(placementId, format)
         if let configured = placement?.format, configured != format {
             let error = QartveloAdsError(.invalidPlacement, "Placement '\(placementId)' is a \(configured.wireName) placement")
             Listeners.emit(delegate) { $0.qartveloAdDidFailToLoad?(placementId: self.placementId, error: error) }

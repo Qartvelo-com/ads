@@ -99,4 +99,49 @@ final class SetupIssueTests: XCTestCase {
         drainMain()
         XCTAssertTrue(observer.setupIssues.isEmpty)
     }
+
+    /// Loads an interstitial and waits for the load to end.
+    private func load(_ placementId: String) {
+        let delegate = RecordingDelegate()
+        let finished = expectation(description: "load of \(placementId) finished")
+        finished.assertForOverFulfill = false
+        delegate.onEvent = { event in
+            if event.hasPrefix("loaded") || event.hasPrefix("failed") { finished.fulfill() }
+        }
+        QartveloAds.loadInterstitial(placementId, delegate: delegate)
+        wait(for: [finished], timeout: 10)
+    }
+
+    func testUnknownPlacementIsReportedOncePerCode() {
+        initialize()
+        load("level_up")
+        load("level_up")
+        drainMain()
+        XCTAssertEqual(observer.setupIssues.map(\.code), [QartveloAdsSetupIssue.unknownPlacement])
+        XCTAssertEqual(observer.setupIssues.first?.placementId, "level_up")
+        XCTAssertTrue(observer.setupIssues.first?.message.contains("format interstitial") == true)
+    }
+
+    func testFormatMismatchIsReported() {
+        initialize()
+        load("home_banner")
+        drainMain()
+        XCTAssertEqual(observer.setupIssues.map(\.code), [QartveloAdsSetupIssue.formatMismatch])
+        XCTAssertTrue(observer.setupIssues.first?.message.contains("format banner") == true)
+    }
+
+    func testKnownPlacementsReportNothing() {
+        initialize()
+        load("level_end")
+        drainMain()
+        XCTAssertTrue(observer.setupIssues.isEmpty)
+    }
+
+    func testRejectedKeysNeverJudgePlacements() {
+        rejectInit("package_mismatch", details: nil)
+        initialize()
+        load("level_up")
+        drainMain()
+        XCTAssertEqual(observer.setupIssues.map(\.code), [QartveloAdsSetupIssue.packageMismatch])
+    }
 }

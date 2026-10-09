@@ -125,6 +125,7 @@ final class BannerController {
 
     private func loadNow() {
         let placement = engine.placement(placementId)
+        engine.checkPlacement(placementId, .banner)
         if let format = placement?.format, format != .banner {
             loading = false
             let placementId = self.placementId

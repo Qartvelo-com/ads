@@ -165,6 +165,7 @@ import UIKit
                 fail(delegate, id, .invalidPlacement, "placementId is empty")
                 return
             }
+            engine.checkPlacement(id, format)
             if engine.loadsReady {
                 controller(engine, id, format).show(from: viewController, delegate: delegate)
             } else {
