@@ -143,6 +143,9 @@ public let qartveloAdsDefaultBaseURL = URL(string: "https://ads.qartvelo.com/")!
     @objc public var baseURL: URL = qartveloAdsDefaultBaseURL
     /// Placement code -> the app's AdMob ad unit id. Wins over the server-side mapping.
     @objc public var admobAdUnits: [String: String] = [:]
+    /// Accepted for parity with Android, where debuggable builds use Google's test units for the AdMob
+    /// fallback. Ignored on iOS: every installation outside the App Store already uses test units.
+    @objc public var admobTestUnitsInDebugBuilds: Bool = true
 
     @objc public override init() {
         super.init()

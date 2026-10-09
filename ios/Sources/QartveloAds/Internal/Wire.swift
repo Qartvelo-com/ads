@@ -167,6 +167,8 @@ struct ApiError: Error {
     let httpStatus: Int
     let code: String
     let message: String
+    /// The envelope's optional `error.details` object.
+    var details: JSON? = nil
 
     var isSessionError: Bool { code == "session_expired" || code == "invalid_session" }
 }

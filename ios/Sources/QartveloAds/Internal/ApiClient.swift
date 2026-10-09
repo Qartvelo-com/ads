@@ -191,7 +191,8 @@ final class ApiClient {
             throw ApiError(
                 httpStatus: response.statusCode,
                 code: error?.string("code") ?? "http_\(response.statusCode)",
-                message: error?.string("message") ?? "HTTP \(response.statusCode)"
+                message: error?.string("message") ?? "HTTP \(response.statusCode)",
+                details: error?.object("details")
             )
         }
         let serverNow = WireDates.httpMillis(response.value(forHTTPHeaderField: "Date")) ?? WireDates.wallNowMillis()

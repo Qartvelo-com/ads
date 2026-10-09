@@ -110,7 +110,8 @@ final class Engine {
             api: client,
             initBody: { [unowned self] in initBody() },
             initTimeoutMs: max(Int64(options.requestTimeoutMs), Self.minInitTimeoutMs),
-            onInitialized: { [unowned self] result in onSessionInitialized(result) }
+            onInitialized: { [unowned self] result in onSessionInitialized(result) },
+            onFailed: { [unowned self] error in onSessionFailed(error) }
         )
     }
 
@@ -234,6 +235,42 @@ final class Engine {
         stateLock.unlock()
         configStore.save(result.cacheableJSON)
         Main.post { [self] in updateAdapterSettings() }
+    }
+
+    private let issuesLock = NSLock()
+    private var reportedSetupIssues = Set<String>()
+
+    /// Logs a setup issue once per process and tells the global observers. Any thread.
+    func reportSetupIssue(_ code: String, _ message: String, placementId: String? = nil) {
+        issuesLock.lock()
+        let isNew = reportedSetupIssues.insert("\(code)|\(placementId ?? "")").inserted
+        issuesLock.unlock()
+        guard isNew else { return }
+        Log.e("Setup issue (\(code)): \(message)")
+        let issue = QartveloAdsSetupIssue(code: code, message: message, placementId: placementId)
+        Listeners.emit([]) { $0.qartveloAdsDidReportSetupIssue?(issue) }
+    }
+
+    /// Session queue. Turns rejected app keys into setup issues, also in test mode where the failed
+    /// initialization itself is reported to the app as success.
+    private func onSessionFailed(_ error: Error) {
+        guard let api = error as? ApiError else { return }
+        let running = device.bundleId
+        switch api.code {
+        case QartveloAdsSetupIssue.packageMismatch:
+            let message: String
+            if let registered = api.details?.string("registered_package") {
+                message = "This app key is registered for '\(registered)', but this app is '\(running)'. Use the key of the app registered for '\(running)', or correct the bundle ID in the Qartvelo Ads dashboard."
+            } else {
+                message = "This app key is not registered for '\(running)'. Use the key of the app registered for '\(running)', or correct the bundle ID in the Qartvelo Ads dashboard."
+            }
+            reportSetupIssue(QartveloAdsSetupIssue.packageMismatch, message)
+        case QartveloAdsSetupIssue.platformMismatch:
+            let owner = api.details?.string("platform") == "android" ? "the Android app" : "an app of another platform"
+            reportSetupIssue(QartveloAdsSetupIssue.platformMismatch, "This app key belongs to \(owner). Register this iOS app in the Qartvelo Ads dashboard and use its own key.")
+        default:
+            break
+        }
     }
 
     private func toInitError(_ error: Error) -> QartveloAdsError {

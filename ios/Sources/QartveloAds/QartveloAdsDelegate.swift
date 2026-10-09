@@ -21,4 +21,6 @@ import Foundation
     @objc optional func qartveloAd(_ info: QartveloAdsAdInfo, didEarnReward reward: QartveloAdsReward)
     @objc optional func qartveloAdDidStartFallback(placementId: String, format: QartveloAdFormat, reason: String)
     @objc optional func qartveloAdNoAdAvailable(placementId: String, format: QartveloAdFormat)
+    /// A setup problem to fix (wrong key or bundle ID, missing placement). Global observers only.
+    @objc optional func qartveloAdsDidReportSetupIssue(_ issue: QartveloAdsSetupIssue)
 }

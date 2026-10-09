@@ -20,6 +20,7 @@ final class SessionManager {
     private let initBody: () -> JSON
     private let initTimeoutMs: Int64
     private let onInitialized: (InitResult) -> Void
+    private let onFailed: (Error) -> Void
 
     private let lock = NSLock()
     private var inFlight: Attempt?
@@ -27,11 +28,12 @@ final class SessionManager {
     private var lastFailureAt: Int64 = 0
     private var session: Session?
 
-    init(api: ApiClient, initBody: @escaping () -> JSON, initTimeoutMs: Int64, onInitialized: @escaping (InitResult) -> Void) {
+    init(api: ApiClient, initBody: @escaping () -> JSON, initTimeoutMs: Int64, onInitialized: @escaping (InitResult) -> Void, onFailed: @escaping (Error) -> Void = { _ in }) {
         self.api = api
         self.initBody = initBody
         self.initTimeoutMs = initTimeoutMs
         self.onInitialized = onInitialized
+        self.onFailed = onFailed
     }
 
     /// Token if one is currently valid, without any network activity.
@@ -112,6 +114,7 @@ final class SessionManager {
                 lastFailureAt = Clock.now()
                 lock.unlock()
                 Log.e("QartveloAds session request failed: \(Self.describe(error))")
+                onFailed(error)
             }
             lock.lock()
             inFlight = nil

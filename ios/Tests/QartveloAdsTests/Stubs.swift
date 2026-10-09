@@ -105,6 +105,13 @@ final class RecordingDelegate: NSObject, QartveloAdsDelegate {
     func qartveloAdNoAdAvailable(placementId: String, format: QartveloAdFormat) {
         record("noAd")
     }
+
+    var setupIssues: [QartveloAdsSetupIssue] = []
+
+    func qartveloAdsDidReportSetupIssue(_ issue: QartveloAdsSetupIssue) {
+        setupIssues.append(issue)
+        record("setupIssue:\(issue.code):\(issue.placementId ?? "")")
+    }
 }
 
 /// A fallback network that loads instantly.
