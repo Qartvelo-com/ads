@@ -52,7 +52,7 @@ internal class CreativeCache(context: Context, private val api: ApiClient) {
     fun fetch(ad: ServedAd, tracker: CallTracker? = null): File {
         purgeExpired()
         if (!dir.exists() && !dir.mkdirs()) throw IOException("cannot create creative cache")
-        val name = hash(ad.creativeUrl) + extension(ad)
+        val name = hash(ad.creativeUrl) + if (ad.creativeType == CreativeType.HTML5) BUNDLE_SUFFIX else extension(ad)
         val file = File(dir, name)
         synchronized(lockFor(name)) {
             // Register the expiry before downloading so a concurrent purge never removes this file.
@@ -62,7 +62,9 @@ internal class CreativeCache(context: Context, private val api: ApiClient) {
                 had
             }
             try {
-                if (!cached) {
+                if (ad.creativeType == CreativeType.HTML5) {
+                    fetchBundle(ad.bundle ?: throw IOException("html5 ad without bundle"), file, tracker)
+                } else if (!cached) {
                     val video = ad.creativeType == CreativeType.VIDEO
                     api.download(
                         url = ad.creativeUrl,
@@ -74,12 +76,38 @@ internal class CreativeCache(context: Context, private val api: ApiClient) {
                 }
                 validate(ad.creativeType, file)
             } catch (t: Throwable) {
-                file.delete()
+                file.deleteRecursively()
                 synchronized(expiries) { expiries.remove(name) }
                 throw t
             }
         }
         return file
+    }
+
+    /**
+     * Downloads the served layout's files of an HTML5 bundle into [dir] (files already there are
+     * kept: bundles are immutable), at most [MAX_BUNDLE_BYTES] in total.
+     */
+    private fun fetchBundle(bundle: Html5Bundle, dir: File, tracker: CallTracker?) {
+        if (!dir.isDirectory && !dir.mkdirs()) throw IOException("cannot create bundle directory")
+        var total = 0L
+        for (path in bundle.files) {
+            if (!Html5Files.isSafePath(path) || Html5Files.mimeType(path) == null) throw IOException("bundle file not allowed: $path")
+            val file = File(dir, path)
+            if (!file.isFile) {
+                file.parentFile?.let { if (!it.isDirectory && !it.mkdirs()) throw IOException("cannot create bundle directory") }
+                api.download(
+                    url = bundle.baseUrl + path,
+                    dest = file,
+                    maxBytes = MAX_BUNDLE_BYTES - total,
+                    timeoutMs = IMAGE_TIMEOUT_MS,
+                    tracker = tracker,
+                )
+            }
+            total += file.length()
+            if (total > MAX_BUNDLE_BYTES) throw IOException("bundle too large")
+        }
+        if (!File(dir, Html5Files.INDEX).isFile) throw IOException("bundle without index.html")
     }
 
     private fun lockFor(name: String): Any = synchronized(locks) { locks.getOrPut(name) { Any() } }
@@ -99,7 +127,7 @@ internal class CreativeCache(context: Context, private val api: ApiClient) {
                     else -> true
                 }
                 if (stale) {
-                    f.delete()
+                    f.deleteRecursively()
                     expiries.remove(f.name)
                 }
             }
@@ -108,6 +136,7 @@ internal class CreativeCache(context: Context, private val api: ApiClient) {
 
     private fun validate(type: CreativeType, file: File) {
         when (type) {
+            CreativeType.HTML5 -> Unit // Checked file by file in fetchBundle; the web view validates the rest.
             CreativeType.IMAGE -> {
                 if (!hasImageSignature(file)) throw IOException("creative is not a PNG/JPEG/GIF/WebP image")
                 val opts = BitmapFactory.Options().apply { inJustDecodeBounds = true }
@@ -152,6 +181,8 @@ internal class CreativeCache(context: Context, private val api: ApiClient) {
 
     companion object {
         const val MAX_IMAGE_BYTES = 2L * 1024 * 1024
+        const val MAX_BUNDLE_BYTES = 2L * 1024 * 1024
+        private const val BUNDLE_SUFFIX = ".bundle"
         const val MAX_VIDEO_BYTES = 40L * 1024 * 1024
         const val IMAGE_TIMEOUT_MS = 10_000L
         const val VIDEO_TIMEOUT_MS = 45_000L

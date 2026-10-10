@@ -162,8 +162,10 @@ internal class ApiClient(
         val type = when (ad.optString("creative_type")) {
             "image" -> CreativeType.IMAGE
             "video" -> CreativeType.VIDEO
+            "html5" -> CreativeType.HTML5
             else -> throw IOException("unsupported creative_type")
         }
+        val bundle = if (type == CreativeType.HTML5) parseBundle(ad, creativeUrl) else null
         return ServedAd(
             requestId = root.optStringOrNull("request_id") ?: throw IOException("fill without request_id"),
             adId = ad.optString("id"),
@@ -179,11 +181,34 @@ internal class ApiClient(
             impressionToken = token,
             expiresAtElapsed = toElapsed(expiresAt, serverNow),
             test = ad.optBoolean("test", false),
+            bundle = bundle,
         )
+    }
+
+    /**
+     * The layout matching the fill's width and height (else the first) with its files. A fill
+     * without files, or with a path that leaves the bundle, is rejected.
+     */
+    private fun parseBundle(ad: JSONObject, creativeUrl: String): Html5Bundle {
+        val base = Html5Files.baseOf(creativeUrl) ?: throw IOException("html5 creative_url is not an index.html")
+        val layouts = ad.optJSONArray("layouts") ?: throw IOException("html5 fill without layouts")
+        val width = ad.optInt("width")
+        val height = ad.optInt("height")
+        val candidates = (0 until layouts.length()).mapNotNull { layouts.optJSONObject(it) }
+        val layout = candidates.firstOrNull { it.optInt("width") == width && it.optInt("height") == height }
+            ?: candidates.firstOrNull()
+            ?: throw IOException("html5 fill without layouts")
+        val list = layout.optJSONArray("files") ?: throw IOException("html5 layout without files")
+        val files = (0 until list.length()).map { list.optString(it) }.distinct()
+        if (files.isEmpty() || files.size > MAX_BUNDLE_FILES || Html5Files.INDEX !in files || !files.all { Html5Files.isSafePath(it) }) {
+            throw IOException("html5 layout with invalid files")
+        }
+        return Html5Bundle(base, files, layout.optInt("width", width), layout.optInt("height", height))
     }
 
     companion object {
         private val JSON = "application/json; charset=utf-8".toMediaType()
+        private const val MAX_BUNDLE_FILES = 60
 
         /** One pooled client per process: keep-alive connections are shared by all calls. */
         val sharedClient: OkHttpClient by lazy {

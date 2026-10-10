@@ -13,6 +13,7 @@ import com.qartvelo.sdk.QartveloAdsOptions
 import com.qartvelo.sdk.QartveloAdsSetupIssue
 import com.qartvelo.sdk.fallback.FallbackAdapter
 import com.qartvelo.sdk.fallback.FallbackSettings
+import org.json.JSONArray
 import org.json.JSONObject
 import java.io.IOException
 import java.io.InterruptedIOException
@@ -478,8 +479,9 @@ internal class Engine(
     }
 
     private fun prepareCreative(ad: ServedAd, format: AdFormat, tracker: CallTracker, done: (FetchOutcome) -> Unit) {
-        if (ad.format != format || Clock.elapsed() >= ad.expiresAtElapsed - ServedAd.EXPIRY_MARGIN_MS) {
-            OurLog.e("Discarding unusable QartveloAds response (format mismatch or already expired)")
+        val html5NotAllowed = ad.creativeType == CreativeType.HTML5 && format == AdFormat.REWARDED
+        if (ad.format != format || html5NotAllowed || Clock.elapsed() >= ad.expiresAtElapsed - ServedAd.EXPIRY_MARGIN_MS) {
+            OurLog.e("Discarding unusable QartveloAds response (format mismatch, HTML5 rewarded or already expired)")
             done(FetchOutcome.Failure(failure(QartveloAdsFailure.ERROR)))
             return
         }
@@ -569,6 +571,8 @@ internal class Engine(
             .put("screen_height", d.screenHeight)
             .put("test_mode", testMode)
             .put("test_force_no_fill", options.testForceNoFill)
+            // HTML5 is offered for banners and interstitials; rewarded stays video.
+            .put("supported_creative_types", JSONArray().put("image").put("video").apply { if (format != AdFormat.REWARDED) put("html5") })
             .apply {
                 val inlineMax = banner?.inlineMaxHeightPx
                 if (inlineMax != null) {

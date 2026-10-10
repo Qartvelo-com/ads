@@ -2,6 +2,7 @@ package com.qartvelo.sdk.internal
 
 import android.app.Activity
 import android.content.Context
+import android.content.MutableContextWrapper
 import com.qartvelo.sdk.AdFormat
 import com.qartvelo.sdk.AdSource
 import com.qartvelo.sdk.QartveloAdsAdInfo
@@ -61,6 +62,16 @@ internal class ShowSession(
 
     /** Video player owned by the session (created with the application context) across re-creation. */
     var player: AdVideoPlayer? = null
+
+    /**
+     * HTML5 surface owned by the session across re-creation; its context is swapped to each new
+     * activity and back to the application context in between, so no activity leaks.
+     */
+    var html5: Html5Surface? = null
+    var html5Context: MutableContextWrapper? = null
+
+    /** The activity currently drawing this show, for HTML5 callbacks that outlive one activity. */
+    var activity: WeakReference<Activity>? = null
 
     private var clickRecorded = false
     private val rewardGranted = AtomicBoolean(false)
@@ -140,5 +151,8 @@ internal class ShowSession(
         ShowRegistry.remove(id)
         guard("player release") { player?.release() }
         player = null
+        guard("html5 destroy") { html5?.destroy() }
+        html5 = null
+        html5Context = null
     }
 }

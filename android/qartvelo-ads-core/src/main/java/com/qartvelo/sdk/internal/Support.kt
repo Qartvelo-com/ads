@@ -72,6 +72,9 @@ internal object TestHooks {
     @Volatile
     var creativeGraceMs: Long? = null
 
+    @Volatile
+    var html5SurfaceFactory: ((Context, ServedAd) -> Html5Surface)? = null
+
     /** Overrides emulator detection (Robolectric is not detected as an emulator). */
     @Volatile
     var emulator: Boolean? = null
@@ -81,6 +84,7 @@ internal object TestHooks {
         eventRetryBaseMs = null
         videoPlayerFactory = null
         creativeGraceMs = null
+        html5SurfaceFactory = null
         emulator = null
     }
 }

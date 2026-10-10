@@ -178,6 +178,38 @@ class FakeBackend : Dispatcher() {
         return json(body)
     }
 
+    /**
+     * An HTML5 fill whose bundle lives under /creatives/h5/ (see [html5Bundle]). [files] are the
+     * served layout's files; the other layouts list the shared files only.
+     */
+    fun fillHtml5(
+        format: String,
+        files: List<String> = listOf("index.html", "style.css", "main.js", "m/a.png"),
+        width: Int = if (format == "banner") 320 else 360,
+        height: Int = if (format == "banner") 50 else 640,
+        test: Boolean = false,
+    ): MockResponse {
+        val id = synchronized(this) { ++requestCounter }
+        val layouts = JSONArray().put(JSONObject().put("family", "served").put("width", width).put("height", height).put("files", JSONArray(files)))
+            .put(JSONObject().put("family", "other").put("width", height).put("height", width).put("files", JSONArray(listOf("index.html", "style.css", "main.js", "m/b.png"))))
+        val body = JSONObject().put("status", "fill").put("request_id", "req_$id").put("ad", JSONObject()
+            .put("id", "ad_$id").put("campaign_id", "cmp_12").put("creative_id", "cr_h5").put("format", format)
+            .put("creative_type", "html5").put("creative_url", baseUrl.trimEnd('/') + "/creatives/h5/index.html")
+            .put("click_url", "https://advertiser.example/landing").put("width", width).put("height", height)
+            .put("layouts", layouts).put("duration_seconds", JSONObject.NULL)
+            .put("impression_token", "imp-token-$id").put("expires_at", isoIn(30 * 60_000L)).put("test", test))
+        return json(body)
+    }
+
+    /** Serves a small HTML5 bundle under /creatives/h5/. */
+    fun html5Bundle() {
+        creatives["/creatives/h5/index.html"] = MockResponse().setBody("<!doctype html><div id=c></div><script src=main.js></script>")
+        creatives["/creatives/h5/style.css"] = MockResponse().setBody("#c{}")
+        creatives["/creatives/h5/main.js"] = MockResponse().setBody("window.__qartvelo={ready:true}")
+        creatives["/creatives/h5/m/a.png"] = MockResponse().setBody(Buffer().write(pngBytes(4, 4)))
+        creatives["/creatives/h5/m/b.png"] = MockResponse().setBody(Buffer().write(pngBytes(4, 4)))
+    }
+
     fun noFill(fallback: String = "admob"): MockResponse = json(
         JSONObject().put("status", "no_fill").put("request_id", "req_nf").put("fallback", fallback).put("reason", "no_eligible_campaign"),
     )
