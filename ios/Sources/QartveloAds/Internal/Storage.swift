@@ -39,6 +39,7 @@ final class ConfigStore {
 /// purged on start and before each download. Blocking; background queues only.
 final class CreativeCache {
     static let maxImageBytes: Int64 = 2 * 1024 * 1024
+    static let maxBundleBytes: Int64 = 2 * 1024 * 1024
     static let maxVideoBytes: Int64 = 40 * 1024 * 1024
     static let imageTimeoutMs: Int64 = 10_000
     static let videoTimeoutMs: Int64 = 45_000
@@ -63,7 +64,7 @@ final class CreativeCache {
     func fetch(_ ad: ServedAd, tracker: CallTracker? = nil) throws -> URL {
         purgeExpired()
         try fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
-        let name = Self.hash(ad.creativeURL.absoluteString) + Self.fileExtension(ad.creativeURL)
+        let name = Self.hash(ad.creativeURL.absoluteString) + (ad.creativeType == .html5 ? ".bundle" : Self.fileExtension(ad.creativeURL))
         let file = directory.appendingPathComponent(name)
         let fileLock = lockFor(name)
         fileLock.lock()
@@ -75,7 +76,10 @@ final class CreativeCache {
         expiries[name] = max(expiries[name] ?? 0, ad.expiresAt)
         lock.unlock()
         do {
-            if !cached {
+            if ad.creativeType == .html5 {
+                guard let bundle = ad.bundle else { throw NetworkError(message: "html5 ad without bundle") }
+                try fetchBundle(bundle, into: file, tracker: tracker)
+            } else if !cached {
                 let video = ad.creativeType == .video
                 try api.download(
                     ad.creativeURL,
@@ -94,6 +98,28 @@ final class CreativeCache {
             throw error
         }
         return file
+    }
+
+    /// Downloads the served layout's files of an HTML5 bundle into `directory` (files already there
+    /// are kept: bundles are immutable), at most `maxBundleBytes` in total.
+    private func fetchBundle(_ bundle: Html5Bundle, into directory: URL, tracker: CallTracker?) throws {
+        try fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
+        var total: Int64 = 0
+        for path in bundle.files {
+            guard Html5Files.isSafePath(path), Html5Files.mimeType(path) != nil, let source = URL(string: path, relativeTo: bundle.baseURL) else {
+                throw NetworkError(message: "bundle file not allowed: \(path)")
+            }
+            let file = directory.appendingPathComponent(path)
+            if !fileManager.fileExists(atPath: file.path) {
+                try fileManager.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
+                try api.download(source.absoluteURL, to: file, maxBytes: Self.maxBundleBytes - total, timeoutMs: Self.imageTimeoutMs, tracker: tracker)
+            }
+            total += ((try? fileManager.attributesOfItem(atPath: file.path)[.size]) as? NSNumber)?.int64Value ?? 0
+            if total > Self.maxBundleBytes { throw NetworkError(message: "bundle too large") }
+        }
+        guard fileManager.fileExists(atPath: directory.appendingPathComponent(Html5Files.index).path) else {
+            throw NetworkError(message: "bundle without index.html")
+        }
     }
 
     /// Deletes files whose ads have all expired, plus leftovers from earlier processes.
@@ -138,8 +164,12 @@ final class CreativeCache {
     }
 
     static func validate(_ type: CreativeType, file: URL) throws {
+        // HTML5 bundles are checked file by file in fetchBundle; the web view validates the rest.
+        if type == .html5 { return }
         let header = try readHeader(file, count: 12)
         switch type {
+        case .html5:
+            return
         case .image:
             guard hasImageSignature(header) else { throw NetworkError(message: "creative is not a PNG/JPEG/GIF/WebP image") }
             guard let source = CGImageSourceCreateWithURL(file as CFURL, nil),

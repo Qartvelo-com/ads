@@ -48,6 +48,8 @@ import UIKit
             currentEngine = created
             lock.unlock()
             created.start(completion)
+            // Compiled once, ahead of the first HTML5 ad.
+            Html5ContentRules.prepare()
         }
     }
 

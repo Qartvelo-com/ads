@@ -4,6 +4,9 @@ import QartveloAds
 /// Manual sample: load each format, present full-screen ads on demand, and inspect callbacks.
 final class TestAdsViewController: UIViewController, QartveloAdsDelegate {
     private let banner = QartveloAdsBannerView(placementId: AppConfig.bannerPlacement)
+    /// Inline banner inside the scrolling content: the biggest ad that fits, up to 250 points tall.
+    /// Its own placement: banners of one placement share one ad.
+    private let inlineBanner = QartveloAdsBannerView(placementId: AppConfig.inlineBannerPlacement)
     private let bannerCard = AdControlCard(title: "Banner", symbol: "rectangle.bottomthird.inset.filled", detail: "Adaptive banner at the bottom of the screen.")
     private let interstitialCard = AdControlCard(title: "Interstitial", symbol: "rectangle.expand.vertical", detail: "Full-screen image. Close it to return here.")
     private let rewardedCard = AdControlCard(title: "Rewarded", symbol: "gift", detail: "Watch the video to earn a test reward.")
@@ -64,7 +67,11 @@ final class TestAdsViewController: UIViewController, QartveloAdsDelegate {
         eventStatus.text = "Tap Load, then Show. Full-screen ads open only when you choose."
         eventStatus.accessibilityIdentifier = "latestAdEvent"
 
-        let stack = UIStackView(arrangedSubviews: [title, subtitle, sdkStatus, loadAll, bannerCard, interstitialCard, rewardedCard, rewardStatus, eventStatus])
+        inlineBanner.sizing = .inline
+        inlineBanner.inlineMaxHeight = 250
+        inlineBanner.rootViewController = self
+        let inlineTitle = label("Inline banner (max 250)", style: .headline)
+        let stack = UIStackView(arrangedSubviews: [title, subtitle, sdkStatus, loadAll, bannerCard, interstitialCard, rewardedCard, rewardStatus, eventStatus, inlineTitle, inlineBanner])
         stack.axis = .vertical
         stack.spacing = 16
         stack.setCustomSpacing(4, after: title)
@@ -89,7 +96,10 @@ final class TestAdsViewController: UIViewController, QartveloAdsDelegate {
         ])
     }
 
-    deinit { banner.destroy() }
+    deinit {
+        banner.destroy()
+        inlineBanner.destroy()
+    }
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
@@ -128,6 +138,7 @@ final class TestAdsViewController: UIViewController, QartveloAdsDelegate {
         loadBanner()
         loadInterstitial()
         loadRewarded()
+        inlineBanner.load()
     }
 
     private func loadBanner() {

@@ -64,6 +64,7 @@ enum TestHooks {
     static var creativeGraceMs: Int64?
     /// URL protocols put in front of the SDK's own URLSession (request stubs).
     static var urlProtocols: [AnyClass] = []
+    static var html5SurfaceFactory: ((ServedAd) -> Html5Surface?)?
 
     static func reset() {
         simulator = nil
@@ -72,6 +73,7 @@ enum TestHooks {
         eventRetryBaseMs = nil
         creativeGraceMs = nil
         urlProtocols = []
+        html5SurfaceFactory = nil
     }
 }
 

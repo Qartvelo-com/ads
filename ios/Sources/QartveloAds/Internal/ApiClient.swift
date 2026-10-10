@@ -214,8 +214,10 @@ final class ApiClient {
         switch ad.string("creative_type") {
         case "image": type = .image
         case "video": type = .video
+        case "html5": type = .html5
         default: throw NetworkError(message: "unsupported creative_type")
         }
+        let bundle = type == .html5 ? try Self.parseBundle(ad, creativeURL: creativeURL) : nil
         return ServedAd(
             requestId: requestId,
             adId: ad.string("id") ?? "",
@@ -230,8 +232,27 @@ final class ApiClient {
             durationSeconds: ad.positiveInt64("duration_seconds").map(Int.init),
             impressionToken: token,
             expiresAt: Self.toMonotonic(expiresAt, serverNow: serverNow),
-            test: ad.bool("test", default: false)
+            test: ad.bool("test", default: false),
+            bundle: bundle
         )
+    }
+
+    /// The layout matching the fill's width and height (else the first) with its files. A fill
+    /// without files, or with a path that leaves the bundle, is rejected.
+    static func parseBundle(_ ad: JSON, creativeURL: URL) throws -> Html5Bundle {
+        guard let base = Html5Files.base(of: creativeURL) else { throw NetworkError(message: "html5 creative_url is not an index.html") }
+        let layouts = (ad.array("layouts") ?? []).compactMap { $0 as? JSON }
+        let width = ad.int("width")
+        let height = ad.int("height")
+        guard let layout = layouts.first(where: { $0.int("width") == width && $0.int("height") == height }) ?? layouts.first else {
+            throw NetworkError(message: "html5 fill without layouts")
+        }
+        var files: [String] = []
+        for case let file as String in layout.array("files") ?? [] where !files.contains(file) { files.append(file) }
+        guard !files.isEmpty, files.count <= 60, files.contains(Html5Files.index), files.allSatisfy(Html5Files.isSafePath) else {
+            throw NetworkError(message: "html5 layout with invalid files")
+        }
+        return Html5Bundle(baseURL: base, files: files, width: layout.int("width"), height: layout.int("height"))
     }
 
     private static func map(_ error: Error) -> Error {

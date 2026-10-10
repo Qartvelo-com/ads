@@ -95,7 +95,17 @@ struct InitResult {
 }
 
 enum CreativeType {
-    case image, video
+    case image, video, html5
+}
+
+/// The served layout of an HTML5 creative: the bundle's base URL (`creative_url` without
+/// `index.html`) and the files that layout loads, relative to the base. Other layouts' files load
+/// lazily from the same base when the ad is resized into them.
+struct Html5Bundle {
+    let baseURL: URL
+    let files: [String]
+    let width: Int
+    let height: Int
 }
 
 /// An ad returned by `/ads/request`. Expiry is converted to the monotonic clock.
@@ -119,6 +129,8 @@ final class ServedAd {
     let expiresAt: Int64
     let test: Bool
     let localTest: Bool
+    /// HTML5 creatives only: the served layout's bundle.
+    let bundle: Html5Bundle?
 
     private let lock = NSLock()
     private var storedFile: URL?
@@ -132,7 +144,8 @@ final class ServedAd {
     init(
         requestId: String, adId: String, campaignId: String?, creativeId: String?, format: QartveloAdFormat,
         creativeType: CreativeType, creativeURL: URL, clickURL: String?, width: Int, height: Int,
-        durationSeconds: Int?, impressionToken: String, expiresAt: Int64, test: Bool, localTest: Bool = false
+        durationSeconds: Int?, impressionToken: String, expiresAt: Int64, test: Bool, localTest: Bool = false,
+        bundle: Html5Bundle? = nil
     ) {
         self.requestId = requestId
         self.adId = adId
@@ -149,6 +162,7 @@ final class ServedAd {
         self.expiresAt = expiresAt
         self.test = test
         self.localTest = localTest
+        self.bundle = bundle
     }
 
     func isValid(now: Int64 = Clock.now()) -> Bool {

@@ -21,6 +21,20 @@ import UIKit
         didSet { setNeedsLayout() }
     }
 
+    /// `.anchored` (default) or `.inline` for banners inside scrolling content. Inline wins over
+    /// `usesAdaptiveSize`. Set it before `load()`.
+    @objc public var sizing: QartveloBannerSizing = .anchored {
+        didSet { setNeedsLayout() }
+    }
+
+    /// The most an inline banner may be tall, in points (default 250, at least 32).
+    @objc public var inlineMaxHeight: CGFloat = 250 {
+        didSet { setNeedsLayout() }
+    }
+
+    /// Google's inline adaptive minimum.
+    static let minInlineHeight: CGFloat = 32
+
     private var controller: BannerController?
     private var contentSize: CGSize = .zero
     private var contentWidthConstraint: NSLayoutConstraint?
@@ -127,8 +141,18 @@ import UIKit
             ?? AdaptiveBannerLayout.size(width: availableBannerWidth, screenHeight: screenHeight)
     }
 
+    var clampedInlineMaxHeight: CGFloat {
+        max(Self.minInlineHeight, inlineMaxHeight.isFinite ? inlineMaxHeight : 250)
+    }
+
+    /// Inline banners: the max height in pixels, like `screen_width`.
+    var bannerRequestMaxHeight: Int? {
+        guard sizing == .inline else { return nil }
+        return Int(min(20_000, ceil(clampedInlineMaxHeight * (window?.screen.scale ?? UIScreen.main.scale))))
+    }
+
     var bannerRequestHeight: Int? {
-        guard usesAdaptiveSize else { return nil }
+        guard usesAdaptiveSize, sizing == .anchored else { return nil }
         return Int(ceil(adaptiveBannerSize.height * (window?.screen.scale ?? UIScreen.main.scale)))
     }
 

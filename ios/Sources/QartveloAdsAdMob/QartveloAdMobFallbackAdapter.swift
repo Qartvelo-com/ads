@@ -133,7 +133,28 @@ public final class QartveloAdMobFallbackAdapter: NSObject, QartveloFallbackAdapt
         rootViewController: UIViewController?,
         callback: QartveloFallbackBannerCallback
     ) -> QartveloFallbackBanner {
-        let bannerView = BannerView(adSize: currentOrientationAnchoredAdaptiveBanner(width: width))
+        makeBanner(adSize: currentOrientationAnchoredAdaptiveBanner(width: width), adUnitId: adUnitId, rootViewController: rootViewController, callback: callback)
+    }
+
+    /// Google's inline adaptive banner: `width` wide, as tall as Google decides up to `maxHeight`.
+    public func createInlineBanner(
+        placementId: String,
+        adUnitId: String,
+        width: CGFloat,
+        maxHeight: CGFloat,
+        rootViewController: UIViewController?,
+        callback: QartveloFallbackBannerCallback
+    ) -> QartveloFallbackBanner? {
+        makeBanner(adSize: inlineAdaptiveBanner(width: width, maxHeight: maxHeight), adUnitId: adUnitId, rootViewController: rootViewController, callback: callback)
+    }
+
+    private func makeBanner(
+        adSize: AdSize,
+        adUnitId: String,
+        rootViewController: UIViewController?,
+        callback: QartveloFallbackBannerCallback
+    ) -> QartveloFallbackBanner {
+        let bannerView = BannerView(adSize: adSize)
         let banner = AdMobBanner(bannerView: bannerView, callback: callback)
         guard let unit = AdMobUnits.resolve(.banner, configured: adUnitId, testMode: settings.testMode) else {
             callback.onFailed("no AdMob banner unit configured")

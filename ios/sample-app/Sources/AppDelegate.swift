@@ -28,6 +28,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         options.logLevel = .debug
         options.testMode = true
         options.testForceNoFill = AppConfig.forceNoFill
+        if let baseURL = AppConfig.baseURL { options.baseURL = baseURL }
         QartveloAds.initialize(appKey: AppConfig.appKey, options: options) { [weak root] success, error in
             qa("init success=\(success) error=\(error.map { "\($0)" } ?? "none")")
             (root as? TestAdsViewController)?.sdkDidInitialize(success: success, error: error)
