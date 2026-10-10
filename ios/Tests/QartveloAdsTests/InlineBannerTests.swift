@@ -78,6 +78,21 @@ final class InlineBannerTests: XCTestCase {
         XCTAssertEqual(StubURLProtocol.requests("/api/v1/ads/request").count, 1)
     }
 
+    func testAViewSwitchedToInlineDoesNotReuseTheAnchoredAd() throws {
+        let view = try loadBanner(width: 400) { _ in }
+        XCTAssertNotNil(StubURLProtocol.requests("/api/v1/ads/request").first?["banner_height"])
+        let second = expectation(description: "second request")
+        let delegate = RecordingDelegate()
+        delegate.onEvent = { if $0 == "loaded:QARTVELO" { second.fulfill() } }
+        view.delegate = delegate
+        view.destroy()
+        view.sizing = .inline
+        view.load()
+        wait(for: [second], timeout: 5)
+        XCTAssertEqual(StubURLProtocol.requests("/api/v1/ads/request").last?["banner_mode"] as? String, "inline")
+        XCTAssertEqual(view.intrinsicContentSize, CGSize(width: 300, height: 250))
+    }
+
     func testAnchoredBannersAreUnchanged() throws {
         _ = try loadBanner(width: 400) { _ in }
         let request = try XCTUnwrap(StubURLProtocol.requests("/api/v1/ads/request").first)

@@ -58,6 +58,9 @@ final class BannerController {
     private var fallbackWidth: CGFloat = 0
     private var refreshTask: DispatchWorkItem?
     private var staged: Staged?
+    /// Sizing of the request in flight, and of the content it produced (an anchored ad never fills an inline slot).
+    private var requestInline = false
+    private var contentInline = false
 
     init(engine: Engine, placementId: String) {
         self.engine = engine
@@ -67,6 +70,12 @@ final class BannerController {
     // MARK: - Host lifecycle
 
     func attach(_ view: QartveloAdsBannerView) {
+        if content != nil, contentInline != (view.sizing == .inline) {
+            // Loaded for the other sizing (anchored or inline): drop it and ask again now.
+            if let host = hostView { unrender(host) }
+            replaceContent(nil)
+            lastRequestAt = Int64.min / 2
+        }
         if let previous = hostView {
             if previous === view {
                 if content == nil && !loading && isDue() { startLoad() }
@@ -148,6 +157,7 @@ final class BannerController {
     }
 
     private func loadNow() {
+        requestInline = hostView?.sizing == .inline
         let placement = engine.placement(placementId)
         engine.checkPlacement(placementId, .banner)
         if let format = placement?.format, format != .banner {
@@ -448,6 +458,7 @@ final class BannerController {
     private func replaceContent(_ next: Content?) {
         let old = content
         content = next
+        if next != nil { contentInline = requestInline }
         if case .qartvelo(let oldItem)? = old, let html5 = oldItem.html5 {
             if case .qartvelo(let newItem)? = next, newItem === oldItem { return }
             html5.destroy()

@@ -63,6 +63,10 @@ internal class BannerController(private val engine: Engine, val placementId: Str
      */
     private var staged: Staged? = null
 
+    /** Sizing of the request in flight, and of the content it produced (an anchored ad never fills an inline slot). */
+    private var requestInline = false
+    private var contentInline = false
+
     /** An HTML5 surface and the context it was created with, swapped between Activities like a fallback banner. */
     class Html5Content(val surface: Html5Surface, val wrapper: MutableContextWrapper)
 
@@ -74,6 +78,12 @@ internal class BannerController(private val engine: Engine, val placementId: Str
     // ---- host lifecycle -------------------------------------------------------------------------
 
     fun attach(view: QartveloAdsBannerView) {
+        if (content != null && contentInline != (view.sizing == BannerSizing.INLINE)) {
+            // Loaded for the other sizing (anchored or inline): drop it and ask again now.
+            hostView?.let { unrender(it) }
+            replaceContent(null)
+            lastRequestAt = Long.MIN_VALUE / 2
+        }
         val previous = hostView
         if (previous === view) {
             if (content == null && !loading && isDue()) startLoad()
@@ -168,6 +178,7 @@ internal class BannerController(private val engine: Engine, val placementId: Str
     }
 
     private fun loadNow() {
+        requestInline = hostView?.sizing == BannerSizing.INLINE
         val placement = engine.placement(placementId)
         engine.checkPlacement(placementId, AdFormat.BANNER)
         if (placement?.format != null && placement.format != AdFormat.BANNER) {
@@ -531,6 +542,7 @@ internal class BannerController(private val engine: Engine, val placementId: Str
     private fun replaceContent(next: Content?) {
         val old = content
         content = next
+        if (next != null && next !== old) contentInline = requestInline
         if (old is Content.Fallback && old !== next) {
             (old.banner.view.parent as? ViewGroup)?.removeView(old.banner.view)
             old.wrapper.baseContext = engine.appContext

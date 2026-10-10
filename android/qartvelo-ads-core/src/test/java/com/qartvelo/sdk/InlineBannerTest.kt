@@ -93,6 +93,20 @@ class InlineBannerTest : SdkTest() {
     }
 
     @Test
+    fun aViewSwitchedToInlineDoesNotReuseTheAnchoredAd() {
+        assertTrue(init())
+        backend.adResponses.add(backend.fill("banner", creativePath = "/creatives/b.png", width = 300, height = 250))
+        val banner = showBanner { }
+        assertTrue(backend.bodies("/api/v1/ads/request").single().has("banner_height"))
+
+        banner.destroy()
+        banner.sizing = BannerSizing.INLINE
+        banner.load()
+        awaitMain(message = "second request") { backend.count("/api/v1/ads/request") == 2 }
+        assertEquals("inline", backend.bodies("/api/v1/ads/request")[1].getString("banner_mode"))
+    }
+
+    @Test
     fun anchoredBannersAreUnchanged() {
         assertTrue(init())
         showBanner { }
