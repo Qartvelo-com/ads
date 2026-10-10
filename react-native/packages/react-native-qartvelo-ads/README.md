@@ -27,6 +27,24 @@ subscription.remove();
 <QartveloAdsBanner placementId="home_banner" style={{ width: '100%' }} />;
 ```
 
+## Banners
+
+`QartveloAdsBanner` takes `size` and `maxHeight` (since 0.6.0):
+
+- `size="anchored"` (default): a full-width strip 50 to 90 tall, for a banner pinned to a screen edge.
+- `size="inline"`: for a banner inside scrolling content. The ad takes the biggest size that fits the
+  width and `maxHeight` (default 250, dp on Android and points on iOS), keeping its proportions, and
+  the banner is as tall as the ad. The AdMob fallback is Google's inline adaptive banner.
+
+```tsx
+<QartveloAdsBanner placementId="feed_banner" size="inline" maxHeight={250} style={{ width: '100%' }} />
+```
+
+Banners of the same placement share one ad, so an anchored and an inline banner on the same screen
+need two placements. Since 0.6.0, banners and interstitials can also show HTML5 ads made in the
+Qartvelo Ads editor, with nothing to change in your app; earlier versions get the static image
+versions of the same design.
+
 Native setup (iOS CocoaPods autolinking, Android Maven repository for `com.qartvelo.ads:core`, the optional AdMob adapter and
 its App IDs through an Expo plugin entry or an `app.json` key), the full API, events, error codes, testing and
 troubleshooting are documented at

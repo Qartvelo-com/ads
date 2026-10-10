@@ -11,6 +11,7 @@ import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.events.Event
 import com.qartvelo.sdk.AdFormat
+import com.qartvelo.sdk.BannerSizing
 import com.qartvelo.sdk.QartveloAdsBannerView
 
 /**
@@ -46,11 +47,37 @@ internal class QartveloAdsBannerHostView(context: ThemedReactContext) : FrameLay
         constructed = true
     }
 
-    /** Called by the view manager for every prop update; unchanged values are ignored. */
+    // Props arrive one setter at a time in no fixed order; they are applied together in
+    // [applyProps] (after each update transaction), so a banner never loads with half its props.
+    private var pendingPlacementId: String? = null
+    private var pendingSizing = BannerSizing.ANCHORED
+    private var pendingMaxHeightDp = 250
+
     fun setPlacementId(value: String?) {
-        val id = value?.trim().orEmpty()
-        if (released || id == placementId) return
+        pendingPlacementId = value?.trim().orEmpty()
+    }
+
+    /** `size="inline"`: the biggest ad that fits the width and `maxHeight`. */
+    fun setInline(inline: Boolean) {
+        pendingSizing = if (inline) BannerSizing.INLINE else BannerSizing.ANCHORED
+    }
+
+    /** `maxHeight` in dp, for inline banners. */
+    fun setInlineMaxHeight(dp: Double) {
+        pendingMaxHeightDp = if (dp.isFinite()) dp.toInt() else 250
+    }
+
+    /** Called by the view manager after every prop update; a load starts only when something changed. */
+    fun applyProps() {
+        val id = pendingPlacementId ?: return
+        if (released) return
+        val sizingChanged = banner.sizing != pendingSizing ||
+            (pendingSizing == BannerSizing.INLINE && banner.inlineMaxHeightDp != pendingMaxHeightDp)
+        if (id == placementId && !sizingChanged) return
+        if (placementId != null) banner.destroy()
         placementId = id
+        banner.sizing = pendingSizing
+        banner.inlineMaxHeightDp = pendingMaxHeightDp
         if (id.isEmpty()) {
             // Detach from the previous placement; load() then reports INVALID_PLACEMENT.
             banner.destroy()

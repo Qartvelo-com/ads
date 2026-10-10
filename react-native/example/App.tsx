@@ -62,6 +62,9 @@ function describeError(error: unknown): string {
 function describeEvent(
   event: QartveloAdsEvent,
 ): Pick<LogEntry, 'text' | 'tone'> {
+  if (event.type === 'setupIssue') {
+    return { text: `setupIssue ${event.code}: ${event.message}`, tone: 'error' };
+  }
   const where = `${event.placementId} (${event.format ?? '?'})`;
   switch (event.type) {
     case 'fallbackStarted':
@@ -298,6 +301,19 @@ function DemoScreen() {
               compact
             />
           </View>
+        </Section>
+
+        <Section title="Inline banner (up to 250)">
+          {initialized ? (
+            <QartveloAdsBanner
+              placementId={PLACEMENTS.inlineBanner}
+              size="inline"
+              maxHeight={250}
+              style={styles.banner}
+            />
+          ) : (
+            <Text style={styles.muted}>Preparing banner…</Text>
+          )}
         </Section>
 
         <Section title="Interstitial">

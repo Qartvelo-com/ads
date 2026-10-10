@@ -35,6 +35,14 @@ export interface QartveloAdsBannerProps extends Omit<
   /** Placement code from the QartveloAds dashboard. Changing it loads the new placement. */
   placementId: string;
   /**
+   * `anchored` (default): the 50 to 90 strip for banners pinned to a screen edge. `inline`: for
+   * banners inside scrolling content; the ad takes the biggest size that fits the width and
+   * `maxHeight`, keeping its proportions, and the banner is as tall as that ad.
+   */
+  size?: 'anchored' | 'inline';
+  /** Inline only: the most the banner may be tall, in points/dp (default 250, at least 32). */
+  maxHeight?: number;
+  /**
    * Usually `{ width: '100%' }`. The height follows the rendered creative unless you set one.
    * The banner is collapsed (height 0) until an ad is rendered.
    */
@@ -111,13 +119,15 @@ function deliver(callbacks: Callbacks, raw: NativeBannerAdEvent): void {
 }
 
 /**
- * Native banner. Re-renders never reach the SDK: the native props are only `placementId`, style
- * and two event handlers whose identity is stable for the component's lifetime, so new inline
+ * Native banner. Re-renders never reach the SDK: the native props are only `placementId`, `size`,
+ * `maxHeight`, style and two event handlers whose identity is stable for the component's lifetime, so new inline
  * callbacks from the parent cause no native updates. Remounting reuses the SDK's cached banner for
  * the placement instead of requesting a new one.
  */
 function NativeBanner({
   placementId,
+  size,
+  maxHeight,
   style,
   onLoaded,
   onLoadFailed,
@@ -171,6 +181,8 @@ function NativeBanner({
     <QartveloAdsBannerView
       {...viewProps}
       placementId={placementId}
+      size={size ?? 'anchored'}
+      maxHeight={maxHeight ?? 250}
       style={nativeStyle}
       onAdEvent={handleAdEvent}
       onSizeChange={handleSizeChange}

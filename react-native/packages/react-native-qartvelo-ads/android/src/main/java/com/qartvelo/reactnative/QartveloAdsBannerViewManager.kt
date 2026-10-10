@@ -26,6 +26,21 @@ internal class QartveloAdsBannerViewManager :
         view.setPlacementId(value)
     }
 
+    @ReactProp(name = "size")
+    override fun setSize(view: QartveloAdsBannerHostView, value: String?) {
+        view.setInline(value == "inline")
+    }
+
+    @ReactProp(name = "maxHeight", defaultDouble = 250.0)
+    override fun setMaxHeight(view: QartveloAdsBannerHostView, value: Double) {
+        view.setInlineMaxHeight(value)
+    }
+
+    override fun onAfterUpdateTransaction(view: QartveloAdsBannerHostView) {
+        super.onAfterUpdateTransaction(view)
+        view.applyProps()
+    }
+
     override fun onDropViewInstance(view: QartveloAdsBannerHostView) {
         view.release()
         super.onDropViewInstance(view)

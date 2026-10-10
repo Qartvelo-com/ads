@@ -192,9 +192,28 @@ public final class QartveloAdsBannerHost: UIView {
     @objc public var placement: String = "" {
         didSet {
             guard oldValue != placement else { return }
-            banner.destroy(); banner.placementId = placement
-            loadIfPossible()
+            reload()
         }
+    }
+    /// `size="inline"`: the biggest ad that fits the width and `inlineMaxHeight`.
+    @objc public var inlineSizing: Bool = false {
+        didSet {
+            guard inlineSizing != oldValue else { return }
+            banner.sizing = inlineSizing ? .inline : .anchored
+            if !placement.isEmpty { reload() }
+        }
+    }
+    /// `maxHeight` in points, for inline banners.
+    @objc public var inlineMaxHeight: Double = 250 {
+        didSet {
+            guard inlineMaxHeight != oldValue else { return }
+            banner.inlineMaxHeight = CGFloat(inlineMaxHeight)
+            if inlineSizing && !placement.isEmpty { reload() }
+        }
+    }
+    private func reload() {
+        banner.destroy(); banner.placementId = placement
+        loadIfPossible()
     }
     private let banner = QartveloAdsBannerView(frame: .zero)
     private let relay = AdRelay()

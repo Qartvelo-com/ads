@@ -44,6 +44,9 @@ using namespace facebook::react;
 }
 - (void)updateProps:(Props::Shared const &)props oldProps:(Props::Shared const &)oldProps {
   const auto &next = *std::static_pointer_cast<const QartveloAdsBannerViewProps>(props);
+  // Sizing first, so a new placement loads with it.
+  _host.inlineSizing = next.size == QartveloAdsBannerViewSize::Inline;
+  _host.inlineMaxHeight = next.maxHeight;
   _host.placement = [NSString stringWithUTF8String:next.placementId.c_str()];
   [super updateProps:props oldProps:oldProps];
 }
