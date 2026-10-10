@@ -3,6 +3,7 @@ package com.qartvelo.sdk
 import android.app.Activity
 import android.content.Context
 import android.view.View
+import android.view.ViewGroup
 import android.widget.FrameLayout
 import com.qartvelo.sdk.internal.Html5Surface
 import com.qartvelo.sdk.internal.ServedAd
@@ -203,6 +204,10 @@ class Html5AdTest : SdkTest() {
         backend.adResponses.add(backend.fillHtml5("banner"))
         advance(31_000)
         awaitMain(message = "second surface") { surfaces.size == 2 && surfaces[1].onReady != null }
+        // The next ad loads behind the shown one and never takes its taps.
+        val staging = surfaces[1].view.parent as ViewGroup
+        assertEquals(0, banner.indexOfChild(staging))
+        assertFalse(staging.dispatchTouchEvent(android.view.MotionEvent.obtain(0, 0, android.view.MotionEvent.ACTION_DOWN, 1f, 1f, 0)))
         surfaces[1].onReady!!()
         awaitMain { listener.count("loaded:home_banner") == 2 }
         assertTrue("old web view destroyed", first.destroyed)

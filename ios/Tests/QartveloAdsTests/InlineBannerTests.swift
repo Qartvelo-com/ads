@@ -78,19 +78,16 @@ final class InlineBannerTests: XCTestCase {
         XCTAssertEqual(StubURLProtocol.requests("/api/v1/ads/request").count, 1)
     }
 
-    func testAViewSwitchedToInlineDoesNotReuseTheAnchoredAd() throws {
+    func testAViewSwitchedToInlineKeepsItsAdWithoutANewRequest() throws {
         let view = try loadBanner(width: 400) { _ in }
-        XCTAssertNotNil(StubURLProtocol.requests("/api/v1/ads/request").first?["banner_height"])
-        let second = expectation(description: "second request")
-        let delegate = RecordingDelegate()
-        delegate.onEvent = { if $0 == "loaded:QARTVELO" { second.fulfill() } }
-        view.delegate = delegate
         view.destroy()
         view.sizing = .inline
         view.load()
-        wait(for: [second], timeout: 5)
-        XCTAssertEqual(StubURLProtocol.requests("/api/v1/ads/request").last?["banner_mode"] as? String, "inline")
-        XCTAssertEqual(view.intrinsicContentSize, CGSize(width: 300, height: 250))
+        let settled = expectation(description: "settled")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { settled.fulfill() }
+        wait(for: [settled], timeout: 2)
+        XCTAssertEqual(StubURLProtocol.requests("/api/v1/ads/request").count, 1, "the next refresh asks with the new sizing")
+        XCTAssertEqual(view.intrinsicContentSize, CGSize(width: 300, height: 250), "shown with the inline fit")
     }
 
     func testAnchoredBannersAreUnchanged() throws {
@@ -139,6 +136,7 @@ final class InlineBannerTests: XCTestCase {
         wait(for: [initialized], timeout: 5)
         let delegate = RecordingDelegate()
         let loaded = expectation(description: expect)
+        loaded.assertForOverFulfill = false // A re-attached view hears about its ad again.
         delegate.onEvent = { if $0 == expect { loaded.fulfill() } }
         let view = QartveloAdsBannerView(frame: CGRect(x: 0, y: 0, width: width, height: 0))
         view.placementId = "home_banner"

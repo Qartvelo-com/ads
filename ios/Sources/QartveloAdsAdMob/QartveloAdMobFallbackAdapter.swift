@@ -254,6 +254,9 @@ private final class AdMobBanner: NSObject, QartveloFallbackBanner, BannerViewDel
 
     func bannerViewDidReceiveAd(_ bannerView: BannerView) {
         callback.onLoaded()
+        // A refreshed inline adaptive ad may be another height: let the slot re-read the size.
+        bannerView.invalidateIntrinsicContentSize()
+        bannerView.superview?.setNeedsLayout()
     }
 
     func bannerView(_ bannerView: BannerView, didFailToReceiveAdWithError error: Error) {

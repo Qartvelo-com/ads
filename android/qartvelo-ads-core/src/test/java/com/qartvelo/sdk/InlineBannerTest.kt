@@ -30,6 +30,11 @@ class InlineBannerTest : SdkTest() {
         host = hostActivity()
         container = FrameLayout(host.get())
         host.get().setContentView(container)
+        // Robolectric leaves the window "not app-visible"; drive the framework's path (see BannerLifecycleTest).
+        val decor = host.get().window.decorView
+        val root = android.view.View::class.java.getDeclaredMethod("getViewRootImpl").apply { isAccessible = true }.invoke(decor)!!
+        root.javaClass.getDeclaredMethod("dispatchAppVisibility", Boolean::class.javaPrimitiveType).apply { isAccessible = true }.invoke(root, true)
+        settle(20)
     }
 
     private fun showBanner(noFill: Boolean = false, configure: QartveloAdsBannerView.() -> Unit): QartveloAdsBannerView {
@@ -93,17 +98,29 @@ class InlineBannerTest : SdkTest() {
     }
 
     @Test
-    fun aViewSwitchedToInlineDoesNotReuseTheAnchoredAd() {
+    fun aViewSwitchedToInlineKeepsItsAdUntilTheNextRefresh() {
+        backend.placements = listOf(Placement("home_banner", "banner", timeoutMs = 10_000, refreshSeconds = 30))
         assertTrue(init())
-        backend.adResponses.add(backend.fill("banner", creativePath = "/creatives/b.png", width = 300, height = 250))
         val banner = showBanner { }
         assertTrue(backend.bodies("/api/v1/ads/request").single().has("banner_height"))
 
         banner.destroy()
         banner.sizing = BannerSizing.INLINE
         banner.load()
-        awaitMain(message = "second request") { backend.count("/api/v1/ads/request") == 2 }
+        settle()
+        assertEquals("no request before the refresh is due", 1, backend.count("/api/v1/ads/request"))
+
+        backend.adResponses.add(backend.fill("banner", creativePath = "/creatives/b.png", width = 300, height = 250))
+        advance(31_000)
+        awaitMain(message = "refresh") { backend.count("/api/v1/ads/request") == 2 }
         assertEquals("inline", backend.bodies("/api/v1/ads/request")[1].getString("banner_mode"))
+    }
+
+    @Test
+    fun aHugeMaxHeightIsCappedAtTheApiLimit() {
+        assertTrue(init())
+        showBanner { sizing = BannerSizing.INLINE; inlineMaxHeightDp = 100_000 }
+        assertEquals(20_000, request().getInt("banner_max_height"))
     }
 
     @Test

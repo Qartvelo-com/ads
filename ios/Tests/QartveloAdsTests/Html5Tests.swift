@@ -204,6 +204,31 @@ final class Html5Tests: XCTestCase {
         XCTAssertEqual(view.intrinsicContentSize, CGSize(width: 300, height: 250))
     }
 
+    func testABannerBelowTheFoldIsPausedAndNotCountedUntilScrolledIn() throws {
+        StubURLProtocol.route("/api/v1/ads/request", json: fill("banner"))
+        try initialize()
+        let delegate = RecordingDelegate()
+        let view = banner(delegate)
+        let scroll = UIScrollView(frame: CGRect(x: 0, y: 0, width: 400, height: 600))
+        scroll.contentSize = CGSize(width: 400, height: 3000)
+        window?.rootViewController?.view.addSubview(scroll)
+        view.frame.origin.y = 2000
+        scroll.addSubview(view)
+        view.load()
+        let surface = try waitForSurface()
+        surface.onReady?()
+        XCTAssertTrue(surface.paused, "laid out off screen: paused")
+
+        surface.onClick?()
+        XCTAssertTrue(StubURLProtocol.requests("/api/v1/events/impression").isEmpty)
+
+        scroll.contentOffset.y = 1800
+        let shown = expectation(description: "visibility re-checked")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { shown.fulfill() }
+        wait(for: [shown], timeout: 3)
+        XCTAssertFalse(surface.paused, "scrolled into view: playing")
+    }
+
     func testAHiddenHostPausesTheAd() throws {
         StubURLProtocol.route("/api/v1/ads/request", json: fill("banner"))
         try initialize()
@@ -246,7 +271,7 @@ final class Html5Tests: XCTestCase {
         window.rootViewController = UIViewController()
         window.isHidden = false
         self.window = window
-        let view = QartveloAdsBannerView(frame: CGRect(x: 0, y: 0, width: 400, height: 0))
+        let view = QartveloAdsBannerView(frame: CGRect(x: 0, y: 0, width: 400, height: 300))
         view.placementId = "home_banner"
         view.delegate = delegate
         configure(view)
