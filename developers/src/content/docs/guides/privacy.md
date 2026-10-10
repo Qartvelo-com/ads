@@ -40,7 +40,8 @@ On the device the SDK stores only the last remote placement configuration (no us
 
 ## Server side
 
-- The IP address is used transiently to infer the country and is never stored. Security logs keep only a salted hash of the client network where needed for fraud checks.
+- The IP address is used transiently to infer an approximate location (country, region and city, from Cloudflare's visitor location headers or a location database on our own server) and is never stored. Nothing more precise than a city is kept. Security logs keep only a salted hash of the client network where needed for fraud checks.
+- Each impression stores the country, region, city and the device language the SDK reported, so advertisers and publishers can break their reports down by location and language.
 - Impression tokens are stored as SHA-256 hashes only.
 - Long-term reporting uses aggregated daily statistics per app, placement and campaign.
 
@@ -75,9 +76,9 @@ Google's SDK is subject to Google's policies and your agreement with Google. Col
 ## Retention
 
 - Raw security logs are deleted after the retention period (default 30 days).
-- Impressions, clicks and reward events are kept for billing, payouts and fraud review, but the per-event session hash and country are removed after the retention period.
+- Impressions, clicks and reward events are kept for billing, payouts and fraud review, but the per-event session hash, country, region and city are removed after the retention period.
 - On the device, the cached configuration is replaced on every successful start; creative files are removed when their ads expire (at most 30 minutes) or on the next start. Uninstalling the app removes everything.
 
 ## Google Play Data safety
 
-Use the tables above when filling in your Data safety form. The Qartvelo Ads SDK itself does not collect personal information, device identifiers or location from the device, and all traffic is encrypted in transit (HTTPS). Ad interaction events (impressions, clicks, reward completions) are sent to serve and bill ads and to prevent fraud. If you use the AdMob fallback, also include Google Mobile Ads' disclosures, which Google publishes for its SDK. You are responsible for your app's declarations.
+Use the tables above when filling in your Data safety form. The Qartvelo Ads SDK itself does not collect personal information, device identifiers or location from the device, and all traffic is encrypted in transit (HTTPS). The server does derive an approximate location (down to the city) from each ad request's IP address and stores it with ad events for reporting, so consider declaring **Approximate location** as collected, for *Advertising or marketing* and *Analytics*. Ad interaction events (impressions, clicks, reward completions) are sent to serve and bill ads and to prevent fraud. If you use the AdMob fallback, also include Google Mobile Ads' disclosures, which Google publishes for its SDK. You are responsible for your app's declarations.
