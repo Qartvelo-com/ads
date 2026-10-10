@@ -26,6 +26,15 @@ Initialization failure is not fatal: the SDK keeps running on its cached configu
 4. `onFallbackStarted` with reason `disabled` means Qartvelo Ads is switched off for the placement, app or account.
 5. For full-screen ads, make sure you call `show*` only after `onLoaded`, from a resumed Activity, and that no other full-screen ad is on screen (`ALREADY_SHOWING`).
 
+## Banners and HTML5 ads
+
+| Symptom | Cause and fix |
+|---|---|
+| A campaign shows a still image where the dashboard preview is animated | HTML5 ads need SDK 0.6.0 or later. Older SDKs get the static image versions of the same design. Update the SDK |
+| An HTML5 ad falls back with `creative_failed` | The ad did not report ready within 6 seconds, or its files could not be downloaded (at most 2 MB per ad). Check connectivity and the DEBUG log |
+| Two banners on one screen, one stays empty | Banners of the same placement code share one ad. An anchored banner and an inline banner on the same screen need two placements |
+| An inline banner leaves space or looks small | The ad takes the biggest size that fits the width and the inline max height, keeping its proportions; the banner is as tall as the ad. Raise the max height (default 250) for taller ads |
+
 ## Fallback does not show AdMob
 
 | Check | |
@@ -40,7 +49,7 @@ Initialization failure is not fatal: the SDK keeps running on its cached configu
 
 | Error | Fix |
 |---|---|
-| `Could not find com.qartvelo.ads:core:0.5.1` | Add `mavenCentral()` to the repositories used for dependencies (`dependencyResolutionManagement` or `allprojects`). Versions before 0.3.4 are only on JitPack (`maven("https://jitpack.io")`) |
+| `Could not find com.qartvelo.ads:core:0.6.0` | Add `mavenCentral()` to the repositories used for dependencies (`dependencyResolutionManagement` or `allprojects`). Versions before 0.3.4 are only on JitPack (`maven("https://jitpack.io")`) |
 | `AAPT: error: attribute qartvelo_placementId not found` | Declare `xmlns:app="http://schemas.android.com/apk/res-auto"` and make sure `com.qartvelo.ads:core` is a dependency of that module |
 | `attribute ourads_placementId not found` | Old attribute name from pre-release snippets. Use `app:qartvelo_placementId` |
 | `Unresolved reference: OURADS` | The enum value is `AdSource.QARTVELO` |

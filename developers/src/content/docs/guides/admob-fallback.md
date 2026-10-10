@@ -17,7 +17,7 @@ Qartvelo Ads is the primary ad source. When it has no eligible campaign, fails, 
 
 1. In AdMob, create an app for your package and ad units that match your placements: banner units for banner placements, interstitial units for interstitial placements, rewarded units for rewarded placements.
 2. Add the AdMob **App ID** (contains `~`) to `AndroidManifest.xml` as `com.google.android.gms.ads.APPLICATION_ID` meta-data, or on iOS to `Info.plist` as `GADApplicationIdentifier`. In React Native the config in step 3 writes both for you.
-3. Add the adapter: `implementation("com.qartvelo.ads:admob:0.5.1")`. In React Native, add the `admob` config instead (the Expo plugin entry, or the `"@qartvelo/react-native-ads"` key in `app.json`; see [React Native installation](/react-native/installation/#3-admob-fallback-optional)). On iOS add the `QartveloAdsAdMob` product (or pod) and call `QartveloAds.registerFallbackAdapter(QartveloAdMobFallbackAdapter())` before `initialize` ([iOS installation](/ios/installation/#register-the-admob-adapter)).
+3. Add the adapter: `implementation("com.qartvelo.ads:admob:0.6.0")`. In React Native, add the `admob` config instead (the Expo plugin entry, or the `"@qartvelo/react-native-ads"` key in `app.json`; see [React Native installation](/react-native/installation/#3-admob-fallback-optional)). On iOS add the `QartveloAdsAdMob` product (or pod) and call `QartveloAds.registerFallbackAdapter(QartveloAdMobFallbackAdapter())` before `initialize` ([iOS installation](/ios/installation/#register-the-admob-adapter)).
 4. Map each placement to its ad unit **ID** (contains `/`), either on the placement in the dashboard (fallback provider **AdMob**) or in code:
 
    ```kotlin
@@ -55,6 +55,10 @@ All of these must hold for a placement:
 
 **Banners** request Qartvelo Ads first. On failure, the AdMob anchored adaptive banner is created in the same view and refreshes itself according to your AdMob settings. The next successful Qartvelo Ads refresh replaces it.
 
+**Inline banners** (since 0.6.0, for banners inside scrolling content: `sizing = BannerSizing.INLINE` on Android, `.inline` on iOS, `size="inline"` in React Native) fall back to Google's **inline adaptive banner** for the view's width and the app's max height (`AdSize.getInlineAdaptiveBannerAdSize(width, maxHeight)` on Android, `inlineAdaptiveBanner(width:maxHeight:)` on iOS). Google decides the height, up to that max height. A [custom adapter](/guides/custom-fallback-adapter/#inline-banners) without inline support gets its anchored banner instead.
+
+A Qartvelo Ads HTML5 ad that does not report ready within 6 seconds counts as a creative failure (`creative_failed`), so banners fall back to AdMob and interstitials load the AdMob ad instead.
+
 ## Fallback reasons
 
 | Reason | Meaning |
@@ -62,7 +66,7 @@ All of these must hold for a placement:
 | `no_fill` | The backend had no eligible campaign (or test mode forced it) |
 | `timeout` | No answer within the request timeout, or the creative was too slow |
 | `error` | Network or server error |
-| `creative_failed` | The creative could not be downloaded, decoded or rendered |
+| `creative_failed` | The creative could not be downloaded, decoded or rendered, or an HTML5 ad was not ready within 6 seconds |
 | `disabled` | Qartvelo Ads is switched off for this placement, app or publisher |
 
 The SDK also sends a fire-and-forget `POST /api/v1/events/fallback` with the placement code and the reason (never any AdMob data), so your reports show fallback counts.

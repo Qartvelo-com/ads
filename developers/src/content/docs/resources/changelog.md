@@ -5,6 +5,43 @@ description: Release history of the Qartvelo Ads SDKs.
 
 Releases are tagged in [Qartvelo-com/ads](https://github.com/Qartvelo-com/ads). The Android SDK, the iOS SDK, the AdMob adapters and the React Native plugin share one version number.
 
+## 0.6.0
+
+- **HTML5 ads**: banners and interstitials can show HTML5 ads made in the Qartvelo Ads editor.
+  Banner and interstitial requests send `supported_creative_types: ["image","video","html5"]`
+  (rewarded stays image and video). The SDK downloads the served layout's files ahead (at most 2 MB
+  per ad, only plain relative paths) and shows the ad in a locked web view: JavaScript runs, but there
+  is no JavaScript bridge, no storage or cookies, and only the ad's own files load (Android: no DOM
+  storage, no file or content access, no third-party cookies; iOS: a non-persistent data store, a
+  private `qartvelo-bundle` scheme and content rules that block `http` and `https`). The impression
+  counts when the ad reports ready (`window.__qartvelo.ready`) and is visible; an ad that is not
+  ready within 6 seconds is a creative failure, so banners fall back to AdMob and interstitials report
+  no ad or load the fallback. Any navigation from the ad counts as one click and opens `click_url`
+  outside the app. Animations pause while the banner is hidden or the app is in the background.
+  Nothing changes in apps; older SDKs keep receiving the static image versions of the same design.
+- **HTML5 test ads**: in test mode, banners and interstitials get built-in animated HTML5 test ads
+  (`cr_test_banner_html5`, `cr_test_interstitial_html5`). Rewarded keeps the video test ad.
+- **Inline banners** for banners inside scrolling content: `sizing = BannerSizing.INLINE` and
+  `inlineMaxHeightDp` on Android, `sizing = .inline` (`QartveloBannerSizing`) and `inlineMaxHeight` on
+  iOS, both with a default max height of 250 (at least 32). The ad takes the biggest size that fits the
+  width and max height, keeping its proportions (rectangles allowed), and the banner is exactly as
+  tall as the ad. Width changes refit the ad without a new request. Inline sizing wins over
+  `usesAdaptiveSize`; the default anchored sizing is unchanged. Banners of the same placement share
+  one ad, so an anchored and an inline banner on the same screen need two placements.
+- **Inline banner requests** send `banner_mode: "inline"` and `banner_max_height` (pixels, like
+  `screen_width`) and no `banner_height`. The backend scales every image creative and HTML5 layout to
+  fit the slot and serves the one with the largest area.
+- **Inline AdMob fallback**: inline banners fall back to Google's inline adaptive banner
+  (`AdSize.getInlineAdaptiveBannerAdSize` on Android, `inlineAdaptiveBanner(width:maxHeight:)` on iOS).
+  Custom adapters can implement the new optional `InlineBannerFallback` interface on Android, or the
+  new `createInlineBanner(placementId:adUnitId:width:maxHeight:rootViewController:callback:)` method on
+  `QartveloFallbackAdapter` on iOS (the default returns `nil`). Adapters without it get their anchored
+  banner.
+- React Native: `<QartveloAdsBanner size="inline" maxHeight={250} />` (`size` defaults to
+  `'anchored'`, `maxHeight` to 250).
+- React Native: the copy of the iOS SDK bundled with the package is in sync with the native SDK
+  again; in 0.5.1 it was out of date.
+
 ## 0.5.1
 
 - **Android adaptive banners**: `QartveloAdsBannerView` now reserves the same compact anchored
@@ -74,7 +111,7 @@ Releases are tagged in [Qartvelo-com/ads](https://github.com/Qartvelo-com/ads). 
   Only physical App Store installations with a production receipt present may serve live traffic.
   When registration or fill is unavailable in test mode, iOS fetches
   public server test creatives without requiring a valid app session. See [iOS installation](/ios/installation/).
-- **iOS adaptive banners**: compact 50–90 point heights, using the AdMob adapter's standard size
+- **iOS adaptive banners**: compact 50 to 90 point heights, using the AdMob adapter's standard size
   calculation when linked. Adaptive requests select horizontal creatives by slot proportions;
   inline rectangles use `usesAdaptiveSize = false`. Public test banners have Retina artwork at
   960x150, 1320x204 and 2184x270 pixels.

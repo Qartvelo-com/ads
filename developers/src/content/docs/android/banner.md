@@ -89,15 +89,64 @@ cropped, so an older creative may leave space around it. Advertisers upload **96
 
 When the view's width changes, the slot height follows at once, without a new request or impression.
 
-For an inline rectangle, or the earlier sizing that took the creative's own size, set
-`banner.usesAdaptiveSize = false` before `load()`. Those requests leave out `banner_height`.
+For the earlier sizing that took the creative's own size, set `banner.usesAdaptiveSize = false`
+before `load()`. Those requests leave out `banner_height`. For a banner inside scrolling content, use
+[inline sizing](#inline-banners) instead.
+
+## Inline banners
+
+Since 0.6.0. The default (anchored) sizing is for a banner pinned to the top or bottom of the screen.
+For a banner **inside scrolling content**, such as a feed, an article or a `RecyclerView`, use inline
+sizing. The ad can then be a rectangle such as 300x250, not just a strip:
+
+```kotlin
+val banner = QartveloAdsBannerView(this).apply {
+    placementId = "feed_banner"
+    sizing = BannerSizing.INLINE
+    inlineMaxHeightDp = 250 // the default; at least 32
+    layoutParams = ViewGroup.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+}
+container.addView(banner)
+banner.load()
+```
+
+Set `sizing` and `inlineMaxHeightDp` in code before `load()`; there is no XML attribute for them.
+Inline sizing wins over `usesAdaptiveSize`.
+
+- **Sizing rule.** The ad takes the biggest size that fits the view's width and `inlineMaxHeightDp`,
+  keeping its proportions. The view is exactly as tall as that ad, with no reserved empty space, and
+  the ad is centered horizontally. When the width changes, the ad is refitted without a new request.
+- **Request.** Inline banners send `banner_mode: "inline"` and `banner_max_height` (pixels, like
+  `screen_width`) and no `banner_height`. The backend scales every candidate to fit the slot and
+  serves the one that shows biggest ([Ad request](/api/ad-request/#banner-sizing)).
+- **AdMob fallback.** With the AdMob adapter, the fallback is Google's inline adaptive banner
+  (`AdSize.getInlineAdaptiveBannerAdSize(width, maxHeight)`) for the same width and max height.
+  Custom adapters can implement [`InlineBannerFallback`](/guides/custom-fallback-adapter/#inline-banners);
+  adapters without it get their anchored banner.
+- **Two placements.** Banners of the same placement code share one ad. An anchored banner and an
+  inline banner on the same screen need two placement codes.
+
+## HTML5 ads
+
+Since 0.6.0, banners can show HTML5 ads made in the Qartvelo Ads editor. There is nothing to change in
+your app:
+
+- The SDK downloads the ad's files ahead (at most 2 MB per ad) and shows them in a locked `WebView`:
+  JavaScript runs, but there is no JavaScript bridge, no DOM storage, no file or content access, no
+  third-party cookies, and only the ad's own files load.
+- The impression counts when the ad reports it is ready and the banner is visible. An ad that is not
+  ready within 6 seconds is a creative failure, and the banner falls back to AdMob.
+- A tap counts as one click and opens the advertiser's page outside your app.
+- Animations pause while the banner is hidden or the app is in the background.
+
+SDKs before 0.6.0 receive the static image versions of the same design.
 
 ## Behaviour
 
 - **One controller per placement code.** A re-created view (rotation, list recycling, Compose recomposition, React Native re-render) that calls `load()` again re-attaches to the loaded banner; no new request is made.
 - **Refresh** happens no faster than the placement's `banner_refresh_seconds` (at least 30 s), and only while the view is attached and visible. It pauses when the Activity stops or the view is hidden or detached.
-- **Fallback**: on Qartvelo Ads no-fill, timeout, error or creative failure the view renders your AdMob anchored adaptive banner instead. A visible AdMob banner refreshes itself (AdMob settings apply); a later Qartvelo Ads fill replaces it.
-- **One visible banner per placement code.** Use distinct placement codes for banners that are on screen at the same time.
+- **Fallback**: on Qartvelo Ads no-fill, timeout, error or creative failure the view renders your AdMob anchored adaptive banner instead (Google's inline adaptive banner for [inline banners](#inline-banners)). A visible AdMob banner refreshes itself (AdMob settings apply); a later Qartvelo Ads fill replaces it.
+- **One visible banner per placement code.** Use distinct placement codes for banners that are on screen at the same time, for example an anchored and an inline banner.
 - **No leaks.** The view never holds an Activity after it is detached; AdMob views are re-parented through a context wrapper.
 - The **Ad** badge in the corner of a Qartvelo Ads banner opens the Qartvelo Ads website (`https://ads.qartvelo.com/?ref=<your package name>`). Tapping it is not an ad click: no click event, no `onClicked`, no advertiser page.
 

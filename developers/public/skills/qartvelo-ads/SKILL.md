@@ -9,11 +9,11 @@ Qartvelo Ads is a direct-sold ad network for Android and iOS apps in Georgia. Th
 
 ## Facts that must be exact
 
-- Version **0.5.1**. Android artifacts on Maven Central: `com.qartvelo.ads:core:0.5.1` (required), `com.qartvelo.ads:admob:0.5.1` (optional AdMob fallback). Repository `mavenCentral()`; versions before 0.3.4 are only on JitPack.
+- Version **0.6.0**. Android artifacts on Maven Central: `com.qartvelo.ads:core:0.6.0` (required), `com.qartvelo.ads:admob:0.6.0` (optional AdMob fallback). Repository `mavenCentral()`; versions before 0.3.4 are only on JitPack.
 - Kotlin package `com.qartvelo.sdk`, entry point `object QartveloAds`. Options class `QartveloAdsOptions`. Listener `QartveloAdsListener` (all methods have default bodies, main thread).
 - `AdSource` is `QARTVELO` or `ADMOB` (React Native: `'qartvelo'` or `'admob'`). There is no `OURADS` value.
 - Banner view `com.qartvelo.sdk.QartveloAdsBannerView`, XML attribute **`app:qartvelo_placementId`**.
-- iOS (0.4.0+): Swift Package Manager `https://github.com/Qartvelo-com/ads` (products `QartveloAds`, optional `QartveloAdsAdMob`) or pods `QartveloAds` / `QartveloAdsAdMob` `~> 0.5`. iOS 13+. Entry point `QartveloAds` (static methods), `QartveloAdsOptions` (class, set properties), `QartveloAdsDelegate` (optional `@objc` methods), `QartveloAdsBannerView(placementId:)` + `load()`. AdMob adapter: `QartveloAds.registerFallbackAdapter(QartveloAdMobFallbackAdapter())` before `initialize`, plus `GADApplicationIdentifier` in Info.plist. The iOS app is its own app in the dashboard (platform iOS, bundle ID) with its own app key.
+- iOS (0.4.0+): Swift Package Manager `https://github.com/Qartvelo-com/ads` (products `QartveloAds`, optional `QartveloAdsAdMob`) or pods `QartveloAds` / `QartveloAdsAdMob` `~> 0.6`. iOS 13+. Entry point `QartveloAds` (static methods), `QartveloAdsOptions` (class, set properties), `QartveloAdsDelegate` (optional `@objc` methods), `QartveloAdsBannerView(placementId:)` + `load()`. AdMob adapter: `QartveloAds.registerFallbackAdapter(QartveloAdMobFallbackAdapter())` before `initialize`, plus `GADApplicationIdentifier` in Info.plist. The iOS app is its own app in the dashboard (platform iOS, bundle ID) with its own app key.
 - React Native: `npm install @qartvelo/react-native-ads`, New Architecture, Android and iOS. Run `pod install` and rebuild iOS; npm includes the Swift SDK and autolinks `RNQartveloAds`. Optional AdMob is configured in one place: in Expo, the plugin entry `["@qartvelo/react-native-ads", { "admob": { "androidAppId": "ca-app-pub-...~...", "iosAppId": "ca-app-pub-...~..." } }]` in `expo.plugins`; in bare React Native, the same `{ "admob": { ... } }` object under a top-level `"@qartvelo/react-native-ads"` key in `app.json`. Both enable the adapter and write the App IDs (the older flags `QartveloAds_admobEnabled` and `QARTVELO_ADS_ADMOB_ENABLED` still work). Each platform is its own app in the dashboard, so `appKey` and `admobAdUnits` values accept `{ android, ios }`. Setup problems (wrong package or platform for the key, unknown placement codes) arrive as the `setupIssue` event and a development `console.warn`. All non-App Store iOS installs always use non-billable test traffic. Rebuild the native app after installing.
 - Ads are addressed by **placement code** (`[a-z0-9_]{2,64}`, e.g. `game_end`) created in the publisher dashboard. Each placement has one format: banner, interstitial or rewarded.
 - The app key (`app_` + 24 chars) is public and goes in the app. The **SDK secret never goes in an app**.
@@ -24,7 +24,7 @@ Qartvelo Ads is a direct-sold ad network for Android and iOS apps in Georgia. Th
 
 1. Ask for (or find) the app key and the placement codes and formats. If missing, tell the user to create them at https://ads.qartvelo.com (Apps -> app -> placements).
 2. Add the dependencies:
-   - Android: `mavenCentral()` in `settings.gradle.kts` `dependencyResolutionManagement.repositories` (usually already there), then `implementation("com.qartvelo.ads:core:0.5.1")` and, for fallback, `implementation("com.qartvelo.ads:admob:0.5.1")`.
+   - Android: `mavenCentral()` in `settings.gradle.kts` `dependencyResolutionManagement.repositories` (usually already there), then `implementation("com.qartvelo.ads:core:0.6.0")` and, for fallback, `implementation("com.qartvelo.ads:admob:0.6.0")`.
    - iOS: add the Swift package (or pods) above.
    - React Native: install `@qartvelo/react-native-ads`. Android resolves its SDK from Maven Central. For the fallback, add the `admob` config (the Expo plugin entry or the `app.json` key above); no Gradle, Podfile, manifest or Info.plist edits are needed. On iOS run `pod install` (the npm package includes the Swift SDK). Rebuild the app.
 3. If the AdMob adapter is used in a Kotlin app, make sure the manifest has the app's own AdMob App ID (React Native writes it from the `admob` config): `<meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="ca-app-pub-...~..."/>` (missing -> crash at start-up). Keep any existing AdMob setup.
@@ -63,7 +63,9 @@ Qartvelo Ads is a direct-sold ad network for Android and iOS apps in Georgia. Th
 - Do not wrap SDK calls in try/catch for exceptions: the SDK never throws; errors arrive through callbacks / rejected promises.
 - Do not call `initialize` more than once or with different options; it is idempotent per process.
 - Do not parse, log or store session or impression tokens.
-- One visible banner per placement code at a time.
+- One visible banner per placement code at a time (an anchored and an inline banner on one screen need two placements).
+- Banners inside scrolling content (feeds, articles, lists) use inline sizing (0.6.0+): Android `sizing = BannerSizing.INLINE` + `inlineMaxHeightDp`, iOS `sizing = .inline` + `inlineMaxHeight`, RN `size="inline" maxHeight={250}` (default 250). The ad takes the biggest size that fits width x max height, rectangles included; AdMob fallback is Google's inline adaptive banner. Banners pinned to a screen edge keep the default anchored sizing.
+- HTML5 ads (0.6.0+) need no app code; older SDKs get the static image versions of the same design.
 - Do not invent APIs. If unsure, read the page: e.g. https://developers.qartvelo.com/android/api-reference.md, https://developers.qartvelo.com/ios/api-reference.md or https://developers.qartvelo.com/react-native/api-reference.md
 
 ## Error codes

@@ -42,7 +42,7 @@ Avoid linking a second copy of QartveloAds into the same application target.
 
 ## 2. Native SDK repository (Android)
 
-The plugin depends on the native SDK `com.qartvelo.ads:core:0.5.1`, published on Maven Central. React Native and Expo projects already list `mavenCentral()`, so there is nothing to add. (Pinning a version before 0.3.4 with `QartveloAds_sdkVersion` needs JitPack: `maven { url "https://jitpack.io" }` in `allprojects.repositories`. To try an SDK build from `./gradlew publishToMavenLocal` in `android/`, set `QartveloAds_useMavenLocal=true` in `android/gradle.properties` and add `mavenLocal()` to `allprojects.repositories`.)
+The plugin depends on the native SDK `com.qartvelo.ads:core:0.6.0`, published on Maven Central. React Native and Expo projects already list `mavenCentral()`, so there is nothing to add. (Pinning a version before 0.3.4 with `QartveloAds_sdkVersion` needs JitPack: `maven { url "https://jitpack.io" }` in `allprojects.repositories`. To try an SDK build from `./gradlew publishToMavenLocal` in `android/`, set `QartveloAds_useMavenLocal=true` in `android/gradle.properties` and add `mavenLocal()` to `allprojects.repositories`.)
 
 ## 3. AdMob fallback (optional)
 

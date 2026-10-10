@@ -1,15 +1,15 @@
 ---
 title: API reference
-description: Complete public API of the Qartvelo Ads iOS SDK 0.5.1 (modules QartveloAds and QartveloAdsAdMob).
+description: Complete public API of the Qartvelo Ads iOS SDK 0.6.0 (modules QartveloAds and QartveloAdsAdMob).
 ---
 
-Module `QartveloAds`, version `0.5.1` (`QartveloAds.sdkVersion`). Every method is safe to call from any thread, never throws, and delivers callbacks on the main thread. All types are available to Objective-C except `QartveloAdsPrivacy` and the fallback adapter protocols.
+Module `QartveloAds`, version `0.6.0` (`QartveloAds.sdkVersion`). Every method is safe to call from any thread, never throws, and delivers callbacks on the main thread. All types are available to Objective-C except `QartveloAdsPrivacy` and the fallback adapter protocols.
 
 ## QartveloAds
 
 ```swift
 final class QartveloAds: NSObject {
-    static let sdkVersion: String // "0.5.1"
+    static let sdkVersion: String // "0.6.0"
 
     static func initialize(appKey: String, options: QartveloAdsOptions = QartveloAdsOptions(),
                            completion: ((Bool, QartveloAdsError?) -> Void)? = nil)
@@ -41,10 +41,17 @@ final class QartveloAdsBannerView: UIView {
     var placementId: String?
     weak var delegate: QartveloAdsDelegate?
     weak var rootViewController: UIViewController? // for AdMob click-through; defaults to the nearest view controller
+    var usesAdaptiveSize: Bool              // default true: anchored adaptive slot; false: the creative's size
+    var sizing: QartveloBannerSizing        // default .anchored; .inline for banners in scrolling content (wins over usesAdaptiveSize)
+    var inlineMaxHeight: CGFloat            // inline only: the most the banner may be tall, in points, default 250, at least 32
     func load()    // idempotent
     func destroy()
 }
+
+@objc enum QartveloBannerSizing: Int { case anchored, inline }
 ```
+
+Set `sizing` and `inlineMaxHeight` before `load()`. `.anchored`: Google's anchored adaptive slot, full width and 50 to 90 points tall. `.inline`: the ad takes the biggest size that fits the width and `inlineMaxHeight` keeping its proportions, and the view is as tall as that ad. See [Inline banners](/ios/banner/#inline-banners).
 
 ## QartveloAdsDelegate
 
@@ -133,3 +140,16 @@ final class QartveloAdMobFallbackAdapter: NSObject, QartveloFallbackAdapter { in
 ```
 
 Register it with `QartveloAds.registerFallbackAdapter(QartveloAdMobFallbackAdapter())`. In test mode it uses Google's iOS test ad units. To write an adapter for another network, implement `QartveloFallbackAdapter` (see `FallbackAdapter.swift`); the contract matches the [Android adapter](/guides/custom-fallback-adapter/).
+
+Since 0.6.0, `QartveloFallbackAdapter` has an optional method for inline banners. The protocol extension's default returns `nil`, and the SDK then uses `createBanner` (anchored). The AdMob adapter implements it with Google's `inlineAdaptiveBanner(width:maxHeight:)`.
+
+```swift
+func createInlineBanner(
+    placementId: String,
+    adUnitId: String,
+    width: CGFloat,
+    maxHeight: CGFloat,
+    rootViewController: UIViewController?,
+    callback: QartveloFallbackBannerCallback
+) -> QartveloFallbackBanner?
+```

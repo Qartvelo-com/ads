@@ -10,7 +10,7 @@ plugins {
 val jitpackGroup = System.getenv("GROUP")?.let { group -> "$group.${System.getenv("ARTIFACT")}" }
 allprojects {
     group = jitpackGroup ?: "com.qartvelo.ads"
-    version = "0.5.1"
+    version = "0.6.0"
 }
 
 // Repositories for the published artifacts (configured for every module that publishes):

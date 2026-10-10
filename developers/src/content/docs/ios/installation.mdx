@@ -30,18 +30,18 @@ resolves its dependencies and manages version updates automatically.
 https://github.com/Qartvelo-com/ads
 ```
 
-3. Choose **Up to Next Minor Version**, starting from **0.5.1** (`0.5.1..<0.6.0`).
+3. Choose **Up to Next Minor Version**, starting from **0.6.0** (`0.6.0..<0.7.0`).
 4. Click **Add Package**, select **QartveloAds**, and choose your app target.
 5. Also select **QartveloAdsAdMob** if you want the AdMob fallback.
 
 You can now use `import QartveloAds`. For later updates, choose **File > Packages > Update to Latest
-Package Versions**. The version rule keeps updates within the 0.5 series.
+Package Versions**. The version rule keeps updates within the 0.6 series.
 
 In a `Package.swift`:
 
 ```swift title="Package.swift"
 dependencies: [
-    .package(url: "https://github.com/Qartvelo-com/ads", .upToNextMinor(from: "0.5.1")),
+    .package(url: "https://github.com/Qartvelo-com/ads", .upToNextMinor(from: "0.6.0")),
 ],
 targets: [
     .target(name: "MyApp", dependencies: [
@@ -62,8 +62,8 @@ platform :ios, '13.0'
 use_frameworks! :linkage => :static
 
 target 'MyApp' do
-  pod 'QartveloAds', :git => 'https://github.com/Qartvelo-com/ads.git', :tag => '0.5.1'
-  pod 'QartveloAdsAdMob', :git => 'https://github.com/Qartvelo-com/ads.git', :tag => '0.5.1' # optional
+  pod 'QartveloAds', :git => 'https://github.com/Qartvelo-com/ads.git', :tag => '0.6.0'
+  pod 'QartveloAdsAdMob', :git => 'https://github.com/Qartvelo-com/ads.git', :tag => '0.6.0' # optional
 end
 ```
 

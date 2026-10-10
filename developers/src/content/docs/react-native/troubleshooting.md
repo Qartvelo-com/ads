@@ -5,7 +5,7 @@ description: Fixes for common React Native build and runtime problems.
 
 | Symptom | Fix |
 |---|---|
-| `Could not find com.qartvelo.ads:core:0.5.1` | Make sure `mavenCentral()` is in `allprojects.repositories` in `android/build.gradle`; versions before 0.3.4 also need JitPack ([Installation](/react-native/installation/#2-native-sdk-repository-android)) |
+| `Could not find com.qartvelo.ads:core:0.6.0` | Make sure `mavenCentral()` is in `allprojects.repositories` in `android/build.gradle`; versions before 0.3.4 also need JitPack ([Installation](/react-native/installation/#2-native-sdk-repository-android)) |
 | App crashes at start: "The Google Mobile Ads SDK was initialized incorrectly" | The adapter is on but the AdMob `APPLICATION_ID` meta-data is missing (legacy `QartveloAds_admobEnabled=true` setup). Add it, or set `admob.androidAppId` in the Expo plugin entry or the `app.json` key, which writes it for you ([Installation](/react-native/installation/#3-admob-fallback-optional)) |
 | Promises reject with `module_unavailable` | The app binary predates the package. Rebuild with `npx react-native run-android` |
 | Promises reject with `unsupported_platform` | Running on web or another unsupported platform. Guard with `QartveloAds.isSupported()` |
@@ -15,6 +15,8 @@ description: Fixes for common React Native build and runtime problems.
 | Every load ends with `fallbackStarted` reason `timeout` | The backend answered after the request timeout. Common on slow debug networks; raise the placement timeout in the dashboard while testing |
 | `fallbackStarted` but no AdMob ad | The `admob` config is missing from the Expo plugin entry or `app.json` (or the legacy `QartveloAds_admobEnabled` flag is unset), `admobFallback` is false, the placement's fallback is `none`, or no AdMob unit is configured for it |
 | Banner stays empty | Check `onLoadFailed`; give the component a width (it defaults to `100%`) and make sure only one banner per placement code is visible |
+| Two banners on one screen, one stays empty | Banners of the same placement code share one ad. An anchored banner and a `size="inline"` banner on the same screen need two placement codes |
+| A campaign shows a still image where the dashboard preview is animated | HTML5 ads need `@qartvelo/react-native-ads` 0.6.0 or later. Older versions get the static image versions of the same design |
 | Two copies of React in Metro (local package) | Point Metro's `watchFolders` at the package and block its `node_modules/react(-native)`, as in the example app's `metro.config.js` |
 
 ## Setup warnings
