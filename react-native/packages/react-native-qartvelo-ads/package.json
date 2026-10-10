@@ -1,6 +1,6 @@
 {
   "name": "@qartvelo/react-native-ads",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "Qartvelo Ads React Native plugin for Android and iOS: banner, interstitial and rewarded ads with automatic AdMob fallback.",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",

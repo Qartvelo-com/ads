@@ -62,12 +62,49 @@ import { QartveloAdsBanner } from '@qartvelo/react-native-ads';
 ```
 
 - Collapsed (height 0) until an ad is rendered, then takes the height of a compact anchored adaptive banner at the component's width: 50 to 90 dp on Android, 50 to 90 points on iOS. That is the same height as the AdMob fallback banner, so the layout does not jump when one replaces the other. Set an explicit `height` to reserve space instead.
-- Props: `placementId` (required), `style`, `onLoaded`, `onLoadFailed`, `onShown`, `onImpression`, `onClicked`, `onFallbackStarted`, `onNoAdAvailable`, `onSizeChange`.
+- Props: `placementId` (required), `size`, `maxHeight`, `style`, `onLoaded`, `onLoadFailed`, `onShown`, `onImpression`, `onClicked`, `onFallbackStarted`, `onNoAdAvailable`, `onSizeChange`.
 - Re-renders never reach the SDK. Changing `placementId` loads the new placement.
 - Remounting (navigation, list recycling) does not request a new ad: the SDK keeps one banner per placement and the new view re-attaches. The component's `onLoaded` fires again for the new view; global listeners do not get a second `loaded`.
 - Refresh follows the placement's `banner_refresh_seconds` (minimum 30 s) and pauses while off screen or in the background.
 - One visible banner per placement code at a time.
 - A banner mounted before `initialize()` waits and loads as soon as initialization starts.
+
+### Inline banners
+
+Since 0.6.0. The default `size="anchored"` is for a banner pinned to the top or bottom of the screen.
+For a banner **inside scrolling content**, such as a `ScrollView`, a `FlatList` item or an article, use
+`size="inline"`. The ad can then be a rectangle such as 300x250, not just a strip:
+
+```tsx
+<QartveloAdsBanner
+  placementId="feed_banner"
+  size="inline"
+  maxHeight={250} // dp on Android, points on iOS; the default, at least 32
+  style={{ width: '100%' }}
+/>
+```
+
+- **Sizing rule.** The ad takes the biggest size that fits the component's width and `maxHeight`,
+  keeping its proportions. The banner is exactly as tall as that ad, with no reserved empty space,
+  and the ad is centered horizontally. When the width changes, the ad is refitted without a new request.
+- **Request.** Inline banners send `banner_mode: "inline"` and `banner_max_height` (pixels) and no
+  `banner_height`; the backend serves the creative that shows biggest in the slot
+  ([Ad request](/api/ad-request/#banner-sizing)).
+- **AdMob fallback.** The fallback is Google's inline adaptive banner for the same width and max
+  height.
+- **Two placements.** Banners of the same placement share one ad. An anchored banner and an inline
+  banner on the same screen need two placement codes.
+
+### HTML5 ads
+
+Since 0.6.0, banners and interstitials can show HTML5 ads made in the Qartvelo Ads editor. There is
+nothing to change in your app. The native SDK downloads the ad's files ahead (at most 2 MB per ad)
+and shows them in a locked web view with no JavaScript bridge, no storage or cookies, and no network
+access beyond the ad's own files. The impression counts when the ad reports it is ready and is
+visible; an ad that is not ready within 6 seconds is a creative failure and falls back to AdMob. A tap
+counts as one click and opens the advertiser's page outside your app. Animations pause while the
+banner is hidden or the app is in the background. Package versions before 0.6.0 receive the static
+image versions of the same design.
 
 ## Interstitial
 
@@ -167,7 +204,8 @@ AdMob ad. How it works and who gets paid: [AdMob fallback](/guides/admob-fallbac
   reason: `no_fill`, `timeout`, `error`, `creative_failed` or `disabled`. `loaded` and the show
   results carry `source: 'admob'`. See [Events and errors](/react-native/events-and-errors/).
 - **Banner size.** A Qartvelo Ads banner reserves the same anchored adaptive slot as the AdMob
-  banner, so both are the same height.
+  banner, so both are the same height. With `size="inline"`, the fallback is Google's inline adaptive
+  banner up to `maxHeight`.
 - **Consent.** The fallback uses your own Google Mobile Ads setup: run Google's consent flow (UMP)
   yourself where it is required. The SDK only forwards the signals you pass to `setPrivacy`; see
   [Privacy](/guides/privacy/#admob-fallback-and-consent).

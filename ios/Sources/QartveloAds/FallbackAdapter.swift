@@ -42,10 +42,30 @@ public protocol QartveloFallbackAdapter: AnyObject {
         rootViewController: UIViewController?,
         callback: QartveloFallbackBannerCallback
     ) -> QartveloFallbackBanner
+
+    /// An inline banner (inside scrolling content) `width` points wide and up to `maxHeight` tall.
+    /// Return nil to get `createBanner` (anchored) instead; that is the default.
+    func createInlineBanner(
+        placementId: String,
+        adUnitId: String,
+        width: CGFloat,
+        maxHeight: CGFloat,
+        rootViewController: UIViewController?,
+        callback: QartveloFallbackBannerCallback
+    ) -> QartveloFallbackBanner?
 }
 
 public extension QartveloFallbackAdapter {
     func adaptiveBannerSize(width: CGFloat) -> CGSize { .zero }
+
+    func createInlineBanner(
+        placementId: String,
+        adUnitId: String,
+        width: CGFloat,
+        maxHeight: CGFloat,
+        rootViewController: UIViewController?,
+        callback: QartveloFallbackBannerCallback
+    ) -> QartveloFallbackBanner? { nil }
 }
 
 public struct QartveloFallbackSettings: Equatable {

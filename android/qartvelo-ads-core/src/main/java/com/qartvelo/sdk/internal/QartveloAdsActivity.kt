@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
+import android.content.MutableContextWrapper
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
@@ -29,6 +30,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.qartvelo.sdk.R
 import java.io.File
+import java.lang.ref.WeakReference
 import kotlin.math.ceil
 
 /**
@@ -41,6 +43,7 @@ internal class QartveloAdsActivity : Activity() {
     private var countdown: TextView? = null
     private var imageView: ImageView? = null
     private var videoContainer: AspectFitLayout? = null
+    private var html5Container: FrameLayout? = null
     private var confirmDialog: AlertDialog? = null
     private var backCallback: Any? = null
     private var resumedState = false
@@ -69,6 +72,7 @@ internal class QartveloAdsActivity : Activity() {
             when (s.ad.creativeType) {
                 CreativeType.IMAGE -> loadImage(s)
                 CreativeType.VIDEO -> attachVideo(s)
+                CreativeType.HTML5 -> attachHtml5(s)
             }
             if (s.rendered) scheduleClose(s)
             if (s.confirmVisible) showConfirm(s)
@@ -87,12 +91,14 @@ internal class QartveloAdsActivity : Activity() {
             ui.removeCallbacks(tick)
             ui.post(tick)
         }
+        guard("html5 resume") { s.html5?.resume() }
     }
 
     override fun onPause() {
         resumedState = false
         ui.removeCallbacks(tick)
         guard("pause") { session?.player?.pause() }
+        guard("html5 pause") { session?.html5?.pause() }
         super.onPause()
     }
 
@@ -109,6 +115,11 @@ internal class QartveloAdsActivity : Activity() {
             s.player?.let { p ->
                 p.listener = null
                 guard("detach") { p.detach() }
+            }
+            if (!isFinishing) {
+                // Re-creation: keep the web view (and its state) for the next activity, without this one.
+                s.html5?.view?.let { (it.parent as? ViewGroup)?.removeView(it) }
+                s.html5Context?.baseContext = applicationContext
             }
             if (isFinishing) s.close()
         }
@@ -139,6 +150,12 @@ internal class QartveloAdsActivity : Activity() {
                 val container = AspectFitLayout(this)
                 videoContainer = container
                 root.addView(container, FrameLayout.LayoutParams(match, match, Gravity.CENTER))
+            }
+            CreativeType.HTML5 -> {
+                // The ad lays itself out for the screen; taps reach it through the web view.
+                val container = FrameLayout(this)
+                html5Container = container
+                root.addView(container, FrameLayout.LayoutParams(match, match))
             }
         }
 
@@ -284,6 +301,39 @@ internal class QartveloAdsActivity : Activity() {
             }
         }
         player.attach(container)
+    }
+
+    /**
+     * Shows the HTML5 creative: the impression counts when the runtime reports ready (the view has
+     * its size), a creative that is not ready in time is a show failure. The surface outlives this
+     * activity, so callbacks act on whichever activity draws the show then.
+     */
+    private fun attachHtml5(s: ShowSession) {
+        val container = html5Container ?: return failRender(s)
+        s.activity = WeakReference(this)
+        val existing = s.html5
+        if (existing != null) {
+            s.html5Context?.baseContext = this
+            (existing.view.parent as? ViewGroup)?.removeView(existing.view)
+            container.addView(existing.view, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+            return
+        }
+        val wrapper = MutableContextWrapper(this)
+        val surface = Html5AdView.create(wrapper, s.ad)
+        s.html5Context = wrapper
+        s.html5 = surface
+        container.addView(surface.view, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+        fun current(): QartveloAdsActivity? = (s.activity?.get() as? QartveloAdsActivity)?.takeIf { !it.isDestroyed && it.session === s }
+        surface.load(
+            onReady = {
+                if (!s.closed) {
+                    s.onRendered()
+                    current()?.scheduleClose(s)
+                }
+            },
+            onFailed = { if (!s.rendered && !s.closed) current()?.failRender(s) ?: s.onRenderFailed() },
+            onClick = { current()?.let { s.onClick(it) } },
+        )
     }
 
     private fun scheduleClose(s: ShowSession) {

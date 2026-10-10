@@ -16,5 +16,8 @@ internal object AdaptiveBannerLayout {
     }
 }
 
-/** A banner request's slot in px; [heightPx] is null when the host uses the creative's own size. */
-internal data class BannerSlot(val widthPx: Int, val heightPx: Int?)
+/**
+ * A banner request's slot in px; [heightPx] is null when the host uses the creative's own size;
+ * [inlineMaxHeightPx] is set for inline slots (the ad takes its fitted size, see InlineBannerFit).
+ */
+internal data class BannerSlot(val widthPx: Int, val heightPx: Int?, val inlineMaxHeightPx: Int? = null)

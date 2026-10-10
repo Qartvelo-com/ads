@@ -16,6 +16,7 @@ final class AdViewController: UIViewController {
     private let countdown = PillLabel()
     private var imageView: UIImageView?
     private var playerView: PlayerView?
+    private var html5: Html5Surface?
     private var player: AVPlayer?
     private var observations: [NSKeyValueObservation] = []
     private var notificationTokens: [NSObjectProtocol] = []
@@ -57,6 +58,7 @@ final class AdViewController: UIViewController {
         switch session.ad.creativeType {
         case .image: buildImage()
         case .video: buildVideo()
+        case .html5: buildHtml5()
         }
         buildOverlay()
         observeAppState()
@@ -133,6 +135,31 @@ final class AdViewController: UIViewController {
         notificationTokens.append(center.addObserver(forName: .AVPlayerItemFailedToPlayToEndTime, object: item, queue: .main) { [weak self] _ in
             self?.onVideoError()
         })
+    }
+
+    /// The impression counts when the runtime reports ready (the view has its size); a creative that
+    /// is not ready in time is a show failure. Taps reach the ad through the web view.
+    private func buildHtml5() {
+        guard let surface = Html5AdView.create(session.ad) else {
+            DispatchQueue.main.async { [weak self] in self?.failRender() }
+            return
+        }
+        html5 = surface
+        surface.view.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(surface.view)
+        pin(surface.view, to: view)
+        surface.load(
+            onReady: { [weak self] in
+                guard let self = self, !self.session.closed, !self.failing else { return }
+                self.session.onRendered()
+                self.scheduleClose()
+            },
+            onFailed: { [weak self] _ in
+                guard let self = self, !self.session.rendered else { return }
+                self.failRender()
+            },
+            onClick: { [weak self] in self?.session.onClick() }
+        )
     }
 
     private func buildOverlay() {
@@ -330,10 +357,12 @@ final class AdViewController: UIViewController {
         notificationTokens.append(center.addObserver(forName: UIApplication.willResignActiveNotification, object: nil, queue: .main) { [weak self] _ in
             self?.active = false
             self?.player?.pause()
+            self?.html5?.pause()
         })
         notificationTokens.append(center.addObserver(forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main) { [weak self] _ in
             guard let self = self else { return }
             self.active = true
+            self.html5?.resume()
             self.resumeIfPossible()
         })
     }
@@ -409,6 +438,7 @@ final class AdViewController: UIViewController {
         tickTimer?.invalidate()
         tickTimer = nil
         player?.pause()
+        html5?.destroy()
         observations.forEach { $0.invalidate() }
         observations.removeAll()
     }

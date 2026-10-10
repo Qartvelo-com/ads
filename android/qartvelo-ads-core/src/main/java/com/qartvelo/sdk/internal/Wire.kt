@@ -64,7 +64,7 @@ internal class Session(val token: String, val expiresAtElapsed: Long)
 
 internal class InitResult(val session: Session, val config: RemoteConfig, val cacheableJson: String)
 
-internal enum class CreativeType { IMAGE, VIDEO }
+internal enum class CreativeType { IMAGE, VIDEO, HTML5 }
 
 /** An ad returned by `/ads/request`. Expiry is converted to the device's monotonic clock. */
 internal class ServedAd(
@@ -82,8 +82,10 @@ internal class ServedAd(
     val impressionToken: String,
     val expiresAtElapsed: Long,
     val test: Boolean,
+    /** HTML5 creatives only: the served layout's bundle. */
+    val bundle: Html5Bundle? = null,
 ) {
-    /** Local copy of the creative; set once pre-download succeeded. */
+    /** Local copy of the creative (an HTML5 bundle's directory); set once pre-download succeeded. */
     @Volatile
     var file: File? = null
 

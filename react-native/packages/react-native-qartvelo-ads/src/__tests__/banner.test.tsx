@@ -43,6 +43,23 @@ beforeEach(() => {
 
 describe.each(['android', 'ios'] as const)('QartveloAdsBanner on %s', (os) => {
   beforeEach(() => setPlatform(os));
+  it('passes inline sizing to the native banner, anchored by default', () => {
+    render(
+      <QartveloAdsBanner
+        placementId="feed_banner"
+        size="inline"
+        maxHeight={200}
+      />
+    );
+    expect(bannerRecorder.last().size).toBe('inline');
+    expect(bannerRecorder.last().maxHeight).toBe(200);
+
+    bannerRecorder.reset();
+    render(<QartveloAdsBanner placementId="home_banner" />);
+    expect(bannerRecorder.last().size).toBe('anchored');
+    expect(bannerRecorder.last().maxHeight).toBe(250);
+  });
+
   it('keeps native props stable when the parent re-renders with new inline props', () => {
     const renderer = render(
       <QartveloAdsBanner

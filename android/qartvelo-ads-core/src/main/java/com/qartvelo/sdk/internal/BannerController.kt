@@ -8,6 +8,7 @@ import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.util.TypedValue
 import android.view.Gravity
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
@@ -15,6 +16,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import com.qartvelo.sdk.AdFormat
 import com.qartvelo.sdk.AdSource
+import com.qartvelo.sdk.BannerSizing
 import com.qartvelo.sdk.QartveloAdsAdInfo
 import com.qartvelo.sdk.QartveloAdsBannerView
 import com.qartvelo.sdk.QartveloAdsError
@@ -24,6 +26,7 @@ import com.qartvelo.sdk.R
 import com.qartvelo.sdk.fallback.AdaptiveBannerSizer
 import com.qartvelo.sdk.fallback.FallbackBanner
 import com.qartvelo.sdk.fallback.FallbackBannerCallback
+import com.qartvelo.sdk.fallback.InlineBannerFallback
 import java.lang.ref.WeakReference
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.ceil
@@ -39,7 +42,8 @@ import kotlin.math.ceil
  */
 internal class BannerController(private val engine: Engine, val placementId: String) {
     private sealed class Content {
-        class QartveloAds(val ad: ServedAd, val bitmap: Bitmap) : Content() {
+        /** An image ([bitmap]) or HTML5 ([html5]) Qartvelo Ads banner. */
+        class QartveloAds(val ad: ServedAd, val bitmap: Bitmap?, val html5: Html5Content? = null) : Content() {
             var impressed = false
             var clicked = false
         }
@@ -53,6 +57,17 @@ internal class BannerController(private val engine: Engine, val placementId: Str
     private var loading = false
     private var lastRequestAt = Long.MIN_VALUE / 2
     private var pendingFallback: FallbackBanner? = null
+
+    /**
+     * An HTML5 banner loading hidden in the slot (it needs a real size to become ready); swapped in
+     * when ready, dropped (and the fallback used) when it fails or times out.
+     */
+    private var staged: Staged? = null
+
+    /** An HTML5 surface and the context it was created with, swapped between Activities like a fallback banner. */
+    class Html5Content(val surface: Html5Surface, val wrapper: MutableContextWrapper)
+
+    private class Staged(val ad: ServedAd, val html5: Html5Content, val frame: FrameLayout)
     private val refreshTask = Runnable { refreshIfDue() }
 
     private val hostView: QartveloAdsBannerView? get() = host?.get()
@@ -80,7 +95,16 @@ internal class BannerController(private val engine: Engine, val placementId: Str
             if (current != null) replaceContent(null)
             if (!loading && isDue()) startLoad()
         }
+        restage(view)
         schedule()
+    }
+
+    /** Puts a loading HTML5 banner back into [view] after the host changed or re-attached. */
+    private fun restage(view: QartveloAdsBannerView) {
+        val stage = staged ?: return
+        if (stage.frame.parent != null) return
+        stage.html5.wrapper.baseContext = view.context
+        view.addView(stage.frame, 0, paramsFor(view, stage.ad))
     }
 
     fun detach(view: QartveloAdsBannerView) {
@@ -94,21 +118,23 @@ internal class BannerController(private val engine: Engine, val placementId: Str
     fun onHostAttachedToWindow(view: QartveloAdsBannerView) {
         if (hostView !== view) return
         content?.let { if (isDisplayable(it)) render(view, it) }
+        restage(view)
         onVisibilityChanged(view, view.isVisibleForAds())
     }
 
     fun onHostDetachedFromWindow(view: QartveloAdsBannerView) {
         if (hostView !== view) return
         onVisibilityChanged(view, false)
-        // Drop the fallback view from the detached hierarchy and point it at the app context so a
-        // destroyed Activity cannot be reached through the controller.
-        (content as? Content.Fallback)?.let { unrender(view) }
+        // Drop the fallback or web view from the detached hierarchy and point it at the app context so
+        // a destroyed Activity cannot be reached through the controller.
+        if (content is Content.Fallback || (content as? Content.QartveloAds)?.html5 != null || staged != null) unrender(view)
     }
 
     fun onVisibilityChanged(view: QartveloAdsBannerView, visible: Boolean) {
         if (hostView !== view || hostVisible == visible) return
         hostVisible = visible
         (content as? Content.Fallback)?.banner?.let { guard("banner pause/resume") { if (visible) it.resume() else it.pause() } }
+        (content as? Content.QartveloAds)?.html5?.surface?.let { guard("html5 pause/resume") { if (visible) it.resume() else it.pause() } }
         if (visible) onShownMaybe()
         schedule()
     }
@@ -160,7 +186,7 @@ internal class BannerController(private val engine: Engine, val placementId: Str
         }
         engine.fetchOurAd(placementId, AdFormat.BANNER, engine.effectiveTimeoutMs(placement), slotFor(hostView)) { outcome ->
             when (outcome) {
-                is FetchOutcome.Success -> decodeBanner(outcome.ad)
+                is FetchOutcome.Success -> if (outcome.ad.creativeType == CreativeType.HTML5) stageHtml5(outcome.ad) else decodeBanner(outcome.ad)
                 is FetchOutcome.Failure -> onQartveloAdsFailed(outcome.failure)
             }
         }
@@ -179,6 +205,57 @@ internal class BannerController(private val engine: Engine, val placementId: Str
                 if (bitmap == null) onQartveloAdsFailed(creativeFailure()) else onQartveloAdsReady(ad, bitmap)
             }
         }
+    }
+
+    private fun stageHtml5(ad: ServedAd) {
+        dropStaged()
+        val view = hostView
+        val wrapper = MutableContextWrapper(view?.context ?: engine.appContext)
+        val surface = try {
+            Html5AdView.create(wrapper, ad)
+        } catch (t: Throwable) {
+            OurLog.e("HTML5 banner could not be created", t)
+            return onQartveloAdsFailed(creativeFailure())
+        }
+        val html5 = Html5Content(surface, wrapper)
+        val frame = StagingFrame(wrapper)
+        frame.addView(surface.view, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+        val stage = Staged(ad, html5, frame)
+        staged = stage
+        // Behind whatever the slot shows now, and never touchable: taps keep reaching the visible banner.
+        view?.addView(frame, 0, paramsFor(view, ad))
+        surface.load(
+            onReady = { if (staged === stage) onHtml5Ready(stage) },
+            onFailed = { if (staged === stage) {
+                dropStaged()
+                onQartveloAdsFailed(creativeFailure())
+            } },
+            onClick = { onQartveloAdsClick(hostView?.context ?: engine.appContext, surface) },
+        )
+    }
+
+    private fun onHtml5Ready(stage: Staged) {
+        staged = null
+        (stage.frame.parent as? ViewGroup)?.removeView(stage.frame)
+        stage.frame.removeAllViews()
+        OurLog.d("QartveloAds HTML5 banner ready for '$placementId'")
+        loading = false
+        val next = Content.QartveloAds(stage.ad, null, stage.html5)
+        replaceContent(next)
+        hostView?.let { render(it, next) }
+        if (!hostVisible) guard("banner pause") { stage.html5.surface.pause() }
+        val info = infoFor(next)
+        emit("onLoaded") { it.onLoaded(info) }
+        onShownMaybe()
+        schedule()
+    }
+
+    private fun dropStaged() {
+        val stage = staged ?: return
+        staged = null
+        (stage.frame.parent as? ViewGroup)?.removeView(stage.frame)
+        stage.html5.wrapper.baseContext = engine.appContext
+        guard("html5 destroy") { stage.html5.surface.destroy() }
     }
 
     private fun creativeFailure() = QartveloAdsFailure(
@@ -257,7 +334,12 @@ internal class BannerController(private val engine: Engine, val placementId: Str
             }
         }
         try {
-            created = adapter.createBanner(wrapper, placementId, unit, widthDp, callback)
+            val inlineMaxDp = view?.takeIf { it.sizing == BannerSizing.INLINE }?.inlineMaxHeightDp?.coerceAtLeast(MIN_INLINE_HEIGHT_DP)
+            created = if (inlineMaxDp != null && adapter is InlineBannerFallback) {
+                adapter.createInlineBanner(wrapper, placementId, unit, widthDp, inlineMaxDp, callback)
+            } else {
+                adapter.createBanner(wrapper, placementId, unit, widthDp, callback)
+            }
             pendingFallback = created
         } catch (t: Throwable) {
             OurLog.e("Fallback banner creation threw", t)
@@ -320,8 +402,10 @@ internal class BannerController(private val engine: Engine, val placementId: Str
         emit("onImpression") { it.onImpression(info) }
     }
 
-    private fun onQartveloAdsClick(context: Context) {
+    /** [surface]: the HTML5 surface that was tapped; a tap on a replaced one is ignored. */
+    private fun onQartveloAdsClick(context: Context, surface: Html5Surface? = null) {
         val c = content as? Content.QartveloAds ?: return
+        if (surface != null && c.html5?.surface !== surface) return
         val url = c.ad.clickUrl ?: return
         if (!c.impressed) return
         if (!c.clicked) {
@@ -337,18 +421,15 @@ internal class BannerController(private val engine: Engine, val placementId: Str
         when (c) {
             is Content.QartveloAds -> {
                 if (view.getTag(R.id.qartvelo_banner_content) === c) return
+                // Keep a staged HTML5 banner loading in the slot while the current one is shown.
+                val stage = staged?.frame
                 view.removeAllViews()
-                val slot = slotFor(view)
-                val params = if (slot.heightPx != null) {
-                    // The anchored adaptive slot; the creative is fitted into it, like iOS.
-                    FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, slot.heightPx, Gravity.CENTER)
-                } else {
-                    val wantW = (c.ad.width.coerceAtLeast(1) * view.resources.displayMetrics.density).toInt()
-                    val w = minOf(wantW, slot.widthPx)
-                    val h = (w.toLong() * c.ad.height.coerceAtLeast(1) / c.ad.width.coerceAtLeast(1)).toInt()
-                    FrameLayout.LayoutParams(w, h, Gravity.CENTER)
-                }
-                val image = ImageView(view.context).apply {
+                val params = paramsFor(view, c.ad)
+                val creative: View = c.html5?.let { html5 ->
+                    (html5.surface.view.parent as? ViewGroup)?.removeView(html5.surface.view)
+                    html5.wrapper.baseContext = view.context
+                    html5.surface.view
+                } ?: ImageView(view.context).apply {
                     scaleType = ImageView.ScaleType.FIT_CENTER
                     setImageBitmap(c.bitmap)
                     contentDescription = view.context.getString(R.string.qartvelo_ad_label)
@@ -357,11 +438,12 @@ internal class BannerController(private val engine: Engine, val placementId: Str
                 // The creative and its "Ad" badge share a frame sized to the slot.
                 val frame = FrameLayout(view.context)
                 val match = ViewGroup.LayoutParams.MATCH_PARENT
-                frame.addView(image, FrameLayout.LayoutParams(match, match))
+                frame.addView(creative, FrameLayout.LayoutParams(match, match))
                 frame.addView(adBadge(view.context, c.ad.test), FrameLayout.LayoutParams(
                     ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.TOP or Gravity.START,
                 ))
-                view.addView(frame, params)
+                view.addView(frame, 0, params)
+                if (stage != null && stage.parent == null) view.addView(stage, 0, paramsFor(view, staged!!.ad))
                 view.setTag(R.id.qartvelo_banner_content, c)
             }
             is Content.Fallback -> {
@@ -378,23 +460,55 @@ internal class BannerController(private val engine: Engine, val placementId: Str
         }
     }
 
-    /** The host's width changed: refit the adaptive slot, without a new request or impression. */
+    /**
+     * Where a Qartvelo Ads creative goes in the host. Inline: the ad's fitted size, centered, no
+     * space reserved beyond it. Anchored: the adaptive slot (an image is fitted into it; HTML5 lays
+     * itself out in it). Legacy (usesAdaptiveSize = false): the creative's own size in dp.
+     */
+    private fun paramsFor(view: QartveloAdsBannerView, ad: ServedAd): FrameLayout.LayoutParams {
+        val slot = slotFor(view)
+        return if (slot.inlineMaxHeightPx != null) {
+            val fitted = InlineBannerFit.size(ad.width, ad.height, slot.widthPx, slot.inlineMaxHeightPx)
+            FrameLayout.LayoutParams(fitted.width, fitted.height, Gravity.CENTER)
+        } else if (slot.heightPx != null) {
+            FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, slot.heightPx, Gravity.CENTER)
+        } else {
+            val wantW = (ad.width.coerceAtLeast(1) * view.resources.displayMetrics.density).toInt()
+            val w = minOf(wantW, slot.widthPx)
+            val h = (w.toLong() * ad.height.coerceAtLeast(1) / ad.width.coerceAtLeast(1)).toInt()
+            FrameLayout.LayoutParams(w, h, Gravity.CENTER)
+        }
+    }
+
+    /** The host's width changed: refit the adaptive or inline slot, without a new request or impression. */
     fun onHostResized(view: QartveloAdsBannerView) {
-        if (hostView !== view || content !is Content.QartveloAds) return
+        val c = content as? Content.QartveloAds ?: return
+        if (hostView !== view) return
         val frame = view.getChildAt(0) ?: return
-        val height = slotFor(view).heightPx ?: return
         val params = frame.layoutParams ?: return
-        if (params.height != height) {
+        val slot = slotFor(view)
+        val (width, height) = if (slot.inlineMaxHeightPx != null) {
+            InlineBannerFit.size(c.ad.width, c.ad.height, slot.widthPx, slot.inlineMaxHeightPx).let { it.width to it.height }
+        } else {
+            params.width to (slot.heightPx ?: return)
+        }
+        if (params.width != width || params.height != height) {
+            params.width = width
             params.height = height
             frame.layoutParams = params
         }
     }
 
-    /** The host's banner slot in px: its width, and the anchored adaptive height unless it opted out. */
+    /** The host's banner slot in px: its width, and the inline max height or the anchored adaptive height unless it opted out. */
     private fun slotFor(view: QartveloAdsBannerView?): BannerSlot {
         val context = view?.context ?: engine.appContext
         val metrics = context.resources.displayMetrics
         val widthPx = view?.width?.takeIf { it > 0 } ?: metrics.widthPixels
+        if (view?.sizing == BannerSizing.INLINE) {
+            val maxDp = view.inlineMaxHeightDp.coerceAtLeast(MIN_INLINE_HEIGHT_DP)
+            // The API accepts at most 20000 px.
+            return BannerSlot(widthPx, null, ceil(maxDp * metrics.density).toInt().coerceAtMost(MAX_INLINE_HEIGHT_PX))
+        }
         if (view?.usesAdaptiveSize == false) return BannerSlot(widthPx, null)
         val widthDp = (widthPx / metrics.density).toInt().coerceAtLeast(MIN_BANNER_WIDTH_DP)
         val preferred = (engine.fallbackAdapter as? AdaptiveBannerSizer)?.let { sizer ->
@@ -411,6 +525,8 @@ internal class BannerController(private val engine: Engine, val placementId: Str
 
     private fun unrender(view: QartveloAdsBannerView) {
         (content as? Content.Fallback)?.let { it.wrapper.baseContext = engine.appContext }
+        (content as? Content.QartveloAds)?.html5?.let { it.wrapper.baseContext = engine.appContext }
+        staged?.html5?.wrapper?.baseContext = engine.appContext
         view.removeAllViews()
         view.setTag(R.id.qartvelo_banner_content, null)
     }
@@ -422,6 +538,12 @@ internal class BannerController(private val engine: Engine, val placementId: Str
             (old.banner.view.parent as? ViewGroup)?.removeView(old.banner.view)
             old.wrapper.baseContext = engine.appContext
             guard("banner destroy") { old.banner.destroy() }
+        }
+        if (old is Content.QartveloAds && old !== next) {
+            old.html5?.let { html5 ->
+                html5.wrapper.baseContext = engine.appContext
+                guard("html5 destroy") { html5.surface.destroy() }
+            }
         }
     }
 
@@ -451,5 +573,22 @@ internal class BannerController(private val engine: Engine, val placementId: Str
 
     companion object {
         private const val MIN_BANNER_WIDTH_DP = 32
+
+        /** Google's inline adaptive minimum. */
+        private const val MIN_INLINE_HEIGHT_DP = 32
+        private const val MAX_INLINE_HEIGHT_PX = 20_000
     }
+}
+
+/**
+ * Holds an HTML5 banner while it loads: laid out at its final size (the ad needs a real size to
+ * become ready) but transparent, never touchable and hidden from accessibility.
+ */
+private class StagingFrame(context: Context) : FrameLayout(context) {
+    init {
+        alpha = 0f
+        importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
+    }
+
+    override fun dispatchTouchEvent(ev: MotionEvent?): Boolean = false
 }

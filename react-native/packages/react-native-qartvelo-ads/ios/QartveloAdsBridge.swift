@@ -189,12 +189,21 @@ public final class QartveloAdsBridge: NSObject {
 public final class QartveloAdsBannerHost: UIView {
     @objc public var onEvent: (([String: Any]) -> Void)?
     @objc public var onSize: ((Double, Double) -> Void)?
-    @objc public var placement: String = "" {
-        didSet {
-            guard oldValue != placement else { return }
-            banner.destroy(); banner.placementId = placement
-            loadIfPossible()
-        }
+    private(set) var placement: String = ""
+    private var inlineSizing = false
+    private var inlineMaxHeight: Double = 250
+    /// All banner props at once (`placementId`, `size="inline"`, `maxHeight` in points), so a
+    /// change of several never loads with half of them. Unchanged values do nothing.
+    @objc public func apply(placement next: String, inline: Bool, maxHeight: Double) {
+        let sizingChanged = inline != inlineSizing || (inline && maxHeight != inlineMaxHeight)
+        guard next != placement || sizingChanged else { return }
+        placement = next
+        inlineSizing = inline
+        inlineMaxHeight = maxHeight
+        banner.sizing = inline ? .inline : .anchored
+        banner.inlineMaxHeight = CGFloat(maxHeight)
+        banner.destroy(); banner.placementId = placement
+        loadIfPossible()
     }
     private let banner = QartveloAdsBannerView(frame: .zero)
     private let relay = AdRelay()
@@ -231,6 +240,6 @@ public final class QartveloAdsBannerHost: UIView {
         onSize?(Double(size.width), Double(size.height))
     }
     @objc public func recycle() {
-        banner.destroy(); placement = ""; lastSize = CGSize(width: -1, height: -1)
+        banner.destroy(); placement = ""; inlineSizing = false; inlineMaxHeight = 250; lastSize = CGSize(width: -1, height: -1)
     }
 }

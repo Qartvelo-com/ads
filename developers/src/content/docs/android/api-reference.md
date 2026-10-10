@@ -1,15 +1,15 @@
 ---
 title: API reference
-description: Complete public API of the Qartvelo Ads Android SDK 0.5.1 (package com.qartvelo.sdk).
+description: Complete public API of the Qartvelo Ads Android SDK 0.6.0 (package com.qartvelo.sdk).
 ---
 
-Package `com.qartvelo.sdk`, version `0.5.1` (`QartveloAds.SDK_VERSION`). Every method is safe to call from any thread, never throws and delivers callbacks on the main thread. `@JvmStatic` and `@JvmOverloads` make the API callable from Java as `QartveloAds.initialize(...)`.
+Package `com.qartvelo.sdk`, version `0.6.0` (`QartveloAds.SDK_VERSION`). Every method is safe to call from any thread, never throws and delivers callbacks on the main thread. `@JvmStatic` and `@JvmOverloads` make the API callable from Java as `QartveloAds.initialize(...)`.
 
 ## QartveloAds
 
 ```kotlin
 object QartveloAds {
-    const val SDK_VERSION: String = "0.5.1"
+    const val SDK_VERSION: String = "0.6.0"
 
     fun initialize(
         context: Context,
@@ -71,10 +71,16 @@ class QartveloAdsBannerView(context: Context, attrs: AttributeSet? = null, defSt
     var placementId: String?            // XML: app:qartvelo_placementId
     var listener: QartveloAdsListener?
     var usesAdaptiveSize: Boolean       // default true: anchored adaptive slot; false: the creative's size
+    var sizing: BannerSizing            // default ANCHORED; INLINE for banners in scrolling content (wins over usesAdaptiveSize)
+    var inlineMaxHeightDp: Int          // inline only: the most the banner may be tall, default 250, at least 32
     fun load()                          // idempotent
     fun destroy()                       // detaches; the loaded banner stays cached
 }
+
+enum class BannerSizing { ANCHORED, INLINE }
 ```
+
+Set `sizing` and `inlineMaxHeightDp` before `load()`. `ANCHORED`: Google's anchored adaptive slot, full width and 50 to 90 dp tall. `INLINE`: the ad takes the biggest size that fits the width and `inlineMaxHeightDp` keeping its proportions, and the view is as tall as that ad. See [Inline banners](/android/banner/#inline-banners).
 
 ## Listeners
 
@@ -142,7 +148,22 @@ data class QartveloAdsPrivacy(
 
 ## Fallback seam
 
-Package `com.qartvelo.sdk.fallback`: `FallbackAdapter`, `FallbackSettings`, `FallbackLoadCallback`, `FallbackShowCallback`, `FallbackBannerCallback`, `FallbackBanner`, and the optional `AdaptiveBannerSizer`. Documented in [Custom fallback adapter](/guides/custom-fallback-adapter/).
+Package `com.qartvelo.sdk.fallback`: `FallbackAdapter`, `FallbackSettings`, `FallbackLoadCallback`, `FallbackShowCallback`, `FallbackBannerCallback`, `FallbackBanner`, and the optional `AdaptiveBannerSizer` and `InlineBannerFallback` (since 0.6.0):
+
+```kotlin
+interface InlineBannerFallback {
+    fun createInlineBanner(
+        context: Context,
+        placementId: String,
+        adUnitId: String,
+        widthDp: Int,
+        maxHeightDp: Int,
+        callback: FallbackBannerCallback,
+    ): FallbackBanner
+}
+```
+
+Adapters without `InlineBannerFallback` get `createBanner` for inline banners too. The AdMob adapter implements both optional interfaces. Documented in [Custom fallback adapter](/guides/custom-fallback-adapter/).
 
 ## Java
 

@@ -21,6 +21,20 @@ import UIKit
         didSet { setNeedsLayout() }
     }
 
+    /// `.anchored` (default) or `.inline` for banners inside scrolling content. Inline wins over
+    /// `usesAdaptiveSize`. Set it before `load()`.
+    @objc public var sizing: QartveloBannerSizing = .anchored {
+        didSet { setNeedsLayout() }
+    }
+
+    /// The most an inline banner may be tall, in points (default 250, at least 32).
+    @objc public var inlineMaxHeight: CGFloat = 250 {
+        didSet { setNeedsLayout() }
+    }
+
+    /// Google's inline adaptive minimum.
+    static let minInlineHeight: CGFloat = 32
+
     private var controller: BannerController?
     private var contentSize: CGSize = .zero
     private var contentWidthConstraint: NSLayoutConstraint?
@@ -45,6 +59,7 @@ import UIKit
     }
 
     deinit {
+        visibilityTimer?.invalidate()
         observers.forEach { NotificationCenter.default.removeObserver($0) }
     }
 
@@ -76,6 +91,7 @@ import UIKit
             if let previous = controller, previous !== next { previous.detach(self) }
             controller = next
             next.attach(self)
+            updateVisibilityTimer()
         }
     }
 
@@ -84,6 +100,7 @@ import UIKit
         Main.run { [self] in
             controller?.detach(self)
             controller = nil
+            updateVisibilityTimer()
             clear()
         }
     }
@@ -94,6 +111,7 @@ import UIKit
 
     public override func didMoveToWindow() {
         super.didMoveToWindow()
+        updateVisibilityTimer()
         notifyVisibility()
     }
 
@@ -127,19 +145,47 @@ import UIKit
             ?? AdaptiveBannerLayout.size(width: availableBannerWidth, screenHeight: screenHeight)
     }
 
+    var clampedInlineMaxHeight: CGFloat {
+        max(Self.minInlineHeight, inlineMaxHeight.isFinite ? inlineMaxHeight : 250)
+    }
+
+    /// Inline banners: the max height in pixels, like `screen_width`.
+    var bannerRequestMaxHeight: Int? {
+        guard sizing == .inline else { return nil }
+        return Int(min(20_000, ceil(clampedInlineMaxHeight * (window?.screen.scale ?? UIScreen.main.scale))))
+    }
+
     var bannerRequestHeight: Int? {
-        guard usesAdaptiveSize else { return nil }
+        guard usesAdaptiveSize, sizing == .anchored else { return nil }
         return Int(ceil(adaptiveBannerSize.height * (window?.screen.scale ?? UIScreen.main.scale)))
     }
 
+    /// In a window, not hidden, and at least half on screen: inside the window and every clipping
+    /// ancestor (a list or scroll view laying the banner out below the fold does not count).
     var isVisibleForAds: Bool {
-        guard window != nil, appActive else { return false }
+        guard let window = window, appActive, bounds.width > 0, bounds.height > 0 else { return false }
+        var visible = convert(bounds, to: nil).intersection(window.bounds)
         var current: UIView? = self
         while let view = current {
             if view.isHidden || view.alpha < 0.01 { return false }
+            if view !== self, view.clipsToBounds { visible = visible.intersection(view.convert(view.bounds, to: nil)) }
             current = view.superview
         }
-        return true
+        guard !visible.isNull else { return false }
+        return visible.width * visible.height * 2 >= bounds.width * bounds.height
+    }
+
+    /// Scrolling moves the banner on or off screen without telling it: re-check a few times a
+    /// second while it is in a window.
+    private var visibilityTimer: Timer?
+
+    private func updateVisibilityTimer() {
+        visibilityTimer?.invalidate()
+        visibilityTimer = nil
+        guard window != nil, controller != nil else { return }
+        let timer = Timer(timeInterval: 0.25, repeats: true) { [weak self] _ in self?.notifyVisibility() }
+        RunLoop.main.add(timer, forMode: .common)
+        visibilityTimer = timer
     }
 
     var hostViewController: UIViewController? {

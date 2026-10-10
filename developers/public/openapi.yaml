@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Qartvelo Ads SDK API
-  version: 0.5.1
+  version: 0.6.0
   summary: The HTTP API used by the Qartvelo Ads Android and React Native SDKs.
   description: |
     Stateless JSON API for initializing an SDK session, requesting ads and reporting ad events.
@@ -43,7 +43,7 @@ paths:
             example:
               app_key: app_xxxxxxxxxxxxxxxxxxxxxxxx
               package_name: com.example.app
-              sdk_version: 0.5.1
+              sdk_version: 0.6.0
               app_version: 1.0.0
               platform: android
               os_version: '14'
@@ -234,6 +234,13 @@ components:
         sdk_version: { type: [string, 'null'], maxLength: 32 }
         screen_width: { type: [integer, 'null'], minimum: 0, maximum: 20000 }
         screen_height: { type: [integer, 'null'], minimum: 0, maximum: 20000 }
+        banner_height: { type: [integer, 'null'], minimum: 1, maximum: 20000, description: 'Anchored banners: the slot height in pixels. Selects the horizontal creative with the closest aspect ratio to screen_width x banner_height' }
+        banner_mode: { type: [string, 'null'], examples: [inline], description: '`inline` for banners inside scrolling content (send banner_max_height and no banner_height). Any other value means anchored' }
+        banner_max_height: { type: [integer, 'null'], minimum: 1, maximum: 20000, description: 'With banner_mode inline: the most the ad may be tall, in pixels. Each candidate is scaled to fit screen_width x banner_max_height keeping its proportions and the largest area wins. Ignored without banner_mode inline' }
+        supported_creative_types:
+          type: [array, 'null']
+          items: { type: string, examples: [image, video, html5] }
+          description: 'Creative types the SDK can show. Missing or empty means [image, video]; unknown values are ignored. SDKs 0.6.0 and later send [image, video, html5] for banners and interstitials. html5 is only served to requests that list it'
         test_mode: { type: [boolean, 'null'] }
         test_force_no_fill: { type: [boolean, 'null'] }
     FillResponse:
@@ -248,17 +255,32 @@ components:
           properties:
             id: { type: string, examples: [ad_3f2a9c01d4e5b6a7] }
             campaign_id: { type: string, examples: [cmp_12, cmp_test] }
-            creative_id: { type: string, examples: [cr_34, cr_test_interstitial] }
+            creative_id: { type: string, examples: [cr_34, cr_test_interstitial, cr_test_banner_html5] }
             format: { $ref: '#/components/schemas/AdFormat' }
-            creative_type: { type: string, enum: [image, video] }
-            creative_url: { type: string, format: uri }
+            creative_type: { type: string, enum: [image, video, html5], description: html5 only when the request listed it in supported_creative_types }
+            creative_url: { type: string, format: uri, description: "For html5, the bundle's index.html" }
             click_url: { type: string, format: uri }
-            width: { type: [integer, 'null'] }
+            width: { type: [integer, 'null'], description: 'Pixels. For html5, the layout that matches the request' }
             height: { type: [integer, 'null'] }
             duration_seconds: { type: [number, 'null'] }
+            layouts:
+              type: array
+              description: 'html5 only: every layout of the bundle. Download the served layout''s files before showing the ad; files are relative to the bundle base (creative_url without index.html)'
+              items: { $ref: '#/components/schemas/Html5Layout' }
             impression_token: { type: string, description: 'Opaque, single use' }
             expires_at: { type: string, format: date-time, description: Never show the ad after this }
             test: { type: boolean }
+    Html5Layout:
+      type: object
+      required: [family, width, height, files]
+      properties:
+        family: { type: string, examples: [strip, tall, rect] }
+        width: { type: integer, examples: [320] }
+        height: { type: integer, examples: [50] }
+        files:
+          type: array
+          items: { type: string }
+          examples: [[index.html, style.css, main.js, m/3f2a.jpg]]
     NoFillResponse:
       type: object
       required: [status, request_id, fallback, reason]

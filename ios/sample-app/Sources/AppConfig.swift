@@ -1,10 +1,15 @@
 import UIKit
 
 enum AppConfig {
-    static let appKey = "app_dYWiPE5Pp2vvc0fuHkYi3ggo"
-    static let bannerPlacement = "test_banner"
-    static let interstitialPlacement = "test_interstitial"
-    static let rewardedPlacement = "test_rewarded"
+    /// `-local`: the local backend (http://127.0.0.1:8000) with the seeded iOS demo app
+    /// (`php artisan db:seed --class=DemoInventorySeeder`), instead of the production test app.
+    static var local: Bool { ProcessInfo.processInfo.arguments.contains("-local") }
+    static var baseURL: URL? { local ? URL(string: "http://127.0.0.1:8000/") : nil }
+    static var appKey: String { local ? "app_demo_sample_ios_0001" : "app_dYWiPE5Pp2vvc0fuHkYi3ggo" }
+    static var bannerPlacement: String { local ? "home_banner" : "test_banner" }
+    static var inlineBannerPlacement: String { local ? "inline_banner" : "test_inline_banner" }
+    static var interstitialPlacement: String { local ? "game_end" : "test_interstitial" }
+    static var rewardedPlacement: String { local ? "reward_coins" : "test_rewarded" }
     static var autoRun: Bool { ProcessInfo.processInfo.arguments.contains("-autoRun") || bannerOnly }
     static var forceNoFill: Bool { ProcessInfo.processInfo.arguments.contains("-forceNoFill") }
     static var bannerOnly: Bool { ProcessInfo.processInfo.arguments.contains("-bannerOnly") }

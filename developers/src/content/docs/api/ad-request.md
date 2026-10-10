@@ -20,15 +20,38 @@ Content-Type: application/json
 | `android_version` | string | no | Android only. `14` or `14.0.1`; the major version is used for targeting |
 | `os_version` | string, max 32 | no | iOS: the system version, for example `18` (informational) |
 | `app_version`, `sdk_version` | string | no | Informational |
-| `screen_width`, `screen_height` | integer 0..20000 | no | Pixels. Used to pick a banner that fits and an interstitial matching the orientation |
+| `screen_width`, `screen_height` | integer 0..20000 | no | Pixels. Used to pick a banner that fits and an interstitial matching the orientation. For banners, `screen_width` is the slot width |
+| `banner_height` | integer 1..20000 | no | Anchored banners: the slot height in pixels. See [Banner sizing](#banner-sizing) |
+| `banner_mode` | string | no | `inline` for banners inside scrolling content; any other value (or none) means anchored |
+| `banner_max_height` | integer 1..20000 | no | With `banner_mode: "inline"`: the most the ad may be tall, in pixels. Ignored otherwise |
+| `supported_creative_types` | array of strings | no | Creative types the SDK can show: `image`, `video`, `html5`. Missing or empty means `["image","video"]`; unknown values are ignored |
 | `test_mode` | boolean | no | Serve a never-billed test ad (also implied by a test session) |
 | `test_force_no_fill` | boolean | no | Always answer `no_fill` with reason `test_no_fill` |
 
 ```json
 {"app_key":"app_xxxxxxxxxxxxxxxxxxxxxxxx","placement":"game_end","format":"interstitial",
  "session_token":"<opaque>","language":"ka","android_version":"14","app_version":"1.0.0",
- "sdk_version":"0.5.1","screen_width":1080,"screen_height":2400}
+ "sdk_version":"0.6.0","screen_width":1080,"screen_height":2400}
 ```
+
+SDKs 0.6.0 and later send `"supported_creative_types":["image","video","html5"]` for banner and
+interstitial requests and `["image","video"]` for rewarded. An inline banner request adds:
+
+```json
+{"format":"banner","screen_width":1080,"banner_mode":"inline","banner_max_height":750}
+```
+
+## Banner sizing
+
+- **Anchored** (default): send `screen_width` and `banner_height`, the slot in pixels. The server
+  selects the approved horizontal creative with the closest aspect ratio, leaving out rectangles whose
+  width is less than twice their height. Without `banner_height`, the widest creative that fits
+  `screen_width` wins.
+- **Inline**: send `banner_mode: "inline"`, `screen_width` and `banner_max_height`, and no
+  `banner_height`. Each candidate (an image creative, or each layout of an HTML5 ad) is scaled to fit
+  `screen_width` x `banner_max_height` keeping its proportions, and the one with the largest area is
+  served. Rectangles are allowed. `ad.width` and `ad.height` are the chosen creative's or layout's
+  own size; the SDK sizes the slot with the same rule.
 
 ## Response 200: fill
 
@@ -57,14 +80,48 @@ Content-Type: application/json
 | Field | Meaning |
 |---|---|
 | `request_id` | Send with every event for this ad |
-| `ad.creative_type` | `image` (PNG, JPEG, WebP, GIF) or `video` (MP4, H.264) |
-| `ad.creative_url` | Download before reporting the ad as loaded |
+| `ad.creative_type` | `image` (PNG, JPEG, WebP, GIF), `video` (MP4, H.264) or `html5` (only when the request listed it) |
+| `ad.creative_url` | Download before reporting the ad as loaded. For `html5`, the bundle's `index.html` |
 | `ad.click_url` | Advertiser landing page, opened on tap after the click event is queued |
-| `ad.width`, `ad.height` | Creative size in pixels |
+| `ad.width`, `ad.height` | Creative size in pixels. For `html5`, the size of the layout that matches the request |
+| `ad.layouts` | `html5` only: every layout of the bundle with the files it loads. See [HTML5 fill](#html5-fill) |
 | `ad.duration_seconds` | Video length, `null` for images |
 | `ad.impression_token` | Opaque, signed, single-use |
 | `ad.expires_at` | 30 minutes after the request. Never show the ad after this |
 | `ad.test` | `true` for test ads: never billed, show them labelled "Test ad". An approved app gets the live creative it would win; otherwise the built-in test ad (`campaign_id` `cmp_test`, `creative_id` `cr_test_{format}`) |
+
+### HTML5 fill
+
+HTML5 ads are built from designs made in the Qartvelo Ads editor, for banners and interstitials. They
+are only served to requests whose `supported_creative_types` lists `html5`; an HTML5 creative wins
+over images in the same campaign because it fits any slot of its format. Every HTML5 design also has
+static image versions, so older SDKs keep serving the campaign.
+
+```json
+{"creative_type":"html5","creative_url":"https://ads.qartvelo.com/api/v1/bundles/01m4.../index.html",
+ "width":320,"height":50,"layouts":[
+ {"family":"strip","width":320,"height":50,"files":["index.html","style.css","main.js","m/3f2a.jpg"]},
+ {"family":"tall","width":320,"height":100,"files":["index.html","style.css","main.js","m/9c1d.jpg"]},
+ {"family":"rect","width":300,"height":250,"files":["index.html","style.css","main.js","m/77b0.png"]}]}
+```
+
+- `width` and `height` are the layout that matches the request: for anchored banners the closest
+  ratio to `screen_width`/`banner_height`, for inline banners the layout that shows biggest, for
+  interstitials the screen's orientation.
+- `layouts[].files` are paths relative to the bundle base (`creative_url` without `index.html`). Download
+  the served layout's files before reporting the ad as loaded; another layout (after a resize) loads
+  its files from the bundle URL.
+- The ad runtime sets `window.__qartvelo.ready` to `true` after its first render. Count the impression
+  only when the ad is ready and visible. The SDKs treat an ad that is not ready within 6 seconds as a
+  creative failure.
+- On a tap the ad navigates to `qartvelo://click`. Treat that, and any other navigation after the first
+  load, as one click: send the click event and open `click_url` yourself.
+- Call `window.__qartvelo.pause()` when the ad leaves the screen or the app goes to the background, and
+  `resume()` when it is back.
+
+In test mode, requests that list `html5` get the built-in animated HTML5 test ads for banners and
+interstitials (`creative_id` `cr_test_banner_html5` or `cr_test_interstitial_html5`). Rewarded slots
+and other SDKs keep the image and video test ads.
 
 ## Response 200: no fill
 

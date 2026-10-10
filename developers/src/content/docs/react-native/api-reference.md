@@ -1,6 +1,6 @@
 ---
 title: API reference
-description: Complete TypeScript API of @qartvelo/react-native-ads 0.5.1.
+description: Complete TypeScript API of @qartvelo/react-native-ads 0.6.0.
 ---
 
 ```ts
@@ -35,6 +35,8 @@ import {
 | Prop | Type |
 |---|---|
 | `placementId` | `string` (required) |
+| `size` | `'anchored' \| 'inline'`, default `'anchored'`. `inline` (since 0.6.0) is for banners inside scrolling content: the ad takes the biggest size that fits the width and `maxHeight`, keeping its proportions. See [Inline banners](/react-native/usage/#inline-banners) |
+| `maxHeight` | `number`, default `250` (dp on Android, points on iOS, at least 32). Inline only: the most the banner may be tall |
 | `style` | `StyleProp<ViewStyle>`; usually `{ width: '100%' }` |
 | `onLoaded` | `(e: QartveloAdsEventMap['loaded']) => void` |
 | `onLoadFailed` | `(e: QartveloAdsEventMap['loadFailed']) => void` |

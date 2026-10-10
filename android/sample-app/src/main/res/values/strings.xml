@@ -13,5 +13,6 @@
     <string name="open_banner">Open banner screen</string>
     <string name="clear_log">Clear log</string>
     <string name="event_log">Event log</string>
+    <string name="inline_banner_hint">Inline banner (placement inline_banner): the biggest ad that fits, up to 250 dp tall.</string>
     <string name="banner_hint">The banner below is placement home_banner. Rotate the device: the same banner is reused, no new request is made.</string>
 </resources>

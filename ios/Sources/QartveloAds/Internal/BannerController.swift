@@ -14,15 +14,36 @@ final class BannerController {
         case fallback(QartveloFallbackBanner)
     }
 
+    /// An image (`image`) or HTML5 (`html5`) Qartvelo Ads banner.
     private final class QartveloContent {
         let ad: ServedAd
-        let image: UIImage
+        let image: UIImage?
+        let html5: Html5Surface?
         var impressed = false
         var clicked = false
 
-        init(ad: ServedAd, image: UIImage) {
+        init(ad: ServedAd, image: UIImage?, html5: Html5Surface? = nil) {
             self.ad = ad
             self.image = image
+            self.html5 = html5
+        }
+    }
+
+    /// An HTML5 banner loading hidden in the slot (it needs a real size to become ready); swapped
+    /// in when ready, dropped (and the fallback used) when it fails or times out.
+    private final class Staged {
+        let ad: ServedAd
+        let surface: Html5Surface
+        let container = UIView()
+
+        init(ad: ServedAd, surface: Html5Surface) {
+            self.ad = ad
+            self.surface = surface
+            container.alpha = 0
+            container.isUserInteractionEnabled = false
+            surface.view.frame = container.bounds
+            surface.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+            container.addSubview(surface.view)
         }
     }
 
@@ -36,6 +57,7 @@ final class BannerController {
     private var pendingFallback: QartveloFallbackBanner?
     private var fallbackWidth: CGFloat = 0
     private var refreshTask: DispatchWorkItem?
+    private var staged: Staged?
 
     init(engine: Engine, placementId: String) {
         self.engine = engine
@@ -65,6 +87,7 @@ final class BannerController {
             if content != nil { replaceContent(nil) }
             if !loading && isDue() { startLoad() }
         }
+        restage()
         schedule()
     }
 
@@ -81,6 +104,7 @@ final class BannerController {
         if visible, let current = content, isDisplayable(current) { render(view, current) }
         guard hostVisible != visible else { return }
         hostVisible = visible
+        if case .qartvelo(let item)? = content, let html5 = item.html5 { visible ? html5.resume() : html5.pause() }
         if visible { onShownMaybe() }
         schedule()
     }
@@ -140,10 +164,10 @@ final class BannerController {
             onFailed(QartveloAdsFailure(reason: QartveloAdsFailure.disabled, error: QartveloAdsError(.noFill, "Qartvelo Ads serving is disabled for this placement")))
             return
         }
-        engine.fetchAd(placementId, format: .banner, timeoutMs: engine.effectiveTimeoutMs(placement), bannerWidth: hostView?.bannerRequestWidth, bannerHeight: hostView?.bannerRequestHeight) { [weak self] outcome in
+        engine.fetchAd(placementId, format: .banner, timeoutMs: engine.effectiveTimeoutMs(placement), bannerWidth: hostView?.bannerRequestWidth, bannerHeight: hostView?.bannerRequestHeight, bannerMaxHeight: hostView?.bannerRequestMaxHeight) { [weak self] outcome in
             guard let self = self else { return }
             switch outcome {
-            case .success(let ad): self.decode(ad)
+            case .success(let ad): ad.creativeType == .html5 ? self.stageHtml5(ad) : self.decode(ad)
             case .failure(let failure): self.onFailed(failure)
             }
         }
@@ -163,6 +187,62 @@ final class BannerController {
                 if let image = image { self.onReady(ad, image: image) } else { self.onFailed(self.creativeFailure()) }
             }
         }
+    }
+
+    private func stageHtml5(_ ad: ServedAd) {
+        dropStaged()
+        guard let surface = Html5AdView.create(ad) else {
+            onFailed(creativeFailure())
+            return
+        }
+        let stage = Staged(ad: ad, surface: surface)
+        staged = stage
+        restage()
+        surface.load(
+            onReady: { [weak self, weak stage] in
+                guard let self = self, let stage = stage, self.staged === stage else { return }
+                self.onHtml5Ready(stage)
+            },
+            onFailed: { [weak self, weak stage] _ in
+                guard let self = self, let stage = stage, self.staged === stage else { return }
+                self.dropStaged()
+                self.onFailed(self.creativeFailure())
+            },
+            onClick: { [weak self, weak surface] in
+                guard let self = self, case .qartvelo(let item)? = self.content, let surface = surface, item.html5 === surface else { return }
+                self.onClick(item)
+            }
+        )
+    }
+
+    private func onHtml5Ready(_ stage: Staged) {
+        staged = nil
+        stage.container.removeFromSuperview()
+        stage.surface.view.removeFromSuperview()
+        Log.d("Qartvelo Ads HTML5 banner ready for '\(placementId)'")
+        loading = false
+        let next = Content.qartvelo(QartveloContent(ad: stage.ad, image: nil, html5: stage.surface))
+        replaceContent(next)
+        if let view = hostView { render(view, next) }
+        if !hostVisible { stage.surface.pause() }
+        let info = infoFor(next)
+        emit { $0.qartveloAdDidLoad?(info) }
+        onShownMaybe()
+        schedule()
+    }
+
+    /// Puts a loading HTML5 banner (back) into the host, sized like the ad will show.
+    private func restage() {
+        guard let stage = staged, let view = hostView else { return }
+        if stage.container.superview !== view { view.addSubview(stage.container) }
+        stage.container.frame = CGRect(origin: .zero, size: slotSize(view, ad: stage.ad))
+    }
+
+    private func dropStaged() {
+        guard let stage = staged else { return }
+        staged = nil
+        stage.container.removeFromSuperview()
+        stage.surface.destroy()
     }
 
     private func creativeFailure() -> QartveloAdsFailure {
@@ -210,10 +290,21 @@ final class BannerController {
         let width = view?.availableBannerWidth ?? UIScreen.main.bounds.width
         let info = QartveloAdsAdInfo(placementId: placementId, format: .banner, source: .admob)
         let callback = BannerRelay()
-        let banner = adapter.createBanner(
+        let slotWidth = max(width, Self.minBannerWidth)
+        let inlineBanner = view?.sizing == .inline
+            ? adapter.createInlineBanner(
+                placementId: placementId,
+                adUnitId: unit,
+                width: slotWidth,
+                maxHeight: view?.clampedInlineMaxHeight ?? 250,
+                rootViewController: view?.hostViewController,
+                callback: callback
+            )
+            : nil
+        let banner = inlineBanner ?? adapter.createBanner(
             placementId: placementId,
             adUnitId: unit,
-            width: max(width, Self.minBannerWidth),
+            width: slotWidth,
             rootViewController: view?.hostViewController,
             callback: callback
         )
@@ -305,27 +396,53 @@ final class BannerController {
     private func render(_ view: QartveloAdsBannerView, _ content: Content) {
         switch content {
         case .qartvelo(let item):
-            let available = view.availableBannerWidth
-            let width = min(CGFloat(max(item.ad.width, 1)), available)
-            let height = width * CGFloat(max(item.ad.height, 1)) / CGFloat(max(item.ad.width, 1))
-            let size = view.usesAdaptiveSize ? view.adaptiveBannerSize : CGSize(width: width, height: height)
+            let size = slotSize(view, ad: item.ad)
             if view.renderedContent === item {
                 view.updateContentSize(size)
                 return
             }
-            let creative = BannerCreativeView(image: item.image, test: item.ad.test) { [weak self, weak item] in
-                guard let self = self, let item = item else { return }
-                self.onClick(item)
+            let creative: BannerCreativeView
+            if let html5 = item.html5 {
+                // Taps reach the ad through the web view; it reports clicks itself.
+                html5.view.removeFromSuperview()
+                creative = BannerCreativeView(content: html5.view, test: item.ad.test, onTap: nil)
+            } else {
+                let image = UIImageView(image: item.image)
+                image.contentMode = .scaleAspectFit
+                image.accessibilityLabel = Strings.ad
+                creative = BannerCreativeView(content: image, test: item.ad.test) { [weak self, weak item] in
+                    guard let self = self, let item = item else { return }
+                    self.onClick(item)
+                }
             }
             view.show(creative, size: size, content: item)
+            restage()
         case .fallback(let banner):
-            if view.renderedContent === banner { return }
-            banner.setRootViewController(view.hostViewController)
             let adView = banner.view
-            adView.removeFromSuperview()
             let size = adView.intrinsicContentSize.width > 0 ? adView.intrinsicContentSize : adView.frame.size
+            if view.renderedContent === banner {
+                // The network may change the banner's size on refresh (inline adaptive ads do).
+                view.updateContentSize(size)
+                return
+            }
+            banner.setRootViewController(view.hostViewController)
+            adView.removeFromSuperview()
             view.show(adView, size: size, content: banner)
         }
+    }
+
+    /// Where a Qartvelo Ads creative shows. Inline: the ad's fitted size, centered, no space reserved
+    /// beyond it. Anchored: the adaptive slot (an image is fitted into it; HTML5 lays itself out in
+    /// it). Legacy (`usesAdaptiveSize = false`): the creative's own size.
+    private func slotSize(_ view: QartveloAdsBannerView, ad: ServedAd) -> CGSize {
+        let available = view.availableBannerWidth
+        if view.sizing == .inline {
+            return InlineBannerFit.size(width: CGFloat(max(ad.width, 1)), height: CGFloat(max(ad.height, 1)),
+                                        slotWidth: available, maxHeight: view.clampedInlineMaxHeight)
+        }
+        if view.usesAdaptiveSize { return view.adaptiveBannerSize }
+        let width = min(CGFloat(max(ad.width, 1)), available)
+        return CGSize(width: width, height: width * CGFloat(max(ad.height, 1)) / CGFloat(max(ad.width, 1)))
     }
 
     private func unrender(_ view: QartveloAdsBannerView) {
@@ -335,6 +452,10 @@ final class BannerController {
     private func replaceContent(_ next: Content?) {
         let old = content
         content = next
+        if case .qartvelo(let oldItem)? = old, let html5 = oldItem.html5 {
+            if case .qartvelo(let newItem)? = next, newItem === oldItem { return }
+            html5.destroy()
+        }
         if case .fallback(let oldBanner)? = old {
             if case .fallback(let newBanner)? = next, newBanner === oldBanner { return }
             oldBanner.view.removeFromSuperview()
@@ -431,19 +552,17 @@ final class BannerRelay: QartveloFallbackBannerCallback {
     }
 }
 
-/// A Qartvelo Ads banner creative with its "Ad" badge.
+/// A Qartvelo Ads banner creative (an image or an HTML5 web view) with its "Ad" badge.
 final class BannerCreativeView: UIView {
-    private let onTap: () -> Void
+    private let onTap: (() -> Void)?
 
-    init(image: UIImage, test: Bool, onTap: @escaping () -> Void) {
+    /// `onTap`: nil when `content` handles taps itself (HTML5).
+    init(content imageView: UIView, test: Bool, onTap: (() -> Void)?) {
         self.onTap = onTap
         super.init(frame: .zero)
-        let imageView = UIImageView(image: image)
-        imageView.contentMode = .scaleAspectFit
-        imageView.accessibilityLabel = Strings.ad
         imageView.translatesAutoresizingMaskIntoConstraints = false
         imageView.isUserInteractionEnabled = true
-        imageView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(tapped)))
+        if onTap != nil { imageView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(tapped))) }
         addSubview(imageView)
 
         let badge = PillLabel()
@@ -476,7 +595,7 @@ final class BannerCreativeView: UIView {
     }
 
     @objc private func tapped() {
-        onTap()
+        onTap?()
     }
 
     @objc private func badgeTapped() {

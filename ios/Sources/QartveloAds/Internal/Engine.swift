@@ -422,7 +422,7 @@ final class Engine {
     /// Requests a Qartvelo Ads ad bounded by `timeoutMs` (session acquisition included), then
     /// pre-downloads and validates the creative so that a creative failure becomes a fallback rather
     /// than a broken show. `onResult` is called exactly once, on the main thread. Main thread.
-    func fetchAd(_ placementId: String, format: QartveloAdFormat, timeoutMs: Int64, bannerWidth: Int? = nil, bannerHeight: Int? = nil, onResult: @escaping (FetchOutcome) -> Void) {
+    func fetchAd(_ placementId: String, format: QartveloAdFormat, timeoutMs: Int64, bannerWidth: Int? = nil, bannerHeight: Int? = nil, bannerMaxHeight: Int? = nil, onResult: @escaping (FetchOutcome) -> Void) {
         var finished = false
         let finish: (FetchOutcome) -> Void = { outcome in
             guard !finished else { return }
@@ -434,7 +434,7 @@ final class Engine {
             // Reserve the callback while the public asset is being downloaded. A late API response
             // must not replace the fallback that was selected after timeout or request failure.
             finished = true
-            serverTestOutcome(placementId, format: format, bannerWidth: bannerWidth, bannerHeight: bannerHeight, fallback: fallback) { outcome in onResult(outcome) }
+            serverTestOutcome(placementId, format: format, bannerWidth: bannerWidth, bannerHeight: bannerHeight, bannerMaxHeight: bannerMaxHeight, fallback: fallback) { outcome in onResult(outcome) }
         }
         if testMode && options.testForceNoFill {
             Log.i("Forced no fill for '\(placementId)'; using test fallback")
@@ -462,7 +462,7 @@ final class Engine {
         io.async { [self] in
             let result: Result<AdResponse, Error>
             do {
-                result = .success(try requestWithSessionRetry(placementId, format: format, bannerWidth: bannerWidth, bannerHeight: bannerHeight, deadline: deadline, tracker: tracker))
+                result = .success(try requestWithSessionRetry(placementId, format: format, bannerWidth: bannerWidth, bannerHeight: bannerHeight, bannerMaxHeight: bannerMaxHeight, deadline: deadline, tracker: tracker))
             } catch {
                 result = .failure(error)
             }
@@ -491,9 +491,9 @@ final class Engine {
         }
     }
 
-    private func serverTestOutcome(_ placementId: String, format: QartveloAdFormat, bannerWidth: Int?, bannerHeight: Int?, fallback: QartveloAdsFailure, done: @escaping (FetchOutcome) -> Void) {
+    private func serverTestOutcome(_ placementId: String, format: QartveloAdFormat, bannerWidth: Int?, bannerHeight: Int?, bannerMaxHeight: Int?, fallback: QartveloAdsFailure, done: @escaping (FetchOutcome) -> Void) {
         do {
-            let creative = ServerTestAds.creative(for: format, availableWidth: bannerWidth ?? device.screenWidth, availableHeight: bannerHeight)
+            let creative = ServerTestAds.creative(for: format, availableWidth: bannerWidth ?? device.screenWidth, availableHeight: bannerHeight, inlineMaxHeight: bannerMaxHeight)
             guard let url = api.testCreativeURL(creative.filename) else {
                 throw NetworkError(message: "invalid base URL for public test creative")
             }
@@ -550,8 +550,9 @@ final class Engine {
     }
 
     private func prepareCreative(_ ad: ServedAd, format: QartveloAdFormat, tracker: CallTracker, done: @escaping (FetchOutcome) -> Void) {
-        if ad.format != format || Clock.now() >= ad.expiresAt - ServedAd.expiryMarginMs {
-            Log.e("Discarding unusable Qartvelo Ads response (format mismatch or already expired)")
+        let html5NotAllowed = ad.creativeType == .html5 && format == .rewarded
+        if ad.format != format || html5NotAllowed || Clock.now() >= ad.expiresAt - ServedAd.expiryMarginMs {
+            Log.e("Discarding unusable Qartvelo Ads response (format mismatch, HTML5 rewarded or already expired)")
             done(.failure(failure(QartveloAdsFailure.error)))
             return
         }
@@ -570,15 +571,15 @@ final class Engine {
     }
 
     /// Blocking. One transparent retry when the backend reports the session expired or invalid.
-    private func requestWithSessionRetry(_ placementId: String, format: QartveloAdFormat, bannerWidth: Int?, bannerHeight: Int?, deadline: Int64, tracker: CallTracker) throws -> AdResponse {
+    private func requestWithSessionRetry(_ placementId: String, format: QartveloAdFormat, bannerWidth: Int?, bannerHeight: Int?, bannerMaxHeight: Int?, deadline: Int64, tracker: CallTracker) throws -> AdResponse {
         var token = try sessions.acquire(deadline: deadline)
         do {
-            return try api.requestAd(body: adRequestBody(placementId, format: format, token: token, bannerWidth: bannerWidth, bannerHeight: bannerHeight), timeoutMs: remaining(deadline), tracker: tracker)
+            return try api.requestAd(body: adRequestBody(placementId, format: format, token: token, bannerWidth: bannerWidth, bannerHeight: bannerHeight, bannerMaxHeight: bannerMaxHeight), timeoutMs: remaining(deadline), tracker: tracker)
         } catch let error as ApiError where error.isSessionError {
             Log.i("Session rejected (\(error.code)); refreshing once")
             sessions.invalidate(token)
             token = try sessions.acquire(deadline: deadline)
-            return try api.requestAd(body: adRequestBody(placementId, format: format, token: token, bannerWidth: bannerWidth, bannerHeight: bannerHeight), timeoutMs: remaining(deadline), tracker: tracker)
+            return try api.requestAd(body: adRequestBody(placementId, format: format, token: token, bannerWidth: bannerWidth, bannerHeight: bannerHeight, bannerMaxHeight: bannerMaxHeight), timeoutMs: remaining(deadline), tracker: tracker)
         }
     }
 
@@ -636,7 +637,7 @@ final class Engine {
         ]
     }
 
-    private func adRequestBody(_ placementId: String, format: QartveloAdFormat, token: String, bannerWidth: Int?, bannerHeight: Int?) -> JSON {
+    private func adRequestBody(_ placementId: String, format: QartveloAdFormat, token: String, bannerWidth: Int?, bannerHeight: Int?, bannerMaxHeight: Int?) -> JSON {
         var body: JSON = [
             "app_key": appKey,
             "placement": placementId,
@@ -650,8 +651,15 @@ final class Engine {
             "screen_height": device.screenHeight,
             "test_mode": testMode,
             "test_force_no_fill": options.testForceNoFill,
+            // HTML5 is offered for banners and interstitials; rewarded stays video.
+            "supported_creative_types": format == .rewarded ? ["image", "video"] : ["image", "video", "html5"],
         ]
-        if format == .banner, let height = bannerHeight { body["banner_height"] = height }
+        if format == .banner, let maxHeight = bannerMaxHeight {
+            body["banner_mode"] = "inline"
+            body["banner_max_height"] = maxHeight
+        } else if format == .banner, let height = bannerHeight {
+            body["banner_height"] = height
+        }
         return body
     }
 

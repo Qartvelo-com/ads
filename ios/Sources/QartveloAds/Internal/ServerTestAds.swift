@@ -1,3 +1,4 @@
+import CoreGraphics
 import Foundation
 
 /// Metadata for the backend's public, never-billable test creatives. These assets are downloaded
@@ -11,9 +12,18 @@ enum ServerTestAds {
     }
 
     /// Adaptive slots select Retina artwork by proportions; legacy requests use widest-fit rotation.
-    static func creative(for format: QartveloAdFormat, availableWidth: Int? = nil, availableHeight: Int? = nil) -> Creative {
+    static func creative(for format: QartveloAdFormat, availableWidth: Int? = nil, availableHeight: Int? = nil, inlineMaxHeight: Int? = nil) -> Creative {
         switch format {
         case .banner:
+            // Inline slots: the test banner that shows biggest, like the server.
+            if let width = availableWidth, let maxHeight = inlineMaxHeight, width > 0, maxHeight > 0 {
+                func area(_ size: (Int, Int)) -> CGFloat {
+                    let fitted = InlineBannerFit.size(width: CGFloat(size.0), height: CGFloat(size.1), slotWidth: CGFloat(width), maxHeight: CGFloat(maxHeight))
+                    return fitted.width * fitted.height
+                }
+                let size = [(320, 50), (320, 100), (300, 250)].max { area($0) < area($1) }!
+                return Creative(filename: "banner_\(size.0)x\(size.1).png", width: size.0, height: size.1, duration: nil)
+            }
             if let width = availableWidth, let height = availableHeight, width > 0, height > 0 {
                 let sizes = [(960, 150), (1320, 204), (2184, 270)]
                 let ratio = Double(height) / Double(width)

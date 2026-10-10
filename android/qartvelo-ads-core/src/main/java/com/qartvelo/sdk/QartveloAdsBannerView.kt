@@ -2,7 +2,9 @@ package com.qartvelo.sdk
 
 import android.content.Context
 import android.util.AttributeSet
+import android.graphics.Rect
 import android.view.View
+import android.view.ViewTreeObserver
 import android.widget.FrameLayout
 import com.qartvelo.sdk.internal.BannerController
 import com.qartvelo.sdk.internal.Listeners
@@ -36,6 +38,15 @@ public class QartveloAdsBannerView @JvmOverloads public constructor(
      * rectangle. Set it before [load].
      */
     public var usesAdaptiveSize: Boolean = true
+
+    /**
+     * [BannerSizing.ANCHORED] (default) or [BannerSizing.INLINE] for banners inside scrolling
+     * content. Inline wins over [usesAdaptiveSize]. Set it before [load].
+     */
+    public var sizing: BannerSizing = BannerSizing.ANCHORED
+
+    /** The most an inline banner may be tall, in dp (default 250, at least 32). */
+    public var inlineMaxHeightDp: Int = 250
 
     private var controller: BannerController? = null
 
@@ -87,16 +98,34 @@ public class QartveloAdsBannerView @JvmOverloads public constructor(
         }
     }
 
-    internal fun isVisibleForAds(): Boolean = isAttachedToWindow && windowShown && isShown
+    /**
+     * Attached, shown and at least half on screen: inside the window and every clipping parent
+     * (a list or scroll view laying the banner out below the fold does not count).
+     */
+    internal fun isVisibleForAds(): Boolean {
+        if (!isAttachedToWindow || !windowShown || !isShown || width <= 0 || height <= 0) return false
+        if (!getGlobalVisibleRect(visibleRect)) return false
+        return visibleRect.width().toLong() * visibleRect.height() * 2 >= width.toLong() * height
+    }
+
+    private val visibleRect = Rect()
+
+    // Scrolling and layout move the banner on or off screen without a visibility change.
+    private val onScreenListener = ViewTreeObserver.OnScrollChangedListener { notifyVisibility() }
+    private val onLayoutListener = ViewTreeObserver.OnGlobalLayoutListener { notifyVisibility() }
 
     override fun onAttachedToWindow() {
         windowShown = windowVisibility == View.VISIBLE
         super.onAttachedToWindow()
+        viewTreeObserver.addOnScrollChangedListener(onScreenListener)
+        viewTreeObserver.addOnGlobalLayoutListener(onLayoutListener)
         guard("banner attach") { controller?.onHostAttachedToWindow(this) }
     }
 
     override fun onDetachedFromWindow() {
         windowShown = false
+        viewTreeObserver.removeOnScrollChangedListener(onScreenListener)
+        viewTreeObserver.removeOnGlobalLayoutListener(onLayoutListener)
         guard("banner detach") { controller?.onHostDetachedFromWindow(this) }
         super.onDetachedFromWindow()
     }

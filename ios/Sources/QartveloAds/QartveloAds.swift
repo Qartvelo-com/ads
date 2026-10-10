@@ -3,7 +3,7 @@ import UIKit
 /// Entry point of the Qartvelo Ads SDK. Every method is safe to call from any thread, never throws, and
 /// delivers callbacks on the main thread. No networking or disk access happens on the caller's thread.
 @objc public final class QartveloAds: NSObject {
-    @objc public static let sdkVersion = "0.5.1"
+    @objc public static let sdkVersion = "0.6.0"
 
     private static let lock = NSLock()
     private static var currentEngine: Engine?
@@ -48,6 +48,8 @@ import UIKit
             currentEngine = created
             lock.unlock()
             created.start(completion)
+            // Compiled once, ahead of the first HTML5 ad.
+            Html5ContentRules.prepare()
         }
     }
 

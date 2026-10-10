@@ -37,9 +37,14 @@ Test mode is computed from your code and the current installation; it is never c
   | interstitial | 1080x1920 PNG |
   | rewarded | 15 s, 720x1280 MP4 |
 
-- **iOS works without app registration in test mode.** An empty app key skips session initialization. If a registered app key or bundle ID is rejected, the ad request fails, or there is no fill, SDK 0.5.1 downloads the matching public test creative from `/test-ads/` without an app session. Initialization succeeds in test mode, so you can verify the ad UI before registering the app. These public creatives do not send impression, click, or reward events to the backend. When a valid test session returns a fill, the backend-served ad and its test events work as usual.
+  SDKs 0.6.0 and later get **animated HTML5 test ads** for banners and interstitials instead
+  (`creative_id` `cr_test_banner_html5` and `cr_test_interstitial_html5`), so you can check how HTML5
+  ads look and behave in your layout. Rewarded keeps the video test ad, and older SDKs keep the
+  images above.
 
-- **Backend-served test events** are validated and de-duplicated exactly like live ones, so you can test your event handling, but they are never billed, never earn revenue and never appear in reports. Tapping a backend-served test ad opens the advertiser's page like a live ad would. Public iOS fallback creatives have no click destination and do not send events.
+- **iOS works without app registration in test mode.** An empty app key skips session initialization. If a registered app key or bundle ID is rejected, the ad request fails, or there is no fill, SDK 0.6.0 downloads the matching public test creative from `/test-ads/` without an app session. Initialization succeeds in test mode, so you can verify the ad UI before registering the app. These public creatives do not send impression, click, or reward events to the backend. When a valid test session returns a fill, the backend-served ad and its test events work as usual.
+
+- **Backend-served test events** are validated and de-duplicated exactly like live ones, so you can test your event handling, but they are never billed, never earn revenue and never appear in reports. Tapping a backend-served test ad opens the advertiser's page like a live ad would. Public iOS fallback creatives have no click destination and do not send events, and are always the static images and video above.
 - The app does not need to be approved yet: test sessions skip the approval check.
 - The AdMob adapter replaces your unit ids with Google's public test units (in test mode, and on Android in every debuggable build unless `admobTestUnitsInDebugBuilds` is `false`):
 

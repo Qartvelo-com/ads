@@ -10,7 +10,13 @@ adapter's anchored adaptive banner when it is linked. Without the adapter, the h
 from the logical width.
 Requests include container width and adaptive height in pixels; the server selects suitable horizontal
 creatives, and images preserve their proportions. Retina test artwork uses 960x150, 1320x204 and
-2184x270 PNGs. Set `usesAdaptiveSize = false` for inline rectangles or legacy creative-height sizing.
+2184x270 PNGs. Set `usesAdaptiveSize = false` for legacy creative-height sizing.
+Inline banners (since 0.6.0) are for banners inside scrolling content: set the banner's sizing to
+inline with a max height (default 250) and the ad takes the biggest size that fits, rectangles
+included; the AdMob fallback is then Google's inline adaptive banner.
+HTML5 banners and interstitials made in the Qartvelo Ads editor (since 0.6.0) are downloaded ahead
+and shown in a locked web view with no JavaScript bridge, no storage and no network access beyond
+the ad's own files. Older SDKs keep receiving the static image versions of the same design.
 The iOS Simulator and installations outside the App Store always use test mode, even when the app
 sets `testMode = false`; eligible real campaign creatives can be previewed without live stats or charges.
 
@@ -24,11 +30,11 @@ React Native app ──> @qartvelo/react-native-ads ──> Qartvelo Ads Kotlin 
 
 | Package | Where | Install |
 |---|---|---|
-| Android core | Maven Central | `com.qartvelo.ads:core:0.5.1` |
-| Android AdMob adapter (optional) | Maven Central | `com.qartvelo.ads:admob:0.5.1` |
-| Same, also on | JitPack, GitHub Packages (`maven.pkg.github.com/Qartvelo-com/ads`) | `com.qartvelo.ads:core:0.5.1` |
-| iOS core | Swift Package Manager (`https://github.com/Qartvelo-com/ads`) | `QartveloAds` 0.5.1 |
-| iOS AdMob adapter (optional) | same | `QartveloAdsAdMob` 0.5.1 |
+| Android core | Maven Central | `com.qartvelo.ads:core:0.6.0` |
+| Android AdMob adapter (optional) | Maven Central | `com.qartvelo.ads:admob:0.6.0` |
+| Same, also on | JitPack, GitHub Packages (`maven.pkg.github.com/Qartvelo-com/ads`) | `com.qartvelo.ads:core:0.6.0` |
+| iOS core | Swift Package Manager (`https://github.com/Qartvelo-com/ads`) | `QartveloAds` 0.6.0 |
+| iOS AdMob adapter (optional) | same | `QartveloAdsAdMob` 0.6.0 |
 | React Native (Android and iOS) | npm | `npm install @qartvelo/react-native-ads` |
 
 The React Native plugin bridges both native SDKs through one JavaScript API.
@@ -46,8 +52,8 @@ dependencyResolutionManagement {
 
 // app/build.gradle.kts
 dependencies {
-    implementation("com.qartvelo.ads:core:0.5.1")
-    implementation("com.qartvelo.ads:admob:0.5.1") // optional
+    implementation("com.qartvelo.ads:core:0.6.0")
+    implementation("com.qartvelo.ads:admob:0.6.0") // optional
 }
 ```
 
@@ -70,13 +76,13 @@ Full guide: [developers.qartvelo.com/android](https://developers.qartvelo.com/an
 
 1. In Xcode, choose **File > Add Package Dependencies**.
 2. Paste `https://github.com/Qartvelo-com/ads`.
-3. Choose **Up to Next Minor Version**, starting at **0.5.1**.
+3. Choose **Up to Next Minor Version**, starting at **0.6.0**.
 4. Add **QartveloAds** to your app target. Also add **QartveloAdsAdMob** for the optional fallback.
 
 Xcode downloads and manages the SDK and its dependencies. For a Swift package app target:
 
 ```swift
-.package(url: "https://github.com/Qartvelo-com/ads", .upToNextMinor(from: "0.5.1"))
+.package(url: "https://github.com/Qartvelo-com/ads", .upToNextMinor(from: "0.6.0"))
 ```
 
 CocoaPods is an alternative when the pod specifications have been published to trunk;
@@ -114,6 +120,8 @@ if (result.rewarded) {
 }
 
 <QartveloAdsBanner placementId="home_banner" style={{ width: '100%' }} />;
+// inside a ScrollView or list, with its own placement:
+<QartveloAdsBanner placementId="feed_banner" size="inline" maxHeight={250} style={{ width: '100%' }} />;
 ```
 
 Android resolves the SDK from Maven Central; iOS includes the Swift SDK and autolinks through CocoaPods. See the
@@ -166,7 +174,7 @@ docs/                          pointers to the docs site
 
 ```sh
 cd android && ./gradlew :qartvelo-ads-core:testDebugUnitTest :qartvelo-ads-admob:testDebugUnitTest
-cd android && ./gradlew publishToMavenLocal        # com.qartvelo.ads:*:0.5.1 into ~/.m2
+cd android && ./gradlew publishToMavenLocal        # com.qartvelo.ads:*:0.6.0 into ~/.m2
 
 # iOS (on a Mac): open ios/Package.swift in Xcode and run the tests, or
 cd ios
