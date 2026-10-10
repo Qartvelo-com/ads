@@ -15,6 +15,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import com.qartvelo.sdk.AdFormat
 import com.qartvelo.sdk.AdSource
+import com.qartvelo.sdk.BannerSizing
 import com.qartvelo.sdk.QartveloAdsAdInfo
 import com.qartvelo.sdk.QartveloAdsBannerView
 import com.qartvelo.sdk.QartveloAdsError
@@ -24,6 +25,7 @@ import com.qartvelo.sdk.R
 import com.qartvelo.sdk.fallback.AdaptiveBannerSizer
 import com.qartvelo.sdk.fallback.FallbackBanner
 import com.qartvelo.sdk.fallback.FallbackBannerCallback
+import com.qartvelo.sdk.fallback.InlineBannerFallback
 import java.lang.ref.WeakReference
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.ceil
@@ -257,7 +259,12 @@ internal class BannerController(private val engine: Engine, val placementId: Str
             }
         }
         try {
-            created = adapter.createBanner(wrapper, placementId, unit, widthDp, callback)
+            val inlineMaxDp = view?.takeIf { it.sizing == BannerSizing.INLINE }?.inlineMaxHeightDp?.coerceAtLeast(MIN_INLINE_HEIGHT_DP)
+            created = if (inlineMaxDp != null && adapter is InlineBannerFallback) {
+                adapter.createInlineBanner(wrapper, placementId, unit, widthDp, inlineMaxDp, callback)
+            } else {
+                adapter.createBanner(wrapper, placementId, unit, widthDp, callback)
+            }
             pendingFallback = created
         } catch (t: Throwable) {
             OurLog.e("Fallback banner creation threw", t)
@@ -339,7 +346,11 @@ internal class BannerController(private val engine: Engine, val placementId: Str
                 if (view.getTag(R.id.qartvelo_banner_content) === c) return
                 view.removeAllViews()
                 val slot = slotFor(view)
-                val params = if (slot.heightPx != null) {
+                val params = if (slot.inlineMaxHeightPx != null) {
+                    // Inline: the ad's fitted size, centered; no space is reserved beyond it.
+                    val fitted = InlineBannerFit.size(c.ad.width, c.ad.height, slot.widthPx, slot.inlineMaxHeightPx)
+                    FrameLayout.LayoutParams(fitted.width, fitted.height, Gravity.CENTER)
+                } else if (slot.heightPx != null) {
                     // The anchored adaptive slot; the creative is fitted into it, like iOS.
                     FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, slot.heightPx, Gravity.CENTER)
                 } else {
@@ -378,23 +389,34 @@ internal class BannerController(private val engine: Engine, val placementId: Str
         }
     }
 
-    /** The host's width changed: refit the adaptive slot, without a new request or impression. */
+    /** The host's width changed: refit the adaptive or inline slot, without a new request or impression. */
     fun onHostResized(view: QartveloAdsBannerView) {
-        if (hostView !== view || content !is Content.QartveloAds) return
+        val c = content as? Content.QartveloAds ?: return
+        if (hostView !== view) return
         val frame = view.getChildAt(0) ?: return
-        val height = slotFor(view).heightPx ?: return
         val params = frame.layoutParams ?: return
-        if (params.height != height) {
+        val slot = slotFor(view)
+        val (width, height) = if (slot.inlineMaxHeightPx != null) {
+            InlineBannerFit.size(c.ad.width, c.ad.height, slot.widthPx, slot.inlineMaxHeightPx).let { it.width to it.height }
+        } else {
+            params.width to (slot.heightPx ?: return)
+        }
+        if (params.width != width || params.height != height) {
+            params.width = width
             params.height = height
             frame.layoutParams = params
         }
     }
 
-    /** The host's banner slot in px: its width, and the anchored adaptive height unless it opted out. */
+    /** The host's banner slot in px: its width, and the inline max height or the anchored adaptive height unless it opted out. */
     private fun slotFor(view: QartveloAdsBannerView?): BannerSlot {
         val context = view?.context ?: engine.appContext
         val metrics = context.resources.displayMetrics
         val widthPx = view?.width?.takeIf { it > 0 } ?: metrics.widthPixels
+        if (view?.sizing == BannerSizing.INLINE) {
+            val maxDp = view.inlineMaxHeightDp.coerceAtLeast(MIN_INLINE_HEIGHT_DP)
+            return BannerSlot(widthPx, null, ceil(maxDp * metrics.density).toInt())
+        }
         if (view?.usesAdaptiveSize == false) return BannerSlot(widthPx, null)
         val widthDp = (widthPx / metrics.density).toInt().coerceAtLeast(MIN_BANNER_WIDTH_DP)
         val preferred = (engine.fallbackAdapter as? AdaptiveBannerSizer)?.let { sizer ->
@@ -451,5 +473,8 @@ internal class BannerController(private val engine: Engine, val placementId: Str
 
     companion object {
         private const val MIN_BANNER_WIDTH_DP = 32
+
+        /** Google's inline adaptive minimum. */
+        private const val MIN_INLINE_HEIGHT_DP = 32
     }
 }

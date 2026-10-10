@@ -37,6 +37,15 @@ public class QartveloAdsBannerView @JvmOverloads public constructor(
      */
     public var usesAdaptiveSize: Boolean = true
 
+    /**
+     * [BannerSizing.ANCHORED] (default) or [BannerSizing.INLINE] for banners inside scrolling
+     * content. Inline wins over [usesAdaptiveSize]. Set it before [load].
+     */
+    public var sizing: BannerSizing = BannerSizing.ANCHORED
+
+    /** The most an inline banner may be tall, in dp (default 250, at least 32). */
+    public var inlineMaxHeightDp: Int = 250
+
     private var controller: BannerController? = null
 
     /** Last window visibility reported by the framework (GONE while the Activity is stopped). */

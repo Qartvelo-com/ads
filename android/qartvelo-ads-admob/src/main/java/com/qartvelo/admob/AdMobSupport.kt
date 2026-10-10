@@ -12,12 +12,16 @@ import com.qartvelo.sdk.QartveloAdsPrivacy
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * The AdMob banner size for a slot width: Google's standard anchored adaptive banner (50 to 90 dp
- * tall), the same size iOS uses. The large anchored variant is about twice as tall on phones.
+ * AdMob banner sizes. Anchored: Google's standard anchored adaptive banner (50 to 90 dp tall), the
+ * same size iOS uses; the large anchored variant is about twice as tall on phones. Inline: Google's
+ * inline adaptive banner, up to a max height, for banners inside scrolling content.
  */
 internal object AdMobBannerSize {
     fun forWidth(context: Context, widthDp: Int): AdSize =
         AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(context, widthDp)
+
+    fun inline(widthDp: Int, maxHeightDp: Int): AdSize =
+        AdSize.getInlineAdaptiveBannerAdSize(widthDp, maxHeightDp)
 }
 
 /** Google's public test ad units, substituted for every placement in test mode. */

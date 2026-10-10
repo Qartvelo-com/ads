@@ -46,10 +46,12 @@ class SampleApp : Application() {
         const val INTERSTITIAL = "game_end"
         const val REWARDED = "reward_coins"
         const val BANNER = "home_banner"
+        const val INLINE_BANNER = "inline_banner"
 
         /** The publisher's own AdMob units per placement (Google's public test units for this demo). */
         val ADMOB_UNITS = mapOf(
             BANNER to "ca-app-pub-3940256099942544/9214589741",
+            INLINE_BANNER to "ca-app-pub-3940256099942544/9214589741",
             INTERSTITIAL to "ca-app-pub-3940256099942544/1033173712",
             REWARDED to "ca-app-pub-3940256099942544/5224354917",
         )

@@ -4,6 +4,7 @@ import android.app.Activity
 import android.os.Bundle
 import android.widget.TextView
 import com.qartvelo.sdk.AdFormat
+import com.qartvelo.sdk.BannerSizing
 import com.qartvelo.sdk.QartveloAdsAdInfo
 import com.qartvelo.sdk.QartveloAdsBannerView
 import com.qartvelo.sdk.QartveloAdsError
@@ -12,6 +13,7 @@ import com.qartvelo.sdk.QartveloAdsListener
 /** Banner demo. Rotating re-creates this activity; the banner controller reuses the loaded ad. */
 class BannerActivity : Activity() {
     private lateinit var banner: QartveloAdsBannerView
+    private lateinit var inlineBanner: QartveloAdsBannerView
     private lateinit var log: TextView
     private val refresh: () -> Unit = { log.text = EventLog.text }
 
@@ -35,6 +37,12 @@ class BannerActivity : Activity() {
             }
         }
         banner.load()
+
+        // A second placement: banners of one placement share one ad, so each slot needs its own.
+        inlineBanner = findViewById(R.id.inline_banner)
+        inlineBanner.sizing = BannerSizing.INLINE
+        inlineBanner.inlineMaxHeightDp = 250
+        inlineBanner.load()
     }
 
     override fun onStart() {
@@ -50,6 +58,7 @@ class BannerActivity : Activity() {
 
     override fun onDestroy() {
         banner.destroy()
+        inlineBanner.destroy()
         super.onDestroy()
     }
 }

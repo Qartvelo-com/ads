@@ -569,7 +569,15 @@ internal class Engine(
             .put("screen_height", d.screenHeight)
             .put("test_mode", testMode)
             .put("test_force_no_fill", options.testForceNoFill)
-            .apply { banner?.heightPx?.let { put("banner_height", it) } }
+            .apply {
+                val inlineMax = banner?.inlineMaxHeightPx
+                if (inlineMax != null) {
+                    put("banner_mode", "inline")
+                    put("banner_max_height", inlineMax)
+                } else {
+                    banner?.heightPx?.let { put("banner_height", it) }
+                }
+            }
     }
 
     /** Tests only: stop background threads. */

@@ -23,6 +23,20 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
+        android:text="@string/inline_banner_hint" />
+
+    <!-- Inline banner (sizing INLINE, set in BannerActivity): the biggest ad up to 250 dp tall. -->
+    <com.qartvelo.sdk.QartveloAdsBannerView
+        android:id="@+id/inline_banner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        app:qartvelo_placementId="inline_banner" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
         android:text="@string/event_log"
         android:textAppearance="@android:style/TextAppearance.Material.Title" />
 

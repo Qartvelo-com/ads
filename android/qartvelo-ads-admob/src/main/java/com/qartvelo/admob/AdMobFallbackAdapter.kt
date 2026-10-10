@@ -7,6 +7,7 @@ import android.view.View
 import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.FullScreenContentCallback
 import com.google.android.gms.ads.LoadAdError
@@ -23,6 +24,7 @@ import com.qartvelo.sdk.fallback.FallbackBannerCallback
 import com.qartvelo.sdk.fallback.FallbackLoadCallback
 import com.qartvelo.sdk.fallback.FallbackSettings
 import com.qartvelo.sdk.fallback.FallbackShowCallback
+import com.qartvelo.sdk.fallback.InlineBannerFallback
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -36,7 +38,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  *   QartveloAds privacy signals are forwarded (child / teen age-restricted treatment, and non-personalized
  *   ads when the app reports that consent was refused). Nothing here grants consent.
  */
-public class AdMobFallbackAdapter : FallbackAdapter, AdaptiveBannerSizer {
+public class AdMobFallbackAdapter : FallbackAdapter, AdaptiveBannerSizer, InlineBannerFallback {
     override val networkName: String = "admob"
 
     @Volatile
@@ -124,7 +126,19 @@ public class AdMobFallbackAdapter : FallbackAdapter, AdaptiveBannerSizer {
         adUnitId: String,
         widthDp: Int,
         callback: FallbackBannerCallback,
-    ): FallbackBanner {
+    ): FallbackBanner = banner(context, adUnitId, AdMobBannerSize.forWidth(context, widthDp), callback)
+
+    /** Google's inline adaptive banner: [widthDp] wide, as tall as Google decides up to [maxHeightDp]. */
+    override fun createInlineBanner(
+        context: Context,
+        placementId: String,
+        adUnitId: String,
+        widthDp: Int,
+        maxHeightDp: Int,
+        callback: FallbackBannerCallback,
+    ): FallbackBanner = banner(context, adUnitId, AdMobBannerSize.inline(widthDp, maxHeightDp), callback)
+
+    private fun banner(context: Context, adUnitId: String, size: AdSize, callback: FallbackBannerCallback): FallbackBanner {
         val unit = AdMobUnits.resolve(AdMobUnits.Format.BANNER, adUnitId, settings.testMode)
         val adView = AdView(context)
         if (unit == null) {
@@ -132,7 +146,7 @@ public class AdMobFallbackAdapter : FallbackAdapter, AdaptiveBannerSizer {
             return AdViewBanner(adView)
         }
         adView.adUnitId = unit
-        adView.setAdSize(AdMobBannerSize.forWidth(context, widthDp))
+        adView.setAdSize(size)
         adView.adListener = object : AdListener() {
             override fun onAdLoaded() = callback.onLoaded()
             override fun onAdFailedToLoad(error: LoadAdError) = callback.onFailed("AdMob ${error.code}: ${error.message}")

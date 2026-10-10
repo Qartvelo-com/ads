@@ -11,6 +11,7 @@ import com.qartvelo.sdk.fallback.AdaptiveBannerSizer
 import com.qartvelo.sdk.fallback.FallbackAdapter
 import com.qartvelo.sdk.fallback.FallbackLoadCallback
 import com.qartvelo.sdk.fallback.FallbackShowCallback
+import com.qartvelo.sdk.fallback.InlineBannerFallback
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -49,6 +50,14 @@ class AdMobFallbackAdapterTest {
         val size = AdMobBannerSize.forWidth(context, 411)
         assertEquals(AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(context, 411), size)
         assertTrue("anchored banners stay 50 to 90 dp tall, got ${size.height} dp", size.height in 50..90)
+    }
+
+    @Test
+    fun inlineBannersUseGooglesInlineAdaptiveSize() {
+        val size = AdMobBannerSize.inline(widthDp = 360, maxHeightDp = 250)
+        assertEquals(AdSize.getInlineAdaptiveBannerAdSize(360, 250), size)
+        assertEquals(360, size.width)
+        assertTrue("core finds inline banners through the optional interface", AdMobFallbackAdapter() is InlineBannerFallback)
     }
 
     @Test
