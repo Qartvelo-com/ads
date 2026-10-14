@@ -87,6 +87,7 @@ export default defineConfig({
 					items: [
 						{ slug: 'guides/admob-fallback' },
 						{ slug: 'guides/privacy' },
+						{ slug: 'guides/dark-mode' },
 						{ slug: 'guides/custom-fallback-adapter' },
 					],
 				},

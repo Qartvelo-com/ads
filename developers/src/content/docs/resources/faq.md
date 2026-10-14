@@ -15,6 +15,10 @@ No network or disk work happens on your calling thread, loads are asynchronous, 
 
 Yes, natively since 0.4.0: the [iOS SDK](/ios/installation/) for Swift and Objective-C (Swift Package Manager or CocoaPods), with the same placements, fallback and test mode as Android. Register the iOS version as its own app (platform iOS, bundle ID). The [React Native package](/react-native/installation/) also supports iOS through the same JavaScript API as Android, with CocoaPods autolinking. Simulator and all non-App Store installations always use non-billable test traffic.
 
+### Do ads follow my app's dark mode?
+
+HTML5 ads that have a dark version do, by themselves: they follow your app's light or dark appearance, with no SDK update or code. See [Dark mode](/guides/dark-mode/). Image and video ads look the same in both modes.
+
 ### Is the app key a secret?
 
 No. It is public by design and is only accepted together with your registered package name. The SDK secret is the secret; never put it in an app.
