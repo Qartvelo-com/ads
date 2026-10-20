@@ -38,11 +38,11 @@ function redact(value) {
 }
 
 /** Initializes a test session and returns the app's remote configuration (placements and kill switches). */
-export async function getAppConfig({ appKey, packageName, baseUrl }) {
+export async function getAppConfig({ appKey, packageName, platform = 'android', baseUrl }) {
 	const init = await post(baseUrl, 'sdk/initialize', {
 		app_key: appKey,
 		package_name: packageName,
-		platform: 'android',
+		platform,
 		sdk_version: 'mcp',
 		test_mode: true,
 	});
@@ -50,8 +50,8 @@ export async function getAppConfig({ appKey, packageName, baseUrl }) {
 }
 
 /** Initializes a test session and requests one test ad for a placement. */
-export async function testAdRequest({ appKey, packageName, placement, format, forceNoFill = false, baseUrl }) {
-	const { init, sessionToken } = await getAppConfig({ appKey, packageName, baseUrl });
+export async function testAdRequest({ appKey, packageName, platform = 'android', placement, format, forceNoFill = false, baseUrl }) {
+	const { init, sessionToken } = await getAppConfig({ appKey, packageName, platform, baseUrl });
 	const result = { initialize: { status: init.status, ms: init.ms, body: redact(init.body) } };
 	if (!sessionToken) return result;
 	const ad = await post(baseUrl, 'ads/request', {
@@ -60,7 +60,7 @@ export async function testAdRequest({ appKey, packageName, placement, format, fo
 		format,
 		session_token: sessionToken,
 		language: 'ka',
-		android_version: '14',
+		...(platform === 'ios' ? { os_version: '18.0' } : { android_version: '14' }),
 		screen_width: 1080,
 		screen_height: 2400,
 		test_mode: true,

@@ -113,7 +113,8 @@ export function createServer() {
 				'Opens a TEST-MODE session for an app key and package name and returns the remote configuration: placement codes, formats, fallback units, timeouts and kill switches. Use it to verify credentials and discover placement codes. Never billed.',
 			inputSchema: {
 				appKey: z.string(),
-				packageName: z.string().describe('The Android applicationId registered for the app'),
+				packageName: z.string().describe('The Android applicationId or iOS bundle ID registered for the app'),
+				platform: z.enum(['android', 'ios']).optional().describe('Platform to present as (default android); must be one of the app\'s platforms'),
 				baseUrl: z.string().url().optional().describe('API origin (default https://ads.qartvelo.com/)'),
 			},
 			annotations: { readOnlyHint: true, openWorldHint: true, idempotentHint: true },
@@ -137,6 +138,7 @@ export function createServer() {
 			inputSchema: {
 				appKey: z.string(),
 				packageName: z.string(),
+				platform: z.enum(['android', 'ios']).optional().describe('Platform to present as (default android)'),
 				placement: z.string().describe('Placement code'),
 				format: z.enum(['banner', 'interstitial', 'rewarded']),
 				forceNoFill: z.boolean().optional().describe('Force a no_fill to see the fallback answer'),
