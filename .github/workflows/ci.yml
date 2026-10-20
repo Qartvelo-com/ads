@@ -73,7 +73,10 @@ jobs:
         if: matrix.admob == 'false'
         run: node -e "const fs=require('fs');const f='react-native/example/app.json';const j=JSON.parse(fs.readFileSync(f,'utf8'));delete j['@qartvelo/react-native-ads'];fs.writeFileSync(f,JSON.stringify(j,null,2))"
       - name: Install iOS dependencies
-        run: cd react-native/example/ios && pod install
+        run: |
+          cd react-native/example/ios
+          # The AdMob variant also builds pods as static frameworks (use_frameworks!, as apps with Firebase do).
+          if [ "${{ matrix.admob }}" = "true" ]; then USE_FRAMEWORKS=static pod install; else pod install; fi
       - name: Build React Native iOS example
         run: |
           set -euo pipefail

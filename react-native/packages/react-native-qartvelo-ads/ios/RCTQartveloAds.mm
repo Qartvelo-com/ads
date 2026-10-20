@@ -1,5 +1,11 @@
 #import "RCTQartveloAds.h"
+// The Swift interface header lives under the module directory when pods are built as frameworks
+// (use_frameworks!, which Firebase and other pods require), and at the top level otherwise.
+#if __has_include(<RNQartveloAds/RNQartveloAds-Swift.h>)
+#import <RNQartveloAds/RNQartveloAds-Swift.h>
+#else
 #import "RNQartveloAds-Swift.h"
+#endif
 
 @implementation RCTQartveloAds {
   QartveloAdsBridge *_sdk;
