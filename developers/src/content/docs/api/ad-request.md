@@ -31,7 +31,7 @@ Content-Type: application/json
 ```json
 {"app_key":"app_xxxxxxxxxxxxxxxxxxxxxxxx","placement":"game_end","format":"interstitial",
  "session_token":"<opaque>","language":"ka","android_version":"14","app_version":"1.0.0",
- "sdk_version":"0.6.0","screen_width":1080,"screen_height":2400}
+ "sdk_version":"0.6.1","screen_width":1080,"screen_height":2400}
 ```
 
 SDKs 0.6.0 and later send `"supported_creative_types":["image","video","html5"]` for banner and

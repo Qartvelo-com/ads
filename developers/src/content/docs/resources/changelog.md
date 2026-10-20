@@ -5,6 +5,22 @@ description: Release history of the Qartvelo Ads SDKs.
 
 Releases are tagged in [Qartvelo-com/ads](https://github.com/Qartvelo-com/ads). The Android SDK, the iOS SDK, the AdMob adapters and the React Native plugin share one version number.
 
+## 0.6.1
+
+- **Android: HTML5 banners in React Native.** An HTML5 ad could stay blank in a React Native app on
+  Android: React Native sizes the banner with a direct layout call that fires no global-layout
+  callback, so the banner was never seen on screen and the ad stayed paused before its first frame.
+  The banner now re-checks whether it is on screen before each frame (a no-op when nothing changed).
+- **React Native iOS with `use_frameworks!`**: apps that build pods as frameworks (for example apps
+  with Firebase, or Expo's `ios.useFrameworks`) failed to compile with
+  `'RNQartveloAds-Swift.h' file not found`. The package now imports the Swift header in both layouts.
+- **Ad color mode from the dashboard**: when the app's owner sets **Ad color mode** to *Always light*
+  or *Always dark* on the app in the Qartvelo Ads dashboard, HTML5 ads that come in a light and a dark
+  version show that version (`config.ad_color_scheme` in the initialize response). *Match the app*
+  (the default) keeps following the app's light or dark theme. No code changes in apps.
+- **MCP server**: `get_app_config` and `test_ad_request` take an optional `platform` (`android` or
+  `ios`), so apps registered for iOS can be checked too.
+
 ## 0.6.0
 
 - **HTML5 ads**: banners and interstitials can show HTML5 ads made in the Qartvelo Ads editor.
