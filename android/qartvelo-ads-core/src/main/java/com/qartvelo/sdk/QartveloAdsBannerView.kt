@@ -110,15 +110,23 @@ public class QartveloAdsBannerView @JvmOverloads public constructor(
 
     private val visibleRect = Rect()
 
-    // Scrolling and layout move the banner on or off screen without a visibility change.
+    // Scrolling and layout move the banner on or off screen without a visibility change. React
+    // Native (Fabric) sizes and moves views with direct layout() calls outside the window's layout
+    // pass, which fire no global-layout callback; the pre-draw check catches those (it returns at
+    // once when nothing changed).
     private val onScreenListener = ViewTreeObserver.OnScrollChangedListener { notifyVisibility() }
     private val onLayoutListener = ViewTreeObserver.OnGlobalLayoutListener { notifyVisibility() }
+    private val onPreDrawListener = ViewTreeObserver.OnPreDrawListener {
+        notifyVisibility()
+        true
+    }
 
     override fun onAttachedToWindow() {
         windowShown = windowVisibility == View.VISIBLE
         super.onAttachedToWindow()
         viewTreeObserver.addOnScrollChangedListener(onScreenListener)
         viewTreeObserver.addOnGlobalLayoutListener(onLayoutListener)
+        viewTreeObserver.addOnPreDrawListener(onPreDrawListener)
         guard("banner attach") { controller?.onHostAttachedToWindow(this) }
     }
 
@@ -126,6 +134,7 @@ public class QartveloAdsBannerView @JvmOverloads public constructor(
         windowShown = false
         viewTreeObserver.removeOnScrollChangedListener(onScreenListener)
         viewTreeObserver.removeOnGlobalLayoutListener(onLayoutListener)
+        viewTreeObserver.removeOnPreDrawListener(onPreDrawListener)
         guard("banner detach") { controller?.onHostDetachedFromWindow(this) }
         super.onDetachedFromWindow()
     }

@@ -187,6 +187,33 @@ class Html5AdTest : SdkTest() {
     }
 
     @Test
+    fun aBannerSizedOutsideTheLayoutPassIsSeenOnTheNextFrame() {
+        backend.placements = listOf(Placement("home_banner", "banner", timeoutMs = 10_000))
+        backend.adResponses.add(backend.fillHtml5("banner"))
+        assertTrue(init())
+        // React Native (Fabric) mounts the banner 0 tall and later sizes it with a direct layout()
+        // call, outside the window's layout pass, so no global-layout callback follows.
+        val banner = QartveloAdsBannerView(host.get()).apply {
+            placementId = "home_banner"
+            listener = this@Html5AdTest.listener
+            container.addView(this, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0))
+        }
+        banner.load()
+        awaitMain(message = "surface created") { surfaces.isNotEmpty() && surfaces.last().onReady != null }
+        val surface = surfaces.single()
+        surface.onReady!!()
+        settle()
+        assertFalse("a 0-tall slot is not on screen", listener.has("impression"))
+        assertTrue(surface.paused)
+
+        banner.layout(0, 0, container.width, 150)
+        banner.viewTreeObserver.dispatchOnPreDraw()
+
+        awaitMain(message = "impression once sized") { listener.has("impression:home_banner:QARTVELO") }
+        assertFalse(surface.paused)
+    }
+
+    @Test
     fun aHiddenHostPausesTheAdAndARefreshDestroysTheOldOne() {
         backend.placements = listOf(Placement("home_banner", "banner", timeoutMs = 10_000, refreshSeconds = 30))
         backend.adResponses.add(backend.fillHtml5("banner"))
