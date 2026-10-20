@@ -118,6 +118,7 @@ export default defineConfig({
 						{ slug: 'ai/overview' },
 						{ slug: 'ai/llms-txt' },
 						{ slug: 'ai/mcp-server' },
+						{ slug: 'ai/account-mcp' },
 						{ slug: 'ai/agent-skill' },
 						{ slug: 'ai/prompts' },
 					],

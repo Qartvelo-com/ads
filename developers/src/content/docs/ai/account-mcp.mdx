@@ -1,0 +1,66 @@
+---
+title: Account MCP server
+description: Let an AI assistant manage your publisher account - list apps, register an app and add placements - over the Model Context Protocol.
+---
+
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+The account MCP server runs on Qartvelo Ads itself at `https://ads.qartvelo.com/mcp`. Where the [MCP server](/ai/mcp-server/) helps an agent write integration code, this one acts on your **publisher account**: an assistant such as Claude can register your app and its placements for you, with the same rules as the dashboard.
+
+## Tools
+
+| Tool | What it does |
+|---|---|
+| `list_apps` | Your apps with their platforms, package name, review status, SDK app key and placements |
+| `get_app` | One app with its placements, AdMob fallback units and live traffic totals for the last 30 days |
+| `create_app` | Registers an app for Android, iOS or both and returns its app key |
+| `create_placement` | Adds a placement (banner, interstitial or rewarded) with its AdMob fallback units |
+
+New apps are **pending** until an admin approves them, exactly as when you register them in the dashboard. Test mode works right away. The SDK secret is never returned over MCP; generate one in the dashboard if you need it for server-to-server calls.
+
+## Create an access token
+
+1. Sign in to the [dashboard](https://ads.qartvelo.com) with your publisher account.
+2. Open **Profile** and find **AI assistant access (MCP)**.
+3. Name the token (for example "Claude on my laptop") and choose **Create token**.
+4. Copy the token. It is shown only once; revoke it on the same page when you no longer need it.
+
+<Aside type="caution">
+The token can register apps and placements in your account. Keep it out of source control and shared chats, and revoke it if it leaks.
+</Aside>
+
+## Connect
+
+<Tabs>
+<TabItem label="Claude Code">
+
+```sh
+claude mcp add --transport http qartvelo-ads-account https://ads.qartvelo.com/mcp \
+  --header "Authorization: Bearer <token>"
+```
+
+</TabItem>
+<TabItem label="Other clients">
+
+Any client that supports remote MCP servers over HTTP: server URL `https://ads.qartvelo.com/mcp`, header `Authorization: Bearer <token>`.
+
+```json
+{
+  "mcpServers": {
+    "qartvelo-ads-account": {
+      "type": "http",
+      "url": "https://ads.qartvelo.com/mcp",
+      "headers": { "Authorization": "Bearer <token>" }
+    }
+  }
+}
+```
+
+</TabItem>
+</Tabs>
+
+## Example
+
+> Register my game WordCity for Android and iOS. Its package name and bundle ID are both `ge.any.wordcity`. Add an interstitial placement called "Game end" without AdMob fallback.
+
+The assistant calls `create_app` with `platforms: ["android", "ios"]`, then `create_placement`, and reports the app key to put in both builds. Choose both platforms only when the Android `applicationId` and the iOS bundle ID are the same; otherwise register each platform as its own app. See [Account and apps](/publishers/account-and-apps/).

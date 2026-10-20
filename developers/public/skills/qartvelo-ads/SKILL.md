@@ -5,7 +5,7 @@ description: Integrate or debug the Qartvelo Ads SDK (Android Kotlin com.qartvel
 
 # Qartvelo Ads integration
 
-Qartvelo Ads is a direct-sold ad network for Android and iOS apps in Georgia. The SDK serves Qartvelo Ads campaigns first and falls back to the publisher's **own** AdMob ad units. Full docs: https://developers.qartvelo.com (Markdown: https://developers.qartvelo.com/llms-full.txt, any page as `<url>.md`).
+Qartvelo Ads is a direct-sold ad network for Android and iOS apps in Georgia. The SDK serves Qartvelo Ads campaigns first and falls back to the publisher's **own** AdMob ad units. Full docs: https://developers.qartvelo.com (Markdown: https://developers.qartvelo.com/llms-full.txt, any page as `<url>.md`). To register the publisher's apps and placements, use the account MCP server at `https://ads.qartvelo.com/mcp` (tools `list_apps`, `get_app`, `create_app`, `create_placement`; bearer token from the dashboard's Profile page) when it is connected: https://developers.qartvelo.com/ai/account-mcp/
 
 ## Facts that must be exact
 

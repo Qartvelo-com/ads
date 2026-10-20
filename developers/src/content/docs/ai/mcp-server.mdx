@@ -19,6 +19,8 @@ import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 | `get_app_config` | Opens a **test-mode** session for an app key + package and returns the placements, fallback units, timeouts and kill switches | Yes |
 | `test_ad_request` | Test-mode session plus one ad request for a placement, with timings; tokens are redacted | Yes |
 
+To let an assistant register apps and placements in your account instead, use the [account MCP server](/ai/account-mcp/).
+
 It also provides every docs page as a resource (`qartvelo-docs://android/banner`) and a prompt, `integrate-qartvelo-ads`, that walks the agent through a full integration.
 
 <Aside>
