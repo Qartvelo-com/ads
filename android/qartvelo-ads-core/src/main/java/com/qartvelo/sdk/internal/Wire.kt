@@ -22,6 +22,8 @@ internal data class RemoteConfig(
     val fallbackEnabled: Boolean,
     val configTtlSeconds: Long,
     val placements: Map<String, PlacementConfig>,
+    /** `light` or `dark` when the app's owner forces that version of HTML5 ads; null follows the app. */
+    val adColorScheme: String? = null,
 ) {
     companion object {
         const val MIN_BANNER_REFRESH_SECONDS = 30
@@ -54,6 +56,7 @@ internal data class RemoteConfig(
                 fallbackEnabled = cfg.optBoolean("fallback_enabled", true),
                 configTtlSeconds = cfg.optPositiveLong("config_ttl_seconds") ?: 3600,
                 placements = placements,
+                adColorScheme = cfg.optStringOrNull("ad_color_scheme")?.takeIf { it == "light" || it == "dark" },
             )
         }
     }

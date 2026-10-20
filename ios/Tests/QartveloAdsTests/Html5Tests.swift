@@ -94,6 +94,15 @@ final class Html5Tests: XCTestCase {
         XCTAssertNil(Html5Files.base(of: URL(string: "https://ads.test/b/main.js")!))
     }
 
+    func testTheDashboardColorModeIsPassedToThePage() {
+        let base = Html5Policy.pageBase
+        XCTAssertEqual(Html5Files.pageURL(base: base, colorScheme: nil), base + "index.html")
+        XCTAssertEqual(Html5Files.pageURL(base: base, colorScheme: "light"), base + "index.html?theme=light")
+        XCTAssertEqual(Html5Files.pageURL(base: base, colorScheme: "dark"), base + "index.html?theme=dark")
+        XCTAssertEqual(Html5Files.pageURL(base: base, colorScheme: "auto"), base + "index.html")
+        XCTAssertEqual(Html5Files.relativePath(base: base, url: base + "index.html?theme=dark"), "index.html")
+    }
+
     func testRequestsAreServedFetchedOrBlocked() throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: directory.appendingPathComponent("m"), withIntermediateDirectories: true)

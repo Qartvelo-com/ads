@@ -54,6 +54,8 @@ struct RemoteConfig {
     let fallbackEnabled: Bool
     let configTtlSeconds: Int64
     let placements: [String: PlacementConfig]
+    /// `light` or `dark` when the app's owner forces that version of HTML5 ads; nil follows the app.
+    var adColorScheme: String? = nil
 
     /// Parses the `config` + `placements` members of an initialize response (or its cached copy).
     static func parse(_ root: JSON) -> RemoteConfig {
@@ -77,7 +79,8 @@ struct RemoteConfig {
             requestTimeoutMs: config.positiveInt64("request_timeout_ms"),
             fallbackEnabled: config.bool("fallback_enabled", default: true),
             configTtlSeconds: config.positiveInt64("config_ttl_seconds") ?? 3600,
-            placements: placements
+            placements: placements,
+            adColorScheme: config.string("ad_color_scheme").flatMap { $0 == "light" || $0 == "dark" ? $0 : nil }
         )
     }
 }

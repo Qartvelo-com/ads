@@ -15,6 +15,7 @@ import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import com.qartvelo.sdk.QartveloAds
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.FileInputStream
@@ -130,7 +131,7 @@ internal class Html5AdView private constructor(context: Context, private val ad:
         web.webViewClient = Client()
         web.webChromeClient = Chrome()
         Main.postDelayed(Html5Policy.READY_TIMEOUT_MS, timeout)
-        web.loadUrl(bundle.baseUrl + Html5Files.INDEX)
+        web.loadUrl(Html5Files.pageUrl(bundle.baseUrl, QartveloAds.engine()?.remoteConfig?.adColorScheme))
         Main.postDelayed(Html5Policy.READY_POLL_MS, poll)
     }
 

@@ -29,6 +29,7 @@ Under **Apps**, choose **Add app** and fill in:
 | Package name / Bundle ID | Your Android `applicationId` (for example `com.example.game`), iOS bundle ID (for example `ge.example.Game`), or the ID both share (letters, digits and dots, for example `ge.example.game`). No other app can have it on the same platform. **Locked after the app is reviewed**, because the SDK validates it on every start |
 | Category | One of: games, news, entertainment, education, lifestyle, sports, finance, shopping, social, tools, travel, health, music, other. Advertisers can target categories |
 | Default language | `ka`, `en` or `ru`. Used for language targeting when the device does not report a supported language |
+| Ad color mode | **Match the app** (default), **Always light** or **Always dark**: which version your app shows of HTML5 ads that come in a light and a dark version. Match the app follows your app's light or dark theme. Can be changed at any time. Needs SDK 0.6.1 or newer; older SDKs always match the app. See [Dark mode](/guides/dark-mode/#ad-color-mode) |
 
 Each new app is **pending** until an admin approves it. Apps can also be **rejected** or **suspended**.
 

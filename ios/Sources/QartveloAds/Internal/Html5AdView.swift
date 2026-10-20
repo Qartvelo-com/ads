@@ -13,6 +13,13 @@ enum Html5Files {
         return path.split(separator: "/", omittingEmptySubsequences: false).allSatisfy { !$0.isEmpty && $0 != "." && $0 != ".." }
     }
 
+    /// The page to load: the bundle's index, with `?theme=light` or `?theme=dark` when the app's owner
+    /// chose one in the dashboard (the ad runtime then shows that version of an ad that has both;
+    /// without it the ad follows the app's own light or dark appearance).
+    static func pageURL(base: String, colorScheme: String?) -> String {
+        base + index + ((colorScheme == "light" || colorScheme == "dark") ? "?theme=\(colorScheme!)" : "")
+    }
+
     /// The base of a bundle from its `creative_url`, or nil when it is not an `index.html` URL.
     static func base(of creativeURL: URL) -> URL? {
         let string = creativeURL.absoluteString
@@ -122,6 +129,7 @@ final class Html5AdView: NSObject, Html5Surface, WKNavigationDelegate, WKUIDeleg
     private var onFailed: ((String) -> Void)?
     private var onClick: (() -> Void)?
     private var firstLoadDone = false
+    private var pageURL = Html5Files.pageURL(base: Html5Policy.pageBase, colorScheme: nil)
     private var settled = false
     private var destroyed = false
     private var pollTask: DispatchWorkItem?
@@ -166,7 +174,8 @@ final class Html5AdView: NSObject, Html5Surface, WKNavigationDelegate, WKUIDeleg
         timeoutTask = Main.postDelayed(Html5Policy.readyTimeoutMs) { [weak self] in
             self?.fail("not ready within \(Html5Policy.readyTimeoutMs) ms")
         }
-        guard let url = URL(string: Html5Policy.pageBase + Html5Files.index) else {
+        pageURL = Html5Files.pageURL(base: Html5Policy.pageBase, colorScheme: QartveloAds.engine()?.remoteConfig?.adColorScheme)
+        guard let url = URL(string: pageURL) else {
             fail("invalid page URL")
             return
         }
@@ -238,7 +247,7 @@ final class Html5AdView: NSObject, Html5Surface, WKNavigationDelegate, WKUIDeleg
         let url = navigationAction.request.url?.absoluteString ?? ""
         let mainFrame = navigationAction.targetFrame?.isMainFrame ?? true
         // Only the first load of the page itself; every later navigation is stopped.
-        if !firstLoadDone && mainFrame && url == Html5Policy.pageBase + Html5Files.index {
+        if !firstLoadDone && mainFrame && url == pageURL {
             decisionHandler(.allow)
             return
         }

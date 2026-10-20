@@ -23,6 +23,19 @@ class Html5PolicyTest {
     }
 
     @Test
+    fun theDashboardColorModeIsPassedToThePageAndServedFromTheBundle() {
+        assertEquals(base + "index.html", Html5Files.pageUrl(base, null))
+        assertEquals(base + "index.html?theme=light", Html5Files.pageUrl(base, "light"))
+        assertEquals(base + "index.html?theme=dark", Html5Files.pageUrl(base, "dark"))
+        assertEquals("unknown values follow the app", base + "index.html", Html5Files.pageUrl(base, "auto"))
+
+        val dir = bundleDir()
+        val served = Html5Policy.intercept(dir, base, Html5Files.pageUrl(base, "dark"), "GET")
+        assertTrue(served is Html5Policy.Decision.Serve)
+        assertEquals(File(dir, "index.html").canonicalPath, (served as Html5Policy.Decision.Serve).file.canonicalPath)
+    }
+
+    @Test
     fun pathsMustStayInsideTheBundle() {
         assertTrue(Html5Files.isSafePath("index.html"))
         assertTrue(Html5Files.isSafePath("m/3f2a.jpg"))

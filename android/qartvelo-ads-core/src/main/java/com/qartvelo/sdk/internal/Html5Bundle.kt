@@ -21,6 +21,14 @@ internal object Html5Files {
         return path.split('/').all { it.isNotEmpty() && it != "." && it != ".." }
     }
 
+    /**
+     * The page to load: the bundle's index, with `?theme=light` or `?theme=dark` when the app's
+     * owner chose one in the dashboard (the ad runtime then shows that version of an ad that has
+     * both; without it the ad follows the app's own light or dark theme).
+     */
+    fun pageUrl(baseUrl: String, colorScheme: String?): String =
+        baseUrl + INDEX + if (colorScheme == "light" || colorScheme == "dark") "?theme=$colorScheme" else ""
+
     /** The base of a bundle from its `creative_url`, or null when it is not an `index.html` URL. */
     fun baseOf(creativeUrl: String): String? =
         if (creativeUrl.endsWith("/$INDEX") && creativeUrl.indexOf('?') < 0) creativeUrl.removeSuffix(INDEX) else null

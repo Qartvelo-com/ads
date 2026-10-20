@@ -36,6 +36,17 @@ final class WireTests: XCTestCase {
         XCTAssertEqual(interstitial.bannerRefreshSeconds, RemoteConfig.defaultBannerRefreshSeconds)
     }
 
+    func testTheAdColorModeIsReadFromTheConfig() {
+        func scheme(_ value: Any?) -> String? {
+            RemoteConfig.parse(["config": value.map { ["ad_color_scheme": $0] } ?? [:]]).adColorScheme
+        }
+        XCTAssertEqual(scheme("light"), "light")
+        XCTAssertEqual(scheme("dark"), "dark")
+        XCTAssertNil(scheme("auto"), "auto follows the app")
+        XCTAssertNil(scheme("sepia"), "unknown values follow the app")
+        XCTAssertNil(scheme(nil), "older backends send nothing")
+    }
+
     func testEmptyConfigUsesSafeDefaults() {
         let config = RemoteConfig.parse([:])
 
