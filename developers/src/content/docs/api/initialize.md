@@ -77,7 +77,7 @@ Content-Type: application/json
 |---|---|---|
 | 401 | `invalid_app_key` | Unknown app key |
 | 403 | `package_mismatch` | `package_name` differs from the registered app (logged as suspicious) |
-| 403 | `platform_mismatch` | The app key belongs to the app registered for the other platform |
+| 403 | `platform_mismatch` | The app key belongs to an app that is not registered for this platform. `details.platforms` lists the platforms it is registered for |
 | 403 | `app_not_approved` | App not approved and `test_mode` is false |
 | 422 | `validation_failed` | Missing or invalid fields (`error.fields`) |
 | 429 | `rate_limited` | Too many initializations (see `Retry-After`) |

@@ -25,7 +25,7 @@ export const CODES = {
 	invalid_session: { kind: 'API error 401', meaning: 'Session token malformed, forged or issued for another app.', fix: 'Call /sdk/initialize again and use the new token with the same app key.' },
 	session_expired: { kind: 'API error 401', meaning: 'Session token past its expiry (1 hour).', fix: 'Call /sdk/initialize again.' },
 	package_mismatch: { kind: 'API error 403', meaning: 'package_name differs from the app registered for this key.', fix: 'The applicationId must equal the registered package exactly. Watch out for applicationIdSuffix such as .debug.' },
-	platform_mismatch: { kind: 'API error 403', meaning: 'The app key belongs to the app registered for the other platform (Android vs iOS).', fix: 'Register the Android and iOS versions as two apps and use each one\'s own app key.' },
+	platform_mismatch: { kind: 'API error 403', meaning: 'The app key belongs to an app that is not registered for this platform (Android vs iOS).', fix: 'Use the key of the app registered for this platform. When the Android and iOS IDs are the same, register one app for both platforms and use its key on both.' },
 	app_not_approved: { kind: 'API error 403', meaning: 'The app is not approved yet and test_mode is false.', fix: 'Use test mode until an admin approves the app.' },
 	placement_not_found: { kind: 'API error 404', meaning: 'No placement with that code in this app.', fix: 'Create the placement in the dashboard or fix the code (lowercase, [a-z0-9_]{2,64}).' },
 	format_mismatch: { kind: 'API error 422', meaning: 'Requested format differs from the placement format.', fix: 'Use the load method that matches the placement format.' },

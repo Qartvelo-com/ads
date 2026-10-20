@@ -73,7 +73,7 @@ data class QartveloAdsSetupIssue(
 | `code` (constant) | Meaning |
 |---|---|
 | `package_mismatch` (`PACKAGE_MISMATCH`) | The app key is registered for another package name |
-| `platform_mismatch` (`PLATFORM_MISMATCH`) | The app key belongs to the app of the other platform |
+| `platform_mismatch` (`PLATFORM_MISMATCH`) | The app key belongs to an app not registered for Android |
 | `unknown_placement` (`UNKNOWN_PLACEMENT`) | The placement code does not exist for this app |
 | `format_mismatch` (`FORMAT_MISMATCH`) | The placement exists with another format |
 

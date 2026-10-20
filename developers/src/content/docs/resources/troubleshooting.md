@@ -11,7 +11,7 @@ Start with debug logging: `logLevel = QartveloAdsLogLevel.DEBUG` (`logLevel: 'de
 |---|---|
 | `NOT_INITIALIZED` with `invalid_app_key` in the log | Wrong app key. Copy it from the app page in the dashboard |
 | `package_mismatch` | The running `applicationId` (or iOS bundle ID) differs from the registered one. Check `applicationIdSuffix` in debug builds and flavors, or per-configuration bundle IDs in Xcode |
-| `platform_mismatch` | The iOS app uses the Android app's key or the other way round. Register each platform as its own app and use its key |
+| `platform_mismatch` | The iOS app uses the key of an Android-only app or the other way round. Use the key of the app registered for this platform; an app whose Android and iOS IDs are the same can be registered once for both |
 | `app_not_approved` | The app is still pending. Use test mode until it is approved |
 | `NETWORK_ERROR` / `TIMEOUT` | No connectivity, a custom `baseUrl` that is wrong, or cleartext HTTP blocked for a local backend |
 | The listener never reports a second result | `initialize` is idempotent; only the first call's options count. Restart the process |

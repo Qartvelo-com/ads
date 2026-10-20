@@ -30,7 +30,7 @@ export default function App() {
 
 | Option | Type | Default | Meaning |
 |---|---|---|---|
-| `appKey` | `string \| { android, ios }` | required | App key, or one per platform (a key only works on its own platform) |
+| `appKey` | `string \| { android, ios }` | required | App key: one string when the app is registered for Android and iOS, or one key per platform when they are separate apps |
 | `baseUrl` | `string` | `https://ads.qartvelo.com/` | API origin; change only for a self-hosted or local backend |
 | `requestTimeoutMs` | `number` | `800` | Qartvelo Ads time budget before falling back. The dashboard value per placement wins |
 | `testMode` | `boolean` | `false` | Non-billable test ads labelled "Test ad"; AdMob uses Google's test units |

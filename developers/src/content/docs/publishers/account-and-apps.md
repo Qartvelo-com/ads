@@ -25,8 +25,8 @@ Under **Apps**, choose **Add app** and fill in:
 | Field | Rules |
 |---|---|
 | Name | Shown in your dashboard and to advertisers who target specific apps |
-| Platform | **Android** or **iOS**. Locked after creation; an app key only works on its platform. Publish both versions of a game as two apps |
-| Package name / Bundle ID | Your Android `applicationId` (for example `com.example.game`) or iOS bundle ID (for example `ge.example.Game`). Must be unique per platform on Qartvelo Ads. **Locked after the app is reviewed**, because the SDK validates it on every start |
+| Platform | **Android**, **iOS** or **Android and iOS**. Choose both when your Android `applicationId` and iOS bundle ID are the same: you get one app key and one set of placements for both, and the SDK tells Qartvelo Ads which platform each request comes from. If the two IDs differ, register each platform as its own app. **Locked after the app is reviewed** |
+| Package name / Bundle ID | Your Android `applicationId` (for example `com.example.game`), iOS bundle ID (for example `ge.example.Game`), or the ID both share (letters, digits and dots, for example `ge.example.game`). No other app can have it on the same platform. **Locked after the app is reviewed**, because the SDK validates it on every start |
 | Category | One of: games, news, entertainment, education, lifestyle, sports, finance, shopping, social, tools, travel, health, music, other. Advertisers can target categories |
 | Default language | `ka`, `en` or `ru`. Used for language targeting when the device does not report a supported language |
 
