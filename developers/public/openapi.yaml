@@ -203,6 +203,7 @@ components:
             fallback_enabled: { type: boolean }
             test_mode: { type: boolean, description: Echo of the request; never cache it }
             config_ttl_seconds: { type: integer }
+            ad_color_scheme: { type: string, enum: [auto, light, dark], description: "Which version of HTML5 ads that have a light and a dark version to show, set per app in the dashboard. auto follows the app's theme; treat unknown values as auto. Used by SDK 0.6.1 and later." }
         placements:
           type: array
           items: { $ref: '#/components/schemas/PlacementConfig' }

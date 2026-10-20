@@ -37,7 +37,8 @@ Content-Type: application/json
     "request_timeout_ms": 800,
     "fallback_enabled": true,
     "test_mode": false,
-    "config_ttl_seconds": 3600
+    "config_ttl_seconds": 3600,
+    "ad_color_scheme": "auto"
   },
   "placements": [
     {
@@ -63,6 +64,7 @@ Content-Type: application/json
 | `config.fallback_enabled` | Whether fallback is allowed at all; decide per placement with `fallback_provider` |
 | `config.test_mode` | Whether this is a test session (`test_mode` or `is_emulator`). Clients must take test mode from their local option and never cache it |
 | `config.config_ttl_seconds` | How long the client may cache this configuration |
+| `config.ad_color_scheme` | `auto`, `light` or `dark`: the app's **Ad color mode** from the dashboard. With `light` or `dark`, HTML5 ads that have both versions show that one (the SDK loads the ad with `?theme=light` or `?theme=dark`); `auto` follows the app's theme. Treat unknown values as `auto` |
 | `placements[].code` / `format` | Placement code and its format |
 | `placements[].ourads_enabled` | `false` when the placement is paused, switched off by the publisher or an admin, or the app is blocked. The name is historical; it means "Qartvelo Ads enabled". Re-check at most every 5 minutes while off |
 | `placements[].fallback_provider` | `admob` or `none` |
