@@ -184,7 +184,7 @@ components:
         package_name: { type: string, maxLength: 255, description: 'Android application id or iOS bundle ID, compared exactly' }
         sdk_version: { type: [string, 'null'], maxLength: 32 }
         app_version: { type: [string, 'null'], maxLength: 64 }
-        platform: { type: [string, 'null'], enum: [android, ios, null], description: Must match the app's platform; defaults to android }
+        platform: { type: [string, 'null'], enum: [android, ios, null], description: "Must be one of the app's platforms (an app can cover Android and iOS); defaults to android. Every ad request of the session counts for this platform, and admob_ad_unit_id in the response is this platform's unit" }
         os_version: { type: [string, 'null'], maxLength: 32 }
         test_mode: { type: [boolean, 'null'], description: Skips the approval check; the session only gets test ads }
         is_emulator: { type: [boolean, 'null'], description: The device is an emulator; emulator sessions are always test sessions }
